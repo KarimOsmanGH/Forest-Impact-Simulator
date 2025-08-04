@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "name": "Oak",
+    "scientific_name": "Quercus",
+    "description": "A common tree in the northern hemisphere, known for its strength and longevity.",
+    "carbon_sequestration": 25,
+    "biodiversity_impact": 4,
+    "resilience": 3,
+    "image": "/trees/oak.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Pine",
+    "scientific_name": "Pinus",
+    "description": "A coniferous tree, widespread in the northern hemisphere.",
+    "carbon_sequestration": 20,
+    "biodiversity_impact": 3,
+    "resilience": 4,
+    "image": "/trees/pine.jpg"
+  },
+  {
+    "id": 3,
+    "name": "Maple",
+    "scientific_name": "Acer",
+    "description": "A genus of trees and shrubs commonly known as maples.",
+    "carbon_sequestration": 22,
+    "biodiversity_impact": 3,
+    "resilience": 3,
+    "image": "/trees/maple.jpg"
+  },
+  {
+    "id": 4,
+    "name": "Willow",
+    "scientific_name": "Salix",
+    "description": "A genus of deciduous trees and shrubs, found primarily on moist soils in cold and temperate regions of the Northern Hemisphere.",
+    "carbon_sequestration": 18,
+    "biodiversity_impact": 4,
+    "resilience": 5,
+    "image": "/trees/willow.jpg"
+  }
+]
