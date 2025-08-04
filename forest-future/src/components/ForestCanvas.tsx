@@ -11,7 +11,12 @@ interface ForestCanvasProps {
   setYear: (year: number) => void;
 }
 
-const Tree = ({ position, size = 1 }) => (
+interface TreeProps {
+  position: [number, number, number];
+  size?: number;
+}
+
+const Tree: React.FC<TreeProps> = ({ position, size = 1 }) => (
   <Box position={position} scale={[0.5 * size, 2 * size, 0.5 * size]}>
     <meshStandardMaterial color="brown" />
   </Box>
@@ -28,7 +33,7 @@ const ForestCanvas: React.FC<ForestCanvasProps> = ({ config, year, setYear }) =>
           <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
           <pointLight position={[-10, -10, -10]} />
           {config.selectedTrees.map((treeId, index) => {
-            const position = [index * 2 - (config.selectedTrees.length - 1), 0, 0];
+            const position: [number, number, number] = [index * 2 - (config.selectedTrees.length - 1), 0, 0];
             return <Tree key={treeId} position={position} size={growthFactor} />;
           })}
           <OrbitControls />
