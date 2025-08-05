@@ -7,7 +7,7 @@ import Footer from '@/components/Footer'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://forest-impact-simulator-ovdj6r3yg-karimosman-team.vercel.app'),
+  metadataBase: new URL('https://forest-impact-simulator.vercel.app'),
   title: 'Forest Impact Simulator - Analyze the Impact of Forest Planting',
   description: 'Simulate the real-world impact of forests using live soil, climate, and biodiversity data. Plan tree planting projects with scientific accuracy and visualize carbon sequestration, biodiversity impact, and environmental benefits.',
   authors: [{ name: 'Karim Osman' }],
