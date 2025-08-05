@@ -342,14 +342,14 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+    <div className={`bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
 
       
       <div className={`relative ${isFullscreen ? 'h-full' : 'p-3'}`}>
-        <LocationSearch onLocationSelect={handleSearchLocation} />
+        {!isFullscreen && <LocationSearch onLocationSelect={handleSearchLocation} />}
         <div 
           ref={mapContainerRef}
-          className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-white' : ''}`}
+          className={`relative ${isFullscreen ? 'h-full w-full' : ''}`}
           style={isFullscreen ? { padding: 0 } : {}}
         >
           <ClientOnlyMap>
@@ -358,7 +358,11 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
               zoom={mapZoom}
               style={{ 
                 height: isFullscreen ? '100vh' : '384px', 
-                width: '100%' 
+                width: '100%',
+                position: isFullscreen ? 'fixed' : 'relative',
+                top: isFullscreen ? 0 : 'auto',
+                left: isFullscreen ? 0 : 'auto',
+                zIndex: isFullscreen ? 1000 : 'auto'
               }}
               ref={mapRef}
               zoomControl={false}
@@ -412,7 +416,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
             >
               {isFullscreen ? (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3" />
                 </svg>
               ) : (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -424,15 +428,17 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
         </div>
       </div>
       
-      <div className="p-3 bg-gray-50 border-t border-gray-200">
-        <div className="text-sm text-gray-600">
-          {selectedLocation ? (
-            <p>📍 <strong>Selected location:</strong> {selectedLocation[0].toFixed(4)}, {selectedLocation[1].toFixed(4)}</p>
-          ) : selectedRegion ? (
-            <p>🗺️ Selected region: {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
-          ) : null}
+      {!isFullscreen && (
+        <div className="p-3 bg-gray-50 border-t border-gray-200">
+          <div className="text-sm text-gray-600">
+            {selectedLocation ? (
+              <p>📍 <strong>Selected location:</strong> {selectedLocation[0].toFixed(4)}, {selectedLocation[1].toFixed(4)}</p>
+            ) : selectedRegion ? (
+              <p>🗺️ Selected region: {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
+            ) : null}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
