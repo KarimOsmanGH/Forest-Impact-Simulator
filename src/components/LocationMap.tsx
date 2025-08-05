@@ -23,17 +23,17 @@ const Rectangle = dynamic(
   { ssr: false }
 );
 
-// Import Leaflet CSS only on client side
-if (typeof window !== 'undefined') {
-  require('leaflet/dist/leaflet.css');
-}
-
 // Create a client-only wrapper component
 const ClientOnlyMap = ({ children }: { children: React.ReactNode }) => {
   const [isClient, setIsClient] = useState(false);
   
   useEffect(() => {
     setIsClient(true);
+    // Import Leaflet CSS only on client side
+    if (typeof window !== 'undefined') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      require('leaflet/dist/leaflet.css');
+    }
   }, []);
   
   if (!isClient) {
@@ -80,17 +80,16 @@ const MapController = ({ center, zoom }: { center: [number, number]; zoom: numbe
 // Map click handler component
 const MapClickHandler = ({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) => {
   const map = useMap();
-  const [isSelecting, setIsSelecting] = useState(false);
   
   useEffect(() => {
     if (!map) return;
     
     const handleMouseDown = () => {
-      setIsSelecting(true);
+      // Mouse down handler
     };
     
     const handleMouseUp = () => {
-      setIsSelecting(false);
+      // Mouse up handler
     };
     
     map.on('mousedown', handleMouseDown);
@@ -112,13 +111,26 @@ const MapClickHandler = ({ onMapClick }: { onMapClick: (lat: number, lng: number
   return null;
 };
 
+// Define types for bounds and events
+interface MapBounds {
+  getSouth: () => number;
+  getNorth: () => number;
+  getWest: () => number;
+  getEast: () => number;
+}
+
+interface LeafletMouseEvent {
+  latlng: { lat: number; lng: number };
+  originalEvent: Event;
+}
+
 // Custom region selector component
-const CustomRegionSelector = ({ onBoundsChange }: { onBoundsChange: (bounds: any) => void }) => {
+const CustomRegionSelector = ({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds) => void }) => {
   const map = useMap();
   const [isSelecting, setIsSelecting] = useState(false);
   const [startPoint, setStartPoint] = useState<[number, number] | null>(null);
-  const [currentBounds, setCurrentBounds] = useState<any>(null);
-  const tempRectangleRef = useRef<any>(null);
+  const [currentBounds, setCurrentBounds] = useState<MapBounds | null>(null);
+  const tempRectangleRef = useRef<L.Rectangle | null>(null);
   
   // Add visual feedback for dragging state
   useEffect(() => {
@@ -136,7 +148,7 @@ const CustomRegionSelector = ({ onBoundsChange }: { onBoundsChange: (bounds: any
   useEffect(() => {
     if (!map) return;
 
-    const handleMouseDown = (e: any) => {
+    const handleMouseDown = (e: LeafletMouseEvent) => {
       console.log('Mouse down:', e.latlng);
       e.originalEvent.preventDefault();
       e.originalEvent.stopPropagation();
@@ -147,7 +159,7 @@ const CustomRegionSelector = ({ onBoundsChange }: { onBoundsChange: (bounds: any
       e.originalEvent.stopImmediatePropagation();
     };
 
-    const handleMouseMove = (e: any) => {
+    const handleMouseMove = (e: LeafletMouseEvent) => {
       if (!isSelecting || !startPoint) return;
       e.originalEvent.preventDefault();
       e.originalEvent.stopPropagation();
@@ -164,6 +176,7 @@ const CustomRegionSelector = ({ onBoundsChange }: { onBoundsChange: (bounds: any
       if (tempRectangleRef.current) {
         map.removeLayer(tempRectangleRef.current);
       }
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const L = require('leaflet');
       const newTempRectangle = L.rectangle([
         [bounds.getSouth(), bounds.getWest()],
@@ -178,7 +191,7 @@ const CustomRegionSelector = ({ onBoundsChange }: { onBoundsChange: (bounds: any
       tempRectangleRef.current = newTempRectangle;
     };
 
-    const handleMouseUp = (e: any) => {
+    const handleMouseUp = (e: LeafletMouseEvent) => {
       console.log('Mouse up:', e.latlng, 'isSelecting:', isSelecting, 'currentBounds:', currentBounds);
       if (isSelecting && currentBounds) {
         const dragDistance = Math.sqrt(
@@ -238,14 +251,15 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
   const [mapZoom, setMapZoom] = useState<number>(6);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
   // Fix Leaflet marker icons
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const L = require('leaflet');
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
         iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -296,7 +310,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
     }
   };
 
-  const handleBoundsChange = (bounds: any) => {
+  const handleBoundsChange = (bounds: MapBounds) => {
     console.log('Region selected:', bounds);
     const region = [
       bounds.getNorth(),

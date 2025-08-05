@@ -188,7 +188,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       setSoil(null);
       setClimate(null);
     }
-  }, [latitude, longitude]);
+  }, [latitude, longitude, years]);
 
   const calculateImpact = (
     lat: number,

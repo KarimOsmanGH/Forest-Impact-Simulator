@@ -1,4 +1,4 @@
-# Forest Impact Simulator <img src="/favicon.svg" alt="Forest Impact Simulator" width="24" height="24" style="display: inline-block; vertical-align: middle;" />
+# Forest Impact Simulator
 
 A tool to simulate and analyze the environmental impact of forest planting.
 
@@ -232,7 +232,7 @@ Air Quality = min(Base + (Years × 0.7), 95%)
 ## 📚 Data Sources & References
 
 ### **Carbon Sequestration**
-- Default value of 25 kg CO₂/year per mature tree based on IPCC Fourth Assessment Report
+- Default value of 25 kg CO₂/year per mature tree based on [IPCC Fourth Assessment Report](https://www.ipcc.ch/report/ar4/wg1/)
 - Rates vary by species, age, and local conditions
 - Peer-reviewed studies support these estimates
 
