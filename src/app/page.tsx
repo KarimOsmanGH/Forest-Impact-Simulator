@@ -71,7 +71,7 @@ export default function Home() {
           Simulate the Real-World Impact of Forests
         </h1>
         <p className="text-center text-gray-600 mb-24 max-w-2xl mx-auto">
-          Click anywhere on the map to analyze the impact of planting a forest at that location or region. The simulator uses live soil, climate, and biodiversity data to estimate carbon sequestration, ecosystem benefits, and local species diversity.
+          Click and drag on the map to select a region and analyze the impact of planting a forest there. The simulator uses live soil, climate, and biodiversity data to estimate carbon sequestration, ecosystem benefits, and local species diversity.
         </p>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -80,7 +80,7 @@ export default function Home() {
               <div className="flex items-center justify-center w-8 h-8 bg-green-800 text-white rounded-full text-sm">📍</div>
               <h2 className="text-xl font-semibold">Select Location</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-4">Choose a specific point or drag to select a region on the map</p>
+            <p className="text-sm text-gray-600 mb-4">Click and drag to select a region on the map for forest impact analysis</p>
             <div className="flex-1">
               <LocationMap 
                 onLocationSelect={handleLocationSelect}
@@ -301,7 +301,7 @@ export default function Home() {
               {faqOpen[5] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
-                    The simulator is perfect for planning reforestation projects, urban tree planting initiatives, and carbon offset programs. Use it to compare different tree species for your climate zone, estimate long-term environmental benefits, and communicate the impact of your projects to stakeholders. The location-specific data ensures your calculations are relevant to your actual planting site.
+                    The simulator is perfect for planning reforestation projects, urban tree planting initiatives, and carbon offset programs. Use it to compare different tree species for your climate zone, estimate long-term environmental benefits, and communicate the impact of your projects to stakeholders. The region-specific data ensures your calculations are relevant to your actual planting area.
                   </p>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-3">
                     <p className="text-sm text-green-800 font-medium">

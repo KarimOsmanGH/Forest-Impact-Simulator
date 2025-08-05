@@ -4,18 +4,18 @@ A tool to simulate and analyze the environmental impact of forest planting.
 
 ## ✨ Features
 
-### 🗺️ **Interactive Location Selection**
-- **Global Map Interface**: Click anywhere on the world map to select locations
-- **Precise Coordinates**: Real-time latitude and longitude display
-- **Visual Markers**: Clear pin markers for selected locations
-- **Area Selection**: Drag to select regions for larger area analysis
-- **Selected Region Display**: View area coordinates and center point within the simulator
+### 🗺️ **Interactive Region Selection**
+- **Global Map Interface**: Click and drag on the world map to select regions
+- **Precise Coordinates**: Real-time latitude and longitude boundaries
+- **Visual Selection**: Clear rectangle overlay for selected regions
+- **Area Analysis**: Comprehensive impact assessment for selected regions
+- **Selected Region Display**: View area coordinates and boundaries within the simulator
 
 ### 🌍 **Real-time Environmental Data**
 - **Soil Analysis**: Carbon content and pH levels from ISRIC SoilGrids
 - **Climate Information**: Temperature and precipitation from Open-Meteo
 - **Biodiversity Data**: Local species information from GBIF
-- **Automatic Fetching**: Instant environmental data for any location
+- **Automatic Fetching**: Instant environmental data for any selected region
 
 ### 📊 **Advanced Impact Simulation**
 - **Carbon Sequestration**: Calculate annual and cumulative CO₂ absorption
@@ -34,7 +34,7 @@ A tool to simulate and analyze the environmental impact of forest planting.
 ### 🌳 **Comprehensive Tree Database**
 - **60 Tree Species**: Extensive collection from all major climate zones
 - **5 Categories**: Deciduous, Coniferous, Tropical, Mediterranean, and Boreal trees
-- **Climate Matching**: Automatic recommendations based on location and latitude
+- **Climate Matching**: Automatic recommendations based on region and latitude
 - **Growth Characteristics**: Detailed information on each species
 - **Carbon Efficiency**: Compare sequestration rates across species
 - **Percentage Distribution**: Set custom percentages for mixed forests (e.g., 60% Oak, 40% Pine)
@@ -75,7 +75,7 @@ This simulator is for educational and planning purposes only. Use at your own ri
 
 ## 📖 How to Use
 
-1. **Select Location**: Click on the interactive map to choose your forest location or drag to select a region
+1. **Select Region**: Click and drag on the interactive map to select your forest region
 2. **Review Data**: View automatically fetched environmental information:
    - Soil carbon content and pH
    - Current temperature and precipitation
@@ -125,7 +125,7 @@ The Forest Impact Simulator helps users understand the potential benefits of for
 - **Quantified Impact**: Specific metrics for carbon sequestration and biodiversity
 - **Real-world Comparisons**: Impact expressed in relatable terms (car emissions, flights, household electricity)
 - **Long-term Planning**: Multi-decade simulation capabilities
-- **Global Perspective**: Analysis for any location worldwide
+- **Global Perspective**: Analysis for any region worldwide
 - **Comprehensive Tree Database**: 60 species from all major climate zones
 
 ## 🧮 Calculations

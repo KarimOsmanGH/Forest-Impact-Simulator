@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { useMapEvents, useMap } from 'react-leaflet';
+import { useMap } from 'react-leaflet';
 import LocationSearch from './LocationSearch';
 
 // Dynamically import Leaflet components to avoid SSR issues
@@ -77,17 +77,9 @@ const MapController = ({ center, zoom }: { center: [number, number]; zoom: numbe
   return null;
 };
 
-// Map click handler component
-const MapClickHandler = ({ onMapClick, isSelecting }: { onMapClick: (lat: number, lng: number) => void; isSelecting: boolean }) => {
-  useMapEvents({
-    click: (e) => {
-      // Only handle clicks if we're not in the middle of selecting a region
-      if (!isSelecting) {
-        onMapClick(e.latlng.lat, e.latlng.lng);
-      }
-    },
-  });
-  
+// Map click handler component - Disabled for region-only selection
+const MapClickHandler = () => {
+  // Point clicking is disabled - only region selection is supported
   return null;
 };
 
@@ -375,14 +367,14 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
                 onBoundsChange={handleBoundsChange} 
                 onSelectingChange={setIsSelecting} 
               />
-              <MapClickHandler onMapClick={handleMapClick} isSelecting={isSelecting} />
+              <MapClickHandler />
             </MapContainer>
           </ClientOnlyMap>
           
           {/* Map control buttons */}
           <div className="absolute top-2 right-2 z-[1000] flex gap-2">
             {/* Clear selection button */}
-            {(selectedLocation || selectedRegion) && (
+            {selectedRegion && (
               <button
                 onClick={clearSelection}
                 className="bg-white hover:bg-gray-100 text-gray-700 rounded-md p-2 shadow-md border border-gray-200 transition-colors"
@@ -417,11 +409,11 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
       {!isFullscreen && (
         <div className="p-3 bg-gray-50 border-t border-gray-200">
           <div className="text-sm text-gray-600">
-            {selectedLocation ? (
-              <p>📍 <strong>Selected location:</strong> {selectedLocation[0].toFixed(4)}, {selectedLocation[1].toFixed(4)}</p>
-            ) : selectedRegion ? (
-              <p>🗺️ Selected region: {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
-            ) : null}
+            {selectedRegion ? (
+              <p>🗺️ <strong>Selected region:</strong> {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
+            ) : (
+              <p>🗺️ <strong>Click and drag</strong> to select a region for forest impact analysis</p>
+            )}
           </div>
         </div>
       )}
