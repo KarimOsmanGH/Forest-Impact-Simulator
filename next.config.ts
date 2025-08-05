@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true
   },
-  basePath: process.env.NODE_ENV === 'production' ? '/Forest-Impact-Simulator' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/Forest-Impact-Simulator/' : '',
+  basePath: '/Forest-Impact-Simulator',
+  assetPrefix: '/Forest-Impact-Simulator/',
 };
 
 export default nextConfig;
