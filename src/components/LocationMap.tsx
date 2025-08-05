@@ -311,21 +311,19 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
 
   return (
     <div className={`bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-white' : ''}`}>
-
-      
       <div className={`relative ${isFullscreen ? 'h-full w-full' : 'p-3'}`}>
         {!isFullscreen && <LocationSearch onLocationSelect={handleSearchLocation} />}
         <div 
           ref={mapContainerRef}
           className={`relative ${isFullscreen ? 'h-full w-full' : ''}`}
-          style={isFullscreen ? { padding: 0 } : {}}
+          style={isFullscreen ? { padding: 0, height: '100vh', width: '100vw' } : {}}
         >
           <ClientOnlyMap>
             <MapContainer
               center={mapCenter}
               zoom={mapZoom}
               style={{ 
-                height: isFullscreen ? '100%' : '384px', 
+                height: isFullscreen ? '100vh' : '384px', 
                 width: '100%',
                 position: 'relative',
                 zIndex: isFullscreen ? 1000 : 'auto'
