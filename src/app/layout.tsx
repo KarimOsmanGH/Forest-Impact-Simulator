@@ -7,7 +7,7 @@ import Footer from '@/components/Footer'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://karimosmangh.github.io'),
+  metadataBase: new URL('https://forest-impact-simulator-ovdj6r3yg-karimosman-team.vercel.app'),
   title: 'Forest Impact Simulator - A tool to simulate and analyze the environmental impact of forest planting',
   description: 'Simulate the real-world impact of forests using live soil, climate, and biodiversity data. Plan tree planting projects with scientific accuracy and visualize carbon sequestration, biodiversity impact, and environmental benefits.',
   authors: [{ name: 'Karim Osman' }],
@@ -22,11 +22,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Forest Impact Simulator - Environmental Impact Analysis Tool',
     description: 'Simulate the real-world impact of forests using live soil, climate, and biodiversity data. Plan tree planting projects with scientific accuracy and visualize carbon sequestration, biodiversity impact, and environmental benefits.',
-    url: '/Forest-Impact-Simulator/',
+    url: '/',
     siteName: 'Forest Impact Simulator',
     images: [
       {
-        url: '/Forest-Impact-Simulator/og-image.png',
+        url: '/og-image.png',
         width: 1200,
         height: 630,
         alt: 'Forest Impact Simulator - Interactive map showing forest planting simulation with environmental impact metrics',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Forest Impact Simulator - Environmental Impact Analysis Tool',
     description: 'Simulate the real-world impact of forests using live soil, climate, and biodiversity data. Plan tree planting projects with scientific accuracy.',
-    images: ['/Forest-Impact-Simulator/og-image.png'],
+    images: ['/og-image.png'],
   },
 }
 
