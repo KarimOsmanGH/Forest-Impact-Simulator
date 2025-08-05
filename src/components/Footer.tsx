@@ -14,9 +14,10 @@ const Footer = () => {
               >
                 Forest Impact Simulator
               </Link>
-              <p className="text-xs text-gray-200 mt-1">
-                A tool to simulate and analyze the environmental impact of forest planting.
-              </p>
+              <span className="text-white mx-2">-</span>
+              <span className="text-gray-200">
+                Analyze the Impact of Forest Planting
+              </span>
             </div>
           </div>
           

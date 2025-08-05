@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://forest-impact-simulator-ovdj6r3yg-karimosman-team.vercel.app'),
-  title: 'Forest Impact Simulator - A tool to simulate and analyze the environmental impact of forest planting',
+  title: 'Forest Impact Simulator - Analyze the Impact of Forest Planting',
   description: 'Simulate the real-world impact of forests using live soil, climate, and biodiversity data. Plan tree planting projects with scientific accuracy and visualize carbon sequestration, biodiversity impact, and environmental benefits.',
   authors: [{ name: 'Karim Osman' }],
   icons: {
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: 'Forest Impact Simulator - Environmental Impact Analysis Tool',
+    title: 'Forest Impact Simulator - Analyze the Impact of Forest Planting',
     description: 'Simulate the real-world impact of forests using live soil, climate, and biodiversity data. Plan tree planting projects with scientific accuracy and visualize carbon sequestration, biodiversity impact, and environmental benefits.',
     url: '/',
     siteName: 'Forest Impact Simulator',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Forest Impact Simulator - Environmental Impact Analysis Tool',
+    title: 'Forest Impact Simulator - Analyze the Impact of Forest Planting',
     description: 'Simulate the real-world impact of forests using live soil, climate, and biodiversity data. Plan tree planting projects with scientific accuracy.',
     images: ['/og-image.png'],
   },

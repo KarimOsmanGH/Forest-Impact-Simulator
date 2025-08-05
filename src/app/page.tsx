@@ -68,7 +68,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center p-8">
       <div className="container mx-auto max-w-7xl">
         <h1 className="text-4xl font-bold text-center mb-2">
-          Simulate the Real-World Impact of Forests
+          Analyze the Impact of Forest Planting
         </h1>
         <p className="text-center text-gray-600 mb-24 max-w-2xl mx-auto">
           Click and drag on the map to select a region and analyze the impact of planting a forest there. The simulator uses live soil, climate, and biodiversity data to estimate carbon sequestration, ecosystem benefits, and local species diversity.
@@ -156,7 +156,7 @@ export default function Home() {
             ) : (
               <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
                 <h3 className="text-lg font-semibold mb-4">Tree Planting Calculator</h3>
-                <p className="text-gray-600">Select a location or region and tree types to see planting calculations.</p>
+                <p className="text-gray-600">Select a region and tree types to see planting calculations.</p>
               </div>
             )}
           </div>

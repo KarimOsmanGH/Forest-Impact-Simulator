@@ -78,7 +78,6 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 min-h-[450px]">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-base font-semibold">Select Tree Types</h3>
         <div className="flex gap-2">
           <button
             onClick={clearAll}
@@ -112,7 +111,12 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
               onClick={() => setSelectedCategory(category)}
               className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
                 selectedCategory === category
-                  ? 'bg-primary text-white'
+                  ? category === 'deciduous' ? 'bg-green-700 text-white' :
+                    category === 'coniferous' ? 'bg-green-800 text-white' :
+                    category === 'tropical' ? 'bg-green-600 text-white' :
+                    category === 'mediterranean' ? 'bg-green-900 text-white' :
+                    category === 'boreal' ? 'bg-green-950 text-white' :
+                    'bg-green-700 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -215,7 +219,14 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
                 </div>
                 <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-green-800 transition-all duration-200"
+                    className={`h-full transition-all duration-200 ${
+                      tree.category === 'deciduous' ? 'bg-green-700' :
+                      tree.category === 'coniferous' ? 'bg-green-800' :
+                      tree.category === 'tropical' ? 'bg-green-600' :
+                      tree.category === 'mediterranean' ? 'bg-green-900' :
+                      tree.category === 'boreal' ? 'bg-green-950' :
+                      'bg-green-700'
+                    }`}
                     style={{ width: `${treePercentages[tree.id] || 0}%` }}
                   />
                 </div>
@@ -226,7 +237,7 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
               <span className="text-xs text-gray-700">Total:</span>
               <span className={`text-xs font-medium ${
                 Object.values(treePercentages).reduce((sum, p) => sum + (p || 0), 0) === 100 
-                  ? 'text-green-800' 
+                  ? 'text-green-700' 
                   : 'text-red-400'
               }`}>
                 {Object.values(treePercentages).reduce((sum, p) => sum + (p || 0), 0)}%
@@ -252,34 +263,46 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
               onClick={() => handleTreeToggle(tree)}
               className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
                 isSelected
-                  ? 'border-primary bg-primary/5'
-                  : 'border-gray-200 hover:border-primary/50'
+                  ? tree.category === 'deciduous' ? 'border-green-700 bg-green-50' :
+                    tree.category === 'coniferous' ? 'border-green-800 bg-green-50' :
+                    tree.category === 'tropical' ? 'border-green-600 bg-green-50' :
+                    tree.category === 'mediterranean' ? 'border-green-900 bg-green-50' :
+                    tree.category === 'boreal' ? 'border-green-950 bg-green-50' :
+                    'border-green-700 bg-green-50'
+                  : 'border-gray-200 hover:border-green-500/50'
               }`}
             >
-              {/* Selection Indicator */}
-              {isSelected && (
-                <div className="flex justify-end mb-2">
-                  <div className="w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-xs font-bold">
-                    ✓
-                  </div>
-                </div>
-              )}
-
               {/* Tree Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between mb-2">
-                                  <div className="flex-1 mr-2">
-                  <h4 className="font-semibold text-gray-900 text-sm">{tree.name} <span className="font-normal text-gray-500">- {tree.scientificName}</span></h4>
-                </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
-                    tree.category === 'deciduous' ? 'bg-primary text-white' :
-                    tree.category === 'coniferous' ? 'bg-primary text-white' :
-                    tree.category === 'tropical' ? 'bg-primary text-white' :
-                    tree.category === 'mediterranean' ? 'bg-primary text-white' :
-                    'bg-primary text-white'
-                  }`}>
-                    {tree.category.charAt(0).toUpperCase() + tree.category.slice(1)}
-                  </span>
+                  <div className="flex-1 mr-2">
+                    <h4 className="font-semibold text-gray-900 text-sm">{tree.name} <span className="font-normal text-gray-500">- {tree.scientificName}</span></h4>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Selection Indicator */}
+                    {isSelected && (
+                      <div className={`w-5 h-5 text-white rounded-full flex items-center justify-center text-xs font-bold ${
+                        tree.category === 'deciduous' ? 'bg-green-700' :
+                        tree.category === 'coniferous' ? 'bg-green-800' :
+                        tree.category === 'tropical' ? 'bg-green-600' :
+                        tree.category === 'mediterranean' ? 'bg-green-900' :
+                        tree.category === 'boreal' ? 'bg-green-950' :
+                        'bg-green-700'
+                      }`}>
+                        ✓
+                      </div>
+                    )}
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
+                      tree.category === 'deciduous' ? 'bg-green-700 text-white' :
+                      tree.category === 'coniferous' ? 'bg-green-800 text-white' :
+                      tree.category === 'tropical' ? 'bg-green-600 text-white' :
+                      tree.category === 'mediterranean' ? 'bg-green-900 text-white' :
+                      tree.category === 'boreal' ? 'bg-green-950 text-white' :
+                      'bg-green-700 text-white'
+                    }`}>
+                      {tree.category.charAt(0).toUpperCase() + tree.category.slice(1)}
+                    </span>
+                  </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <div className="text-center border border-gray-200 rounded p-2">

@@ -97,7 +97,7 @@ interface LeafletMouseEvent {
 }
 
 // Custom region selector component
-const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsChange: (bounds: MapBounds) => void; onSelectingChange: (selecting: boolean) => void }) => {
+const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsChange: (bounds: MapBounds) => void; onSelectingChange?: (selecting: boolean) => void }) => {
   const map = useMap();
   const [isSelecting, setIsSelecting] = useState(false);
   const [startPoint, setStartPoint] = useState<[number, number] | null>(null);
@@ -113,7 +113,7 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
     }
     
     // Notify parent component of selecting state
-    onSelectingChange(isSelecting);
+    onSelectingChange?.(isSelecting);
     
     return () => {
       document.body.style.cursor = 'default';
@@ -225,7 +225,6 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
   const [mapCenter, setMapCenter] = useState<[number, number]>([50.0, 10.0]);
   const [mapZoom, setMapZoom] = useState<number>(6);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isSelecting, setIsSelecting] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
@@ -268,11 +267,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
     };
   }, []);
 
-  const handleLocationSelect = (lat: number, lng: number) => {
-    setSelectedLocation([lat, lng]);
-    setSelectedRegion(null);
-    onLocationSelect(lat, lng);
-  };
+
 
   const handleSearchLocation = (lat: number, lng: number, name: string) => {
     setMapCenter([lat, lng]);
@@ -304,9 +299,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
     });
   };
 
-  const handleMapClick = (lat: number, lng: number) => {
-    handleLocationSelect(lat, lng);
-  };
+
 
   const clearSelection = () => {
     setSelectedLocation(null);
@@ -317,10 +310,10 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+    <div className={`bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-white' : ''}`}>
 
       
-      <div className={`relative ${isFullscreen ? 'h-full' : 'p-3'}`}>
+      <div className={`relative ${isFullscreen ? 'h-full w-full' : 'p-3'}`}>
         {!isFullscreen && <LocationSearch onLocationSelect={handleSearchLocation} />}
         <div 
           ref={mapContainerRef}
@@ -332,11 +325,9 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
               center={mapCenter}
               zoom={mapZoom}
               style={{ 
-                height: isFullscreen ? '100vh' : '384px', 
+                height: isFullscreen ? '100%' : '384px', 
                 width: '100%',
-                position: isFullscreen ? 'fixed' : 'relative',
-                top: isFullscreen ? 0 : 'auto',
-                left: isFullscreen ? 0 : 'auto',
+                position: 'relative',
                 zIndex: isFullscreen ? 1000 : 'auto'
               }}
               ref={mapRef}
@@ -365,7 +356,6 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
               {/* Custom Region Selector - Always enabled for drag selection */}
               <CustomRegionSelector 
                 onBoundsChange={handleBoundsChange} 
-                onSelectingChange={setIsSelecting} 
               />
               <MapClickHandler />
             </MapContainer>
