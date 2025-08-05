@@ -5,36 +5,27 @@ import { TreeType } from '@/types/treeTypes';
 import {
   RegionBounds,
   calculateTreePlanting,
-  calculatePlantationCarbonSequestration,
   formatArea,
   formatNumber,
   getPlantingRecommendations,
   calculatePlantingTimeline,
   TREE_SPACING_CONFIGS
 } from '@/utils/treePlanting';
-import {
-  getMortalityRate,
-  calculateAdjustedCarbonSequestration,
-  getMortalityDescription
-} from '@/utils/treeMortality';
 
 interface TreePlantingCalculatorProps {
   selectedRegion: RegionBounds | null;
   selectedTreeType: TreeType | null;
   selectedTrees?: TreeType[];
   treePercentages?: { [key: string]: number };
-  years: number;
 }
 
 const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
   selectedRegion,
   selectedTreeType,
   selectedTrees,
-  treePercentages,
-  years
+  treePercentages
 }) => {
   const [customSpacing, setCustomSpacing] = useState<number | undefined>();
-  const [includeMortality, setIncludeMortality] = useState<boolean>(false);
 
 
 
@@ -55,31 +46,7 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
     customSpacing
   );
 
-  const mortalityRate = getMortalityRate(treeForPlanting.name, years);
-  
-  let annualCarbonSequestration: number;
-  let totalCarbonSequestration: number;
-  let survivingTrees = plantingConfig.totalTrees;
-  let deadTrees = 0;
-  
-  if (includeMortality) {
-    const adjustedCarbon = calculateAdjustedCarbonSequestration(
-      plantingConfig.totalTrees,
-      treeForPlanting.carbonSequestration,
-      mortalityRate,
-      years
-    );
-    annualCarbonSequestration = adjustedCarbon.averageAnnualCarbon;
-    totalCarbonSequestration = adjustedCarbon.totalCarbon;
-    survivingTrees = adjustedCarbon.survivingTrees;
-    deadTrees = adjustedCarbon.deadTrees;
-  } else {
-    annualCarbonSequestration = calculatePlantationCarbonSequestration(
-      plantingConfig,
-      treeForPlanting.carbonSequestration
-    );
-    totalCarbonSequestration = annualCarbonSequestration * years;
-  }
+  // Note: Carbon sequestration and mortality calculations removed as requested
   const recommendations = getPlantingRecommendations(plantingConfig.area);
   const timeline = calculatePlantingTimeline(plantingConfig.totalTrees);
 
@@ -148,60 +115,9 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
         </div>
       </div>
 
-      {/* Tree Mortality Option */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="includeMortality"
-            checked={includeMortality}
-            onChange={(e) => setIncludeMortality(e.target.checked)}
-            className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-          />
-          <label htmlFor="includeMortality" className="text-xs font-medium text-gray-700">
-            Include tree mortality in calculations
-          </label>
-        </div>
-        {includeMortality && (
-          <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs">
-            <div className="text-orange-800 font-medium">Mortality Rate: {mortalityRate}% per year</div>
-            <div className="text-orange-700">{getMortalityDescription(treeForPlanting.name, years)}</div>
-          </div>
-        )}
-      </div>
 
-      {/* Carbon Impact */}
-      <div className="mb-4 flex flex-col bg-white rounded shadow p-4">
-        <span className="text-xs text-gray-500 mb-1 flex items-center gap-1 underline">
-          Carbon Impact
-        </span>
-        <div className="space-y-1">
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-500"><strong>Annual CO₂ sequestration:</strong></span>
-            <span className="font-medium text-primary">
-              {formatNumber(annualCarbonSequestration)} kg CO₂/year
-            </span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-500"><strong>Total over {years} years:</strong></span>
-            <span className="font-medium text-primary">
-              {formatNumber(totalCarbonSequestration)} kg CO₂
-            </span>
-          </div>
-          {includeMortality && (
-            <>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-500 font-bold">Surviving trees:</span>
-                <span className="font-medium text-primary">{formatNumber(survivingTrees)}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-500 font-bold">Trees lost to mortality:</span>
-                <span className="font-medium text-orange-600">{formatNumber(deadTrees)}</span>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+
+
 
       {/* Planting Timeline */}
       <div className="mb-4 flex flex-col bg-white rounded shadow p-4">

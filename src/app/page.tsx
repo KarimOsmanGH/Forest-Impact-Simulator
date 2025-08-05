@@ -151,7 +151,6 @@ export default function Home() {
                 selectedTreeType={selectedTrees.length === 1 ? selectedTrees[0] : null}
                 selectedTrees={selectedTrees}
                 treePercentages={treePercentages}
-                years={years}
               />
             ) : (
               <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">

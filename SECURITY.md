@@ -29,10 +29,10 @@ This document outlines the security measures for the Forest Impact Simulator.
 
 ## External APIs
 The app connects to these trusted APIs:
-- OpenStreetMap (location search)
-- ISRIC (soil data)
-- Open-Meteo (climate data)
-- GBIF (biodiversity data)
+- [OpenStreetMap](https://www.openstreetmap.org/) (location search)
+- [ISRIC - World Soil Information](https://www.isric.org/) (soil data)
+- [Open-Meteo](https://open-meteo.com/) (climate data)
+- [GBIF - Global Biodiversity Information Facility](https://www.gbif.org/) (biodiversity data)
 
 ## Reporting Security Issues
 For security concerns, please contact the development team through the project repository.

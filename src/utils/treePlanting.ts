@@ -167,10 +167,10 @@ export const calculatePlantingTimeline = (totalTrees: number): {
   yearsToComplete: number;
   treesPerSeason: number;
 } => {
-  // Assume 1000 trees can be planted per person per day
-  const treesPerPersonPerDay = 1000;
+  // More realistic planting rates
+  const treesPerPersonPerDay = 100; // Realistic: 100 trees per person per day
   const plantingDaysPerYear = 60; // Assuming 2 months of planting season
-  const people = 5; // Assume 5 people planting
+  const people = 10; // Assume 10 people planting team
   
   const treesPerDay = treesPerPersonPerDay * people;
   const treesPerYear = treesPerDay * plantingDaysPerYear;
