@@ -71,27 +71,17 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
     onTreeSelectionChange([]);
   };
 
-  const selectAll = () => {
-    onTreeSelectionChange(filteredTrees);
-  };
+
 
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 min-h-[450px]">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex gap-2">
-          <button
-            onClick={clearAll}
-            className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Clear All
-          </button>
-          <button
-            onClick={selectAll}
-            className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-          >
-            Select All
-          </button>
-        </div>
+      <div className="flex items-center justify-end mb-3">
+        <button
+          onClick={clearAll}
+          className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
+        >
+          Clear All
+        </button>
       </div>
       
       {/* Search and Filter */}
