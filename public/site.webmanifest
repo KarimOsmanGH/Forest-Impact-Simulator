@@ -1,0 +1,26 @@
+{
+  "name": "Forest Impact Simulator",
+  "short_name": "ForestSim",
+  "description": "Simulate the real-world impact of forests using live soil, climate, and biodiversity data.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#256029",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/"
+} 
