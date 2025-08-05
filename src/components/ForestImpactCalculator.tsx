@@ -383,7 +383,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
              {selectedRegion && (
          <div className="mb-4 p-3 bg-white border border-gray-200 rounded-lg">
            <h4 className="font-semibold text-gray-800 mb-2 text-sm">Selected Region</h4>
-           <p className="text-xs text-gray-700">
+           <p className="text-xs text-black">
              Area: {selectedRegion.north.toFixed(4)}°N to {selectedRegion.south.toFixed(4)}°S,
              {selectedRegion.east.toFixed(4)}°E to {selectedRegion.west.toFixed(4)}°W
            </p>
