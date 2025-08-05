@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true
   },
-  basePath: '/Forest-Impact-Simulator',
-  assetPrefix: '/Forest-Impact-Simulator/',
+  // For forest-impact-simulator.github.io, we don't need basePath
+  basePath: '',
+  assetPrefix: '',
 };
 
 export default nextConfig;
