@@ -81,13 +81,13 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
         <div className="flex gap-2">
           <button
             onClick={clearAll}
-            className="px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary/90"
+            className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
           >
             Clear All
           </button>
           <button
             onClick={selectAll}
-            className="px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary/90"
+            className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
           >
             Select All
           </button>
@@ -167,7 +167,7 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
                   });
                   onTreePercentagesChange(newPercentages);
                 }}
-                className="px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary/90"
+                className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
               >
                 Equal Split
               </button>
