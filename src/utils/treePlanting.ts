@@ -64,22 +64,46 @@ export const calculateRegionArea = (bounds: RegionBounds): number => {
 export const getRecommendedSpacing = (treeType: string): keyof typeof TREE_SPACING_CONFIGS => {
   const treeTypeLower = treeType.toLowerCase();
   
-  // Fast-growing species
-  if (treeTypeLower.includes('eucalyptus') || treeTypeLower.includes('willow') || treeTypeLower.includes('poplar')) {
+  // Fast-growing species (dense planting for quick canopy closure)
+  if (treeTypeLower.includes('eucalyptus') || treeTypeLower.includes('willow') || 
+      treeTypeLower.includes('poplar') || treeTypeLower.includes('birch') ||
+      treeTypeLower.includes('bamboo') || treeTypeLower.includes('papaya') ||
+      treeTypeLower.includes('banana') || treeTypeLower.includes('tulip_poplar') ||
+      treeTypeLower.includes('sycamore')) {
     return 'dense';
   }
   
-  // Large trees
-  if (treeTypeLower.includes('sequoia') || treeTypeLower.includes('redwood') || treeTypeLower.includes('cedar')) {
+  // Large/giant trees (need more space for root systems and canopy)
+  if (treeTypeLower.includes('sequoia') || treeTypeLower.includes('redwood') || 
+      treeTypeLower.includes('cedar') || treeTypeLower.includes('baobab') ||
+      treeTypeLower.includes('douglas fir') || treeTypeLower.includes('monkey puzzle')) {
     return 'veryWide';
   }
   
-  // Medium trees
-  if (treeTypeLower.includes('oak') || treeTypeLower.includes('maple') || treeTypeLower.includes('birch')) {
+  // Medium-large trees (standard forestry spacing)
+  if (treeTypeLower.includes('oak') || treeTypeLower.includes('maple') || 
+      treeTypeLower.includes('pine') || treeTypeLower.includes('spruce') ||
+      treeTypeLower.includes('fir') || treeTypeLower.includes('mahogany') ||
+      treeTypeLower.includes('teak') || treeTypeLower.includes('beech') ||
+      treeTypeLower.includes('ash') || treeTypeLower.includes('hickory') ||
+      treeTypeLower.includes('black walnut') || treeTypeLower.includes('white oak') ||
+      treeTypeLower.includes('sugar maple') || treeTypeLower.includes('linden')) {
     return 'wide';
   }
   
-  // Default to standard
+  // Small trees and shrubs (can be planted closer together)
+  if (treeTypeLower.includes('juniper') || treeTypeLower.includes('rowan') ||
+      treeTypeLower.includes('olive') || treeTypeLower.includes('fig') ||
+      treeTypeLower.includes('pomegranate') || treeTypeLower.includes('almond') ||
+      treeTypeLower.includes('carob') || treeTypeLower.includes('cherry') ||
+      treeTypeLower.includes('avocado') || treeTypeLower.includes('mango') ||
+      treeTypeLower.includes('cashew') || treeTypeLower.includes('marula') ||
+      treeTypeLower.includes('shea') || treeTypeLower.includes('sandalwood') ||
+      treeTypeLower.includes('neem') || treeTypeLower.includes('camphor')) {
+    return 'dense';
+  }
+  
+  // Default to standard for unknown types
   return 'standard';
 };
 
@@ -167,10 +191,10 @@ export const calculatePlantingTimeline = (totalTrees: number): {
   yearsToComplete: number;
   treesPerSeason: number;
 } => {
-  // More realistic planting rates
-  const treesPerPersonPerDay = 100; // Realistic: 100 trees per person per day
-  const plantingDaysPerYear = 60; // Assuming 2 months of planting season
-  const people = 10; // Assume 10 people planting team
+  // Realistic planting rates based on professional tree planting operations
+  const treesPerPersonPerDay = 500; // Professional planters: 500-2000 trees/day depending on terrain
+  const plantingDaysPerYear = 90; // 3 months of planting season (spring/fall)
+  const people = 5; // Smaller, more realistic team size
   
   const treesPerDay = treesPerPersonPerDay * people;
   const treesPerYear = treesPerDay * plantingDaysPerYear;
