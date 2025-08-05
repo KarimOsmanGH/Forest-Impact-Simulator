@@ -52,8 +52,8 @@ A tool to simulate and analyze the environmental impact of forest planting.
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/karimosmanGH/Forest-Impact-Simulator.git
-   cd Forest-Impact-Simulator
+   git clone https://github.com/KarimOsmanGH/forest-impact-simulator.git
+   cd forest-impact-simulator
    ```
 
 2. **Install dependencies**
@@ -277,8 +277,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Contact
 
 - **Developer**: [Karim Osman](https://kar.im)
-- **Project**: [Forest Impact Simulator](https://github.com/karimosmanGH/Forest-Impact-Simulator)
-- **Issues**: [GitHub Issues](https://github.com/karimosmanGH/Forest-Impact-Simulator/issues)
+- **Project**: [Forest Impact Simulator](https://github.com/KarimOsmanGH/forest-impact-simulator)
+- **Issues**: [GitHub Issues](https://github.com/KarimOsmanGH/forest-impact-simulator/issues)
 
 ---
 

@@ -264,7 +264,6 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
   if (!latitude || !longitude) {
     return (
       <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
-        <h3 className="text-lg font-semibold mb-4">Forest Impact Simulation</h3>
         <p className="text-gray-600">Select a location on the map to see the potential impact of planting a forest there.</p>
       </div>
     );
@@ -273,7 +272,6 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
   if (loading) {
     return (
       <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
-        <h3 className="text-lg font-semibold mb-4">Forest Impact Simulation</h3>
         <p className="text-gray-600">Loading environmental data...</p>
       </div>
     );
@@ -282,7 +280,6 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
   if (error) {
     return (
       <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
-        <h3 className="text-lg font-semibold mb-4">Forest Impact Simulation</h3>
         <p className="text-red-600">{error}</p>
       </div>
     );
@@ -398,7 +395,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
 
       <div className="mb-6">
         <label htmlFor="years" className="block text-sm font-medium text-gray-700 mb-2">
-          Simulation Duration: <span className="font-bold text-primary">{years} year{years !== 1 ? 's' : ''}</span>
+          <span className="font-bold">Simulation Duration:</span> <span className="font-bold text-primary">{years} year{years !== 1 ? 's' : ''}</span>
         </label>
         <div className="flex items-center gap-3">
           <span className="text-xs text-gray-500 w-8 text-center">1</span>

@@ -129,7 +129,6 @@ export default function Home() {
               />
             ) : (
               <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
-                <h3 className="text-lg font-semibold mb-4">Forest Impact Simulation</h3>
                 <p className="text-gray-600">Select tree types to see the potential impact of planting a forest at this location.</p>
               </div>
             )}
@@ -150,6 +149,8 @@ export default function Home() {
                   west: selectedLongitude - 0.01
                 } : null)}
                 selectedTreeType={selectedTrees.length === 1 ? selectedTrees[0] : null}
+                selectedTrees={selectedTrees}
+                treePercentages={treePercentages}
                 years={years}
               />
             ) : (
@@ -400,8 +401,8 @@ export default function Home() {
 
                     <div>
                       <h4 className="font-semibold text-black mb-2">Mathematical Notation</h4>
-                      <div className="bg-gray-50 p-3 rounded text-sm text-black">
-                        <ul className="space-y-1">
+                      <div className="bg-gray-50 p-3 rounded text-base text-black">
+                        <ul className="space-y-2">
                           <li><strong>Σ:</strong> Summation across all selected tree species</li>
                           <li><strong>Tree_i:</strong> Carbon sequestration rate of tree species i</li>
                           <li><strong>Percentage_i:</strong> User-specified percentage for tree species i</li>
@@ -476,7 +477,7 @@ export default function Home() {
                     The Forest Impact Simulator was created by <a href="https://kar.im" target="_blank" rel="noopener noreferrer" className="text-green-700 hover:text-green-800 underline">Karim Osman</a> to simulate and analyze the environmental impact of forest planting. For detailed contribution guidelines, please check the project&apos;s GitHub repository and README file.
                   </p>
                   <p className="text-gray-900 mb-3">
-                    This tool is completely <a href="https://github.com/karim/forest-impact-simulator" target="_blank" rel="noopener noreferrer" className="text-green-700 hover:text-green-800 underline">open-source</a> and available on GitHub. We welcome contributions from the community! Whether you&apos;re a developer, environmental scientist, or forestry expert, there are many ways to help improve this simulator.
+                    This tool is completely <a href="https://github.com/KarimOsmanGH/forest-impact-simulator" target="_blank" rel="noopener noreferrer" className="text-green-700 hover:text-green-800 underline">open-source</a> and available on GitHub. We welcome contributions from the community! Whether you&apos;re a developer, environmental scientist, or forestry expert, there are many ways to help improve this simulator.
                   </p>
                   <p className="text-gray-900 mt-4">
 

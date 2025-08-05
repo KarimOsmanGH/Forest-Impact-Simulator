@@ -78,33 +78,13 @@ const MapController = ({ center, zoom }: { center: [number, number]; zoom: numbe
 };
 
 // Map click handler component
-const MapClickHandler = ({ onMapClick }: { onMapClick: (lat: number, lng: number) => void }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (!map) return;
-    
-    const handleMouseDown = () => {
-      // Mouse down handler
-    };
-    
-    const handleMouseUp = () => {
-      // Mouse up handler
-    };
-    
-    map.on('mousedown', handleMouseDown);
-    map.on('mouseup', handleMouseUp);
-    
-    return () => {
-      map.off('mousedown', handleMouseDown);
-      map.off('mouseup', handleMouseUp);
-    };
-  }, [map]);
-  
+const MapClickHandler = ({ onMapClick, isSelecting }: { onMapClick: (lat: number, lng: number) => void; isSelecting: boolean }) => {
   useMapEvents({
     click: (e) => {
-      // Handle clicks immediately, the isSelecting state will be false for simple clicks
-      onMapClick(e.latlng.lat, e.latlng.lng);
+      // Only handle clicks if we're not in the middle of selecting a region
+      if (!isSelecting) {
+        onMapClick(e.latlng.lat, e.latlng.lng);
+      }
     },
   });
   
@@ -125,14 +105,14 @@ interface LeafletMouseEvent {
 }
 
 // Custom region selector component
-const CustomRegionSelector = ({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds) => void }) => {
+const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsChange: (bounds: MapBounds) => void; onSelectingChange: (selecting: boolean) => void }) => {
   const map = useMap();
   const [isSelecting, setIsSelecting] = useState(false);
   const [startPoint, setStartPoint] = useState<[number, number] | null>(null);
   const [currentBounds, setCurrentBounds] = useState<MapBounds | null>(null);
   const tempRectangleRef = useRef<L.Rectangle | null>(null);
   
-  // Add visual feedback for dragging state
+  // Add visual feedback for dragging state and notify parent
   useEffect(() => {
     if (isSelecting) {
       document.body.style.cursor = 'crosshair';
@@ -140,10 +120,13 @@ const CustomRegionSelector = ({ onBoundsChange }: { onBoundsChange: (bounds: Map
       document.body.style.cursor = 'default';
     }
     
+    // Notify parent component of selecting state
+    onSelectingChange(isSelecting);
+    
     return () => {
       document.body.style.cursor = 'default';
     };
-  }, [isSelecting]);
+  }, [isSelecting, onSelectingChange]);
 
   useEffect(() => {
     if (!map) return;
@@ -249,8 +232,8 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
   const [selectedRegion, setSelectedRegion] = useState<[number, number, number, number] | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([50.0, 10.0]);
   const [mapZoom, setMapZoom] = useState<number>(6);
-
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isSelecting, setIsSelecting] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
@@ -388,8 +371,11 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
               )}
               
               {/* Custom Region Selector - Always enabled for drag selection */}
-              <CustomRegionSelector onBoundsChange={handleBoundsChange} />
-              <MapClickHandler onMapClick={handleMapClick} />
+              <CustomRegionSelector 
+                onBoundsChange={handleBoundsChange} 
+                onSelectingChange={setIsSelecting} 
+              />
+              <MapClickHandler onMapClick={handleMapClick} isSelecting={isSelecting} />
             </MapContainer>
           </ClientOnlyMap>
           

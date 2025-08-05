@@ -22,12 +22,15 @@ interface TreePlantingCalculatorProps {
   selectedRegion: RegionBounds | null;
   selectedTreeType: TreeType | null;
   selectedTrees?: TreeType[];
+  treePercentages?: { [key: string]: number };
   years: number;
 }
 
 const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
   selectedRegion,
   selectedTreeType,
+  selectedTrees,
+  treePercentages,
   years
 }) => {
   const [customSpacing, setCustomSpacing] = useState<number | undefined>();
@@ -35,17 +38,24 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
 
 
 
-  if (!selectedRegion || !selectedTreeType) {
+  if (!selectedRegion || (!selectedTreeType && (!selectedTrees || selectedTrees.length === 0))) {
+    return null;
+  }
+
+  // Determine which tree to use for planting calculations
+  const treeForPlanting = selectedTreeType || (selectedTrees && selectedTrees.length > 0 ? selectedTrees[0] : null);
+  
+  if (!treeForPlanting) {
     return null;
   }
 
   const plantingConfig = calculateTreePlanting(
     selectedRegion,
-    selectedTreeType.name,
+    treeForPlanting.name,
     customSpacing
   );
 
-  const mortalityRate = getMortalityRate(selectedTreeType.name, years);
+  const mortalityRate = getMortalityRate(treeForPlanting.name, years);
   
   let annualCarbonSequestration: number;
   let totalCarbonSequestration: number;
@@ -55,7 +65,7 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
   if (includeMortality) {
     const adjustedCarbon = calculateAdjustedCarbonSequestration(
       plantingConfig.totalTrees,
-      selectedTreeType.carbonSequestration,
+      treeForPlanting.carbonSequestration,
       mortalityRate,
       years
     );
@@ -66,7 +76,7 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
   } else {
     annualCarbonSequestration = calculatePlantationCarbonSequestration(
       plantingConfig,
-      selectedTreeType.carbonSequestration
+      treeForPlanting.carbonSequestration
     );
     totalCarbonSequestration = annualCarbonSequestration * years;
   }
@@ -75,7 +85,6 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
-      <h3 className="text-lg font-semibold mb-4">Tree Planting Calculator</h3>
       
       {/* Region Information */}
       <div className="mb-4 p-3 bg-gray-50 rounded-lg">
@@ -100,15 +109,15 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
         <h4 className="font-semibold mb-2">Planting Configuration</h4>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">Spacing:</span>
+            <span className="text-xs text-gray-500 font-bold">Spacing:</span>
             <span className="text-xs font-medium">{plantingConfig.spacing}m between trees</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">Density:</span>
+            <span className="text-xs text-gray-500 font-bold">Density:</span>
             <span className="text-xs font-medium">{formatNumber(plantingConfig.density)} trees/ha</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">Total Trees:</span>
+            <span className="text-xs text-gray-500 font-bold">Total Trees:</span>
             <span className="text-xs font-medium text-primary">{formatNumber(plantingConfig.totalTrees)}</span>
           </div>
         </div>
@@ -156,14 +165,14 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
         {includeMortality && (
           <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded text-xs">
             <div className="text-orange-800 font-medium">Mortality Rate: {mortalityRate}% per year</div>
-            <div className="text-orange-700">{getMortalityDescription(selectedTreeType.name, years)}</div>
+            <div className="text-orange-700">{getMortalityDescription(treeForPlanting.name, years)}</div>
           </div>
         )}
       </div>
 
       {/* Carbon Impact */}
       <div className="mb-4 flex flex-col bg-white rounded shadow p-4">
-        <span className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+        <span className="text-xs text-gray-500 mb-1 flex items-center gap-1 underline">
           Carbon Impact
         </span>
         <div className="space-y-1">
@@ -182,11 +191,11 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
           {includeMortality && (
             <>
               <div className="flex justify-between text-xs">
-                <span className="text-gray-500">Surviving trees:</span>
+                <span className="text-gray-500 font-bold">Surviving trees:</span>
                 <span className="font-medium text-primary">{formatNumber(survivingTrees)}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-gray-500">Trees lost to mortality:</span>
+                <span className="text-gray-500 font-bold">Trees lost to mortality:</span>
                 <span className="font-medium text-orange-600">{formatNumber(deadTrees)}</span>
               </div>
             </>
@@ -196,7 +205,7 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
 
       {/* Planting Timeline */}
       <div className="mb-4 flex flex-col bg-white rounded shadow p-4">
-        <span className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+        <span className="text-xs text-gray-500 mb-1 flex items-center gap-1 underline">
           Planting Timeline
         </span>
         <div className="space-y-1">

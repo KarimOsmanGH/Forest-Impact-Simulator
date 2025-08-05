@@ -22,7 +22,7 @@ const Footer = () => {
           
           <div className="flex items-center">
             <a 
-              href="https://github.com/karimosmanGH/Forest-Impact-Simulator" 
+              href="https://github.com/KarimOsmanGH/forest-impact-simulator" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-white hover:text-gray-200 transition-colors duration-200"
