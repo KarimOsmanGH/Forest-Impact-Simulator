@@ -90,7 +90,7 @@ export default function Home() {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="flex flex-col h-full">
             <div className="flex items-center gap-2 mb-4">
               <div className="flex items-center justify-center w-8 h-8 bg-green-800 text-white rounded-full text-sm">📍</div>
@@ -128,7 +128,7 @@ export default function Home() {
         </div>
         
         {/* Environmental Impact Results and Tree Planting Calculator - Side by Side */}
-        <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="flex items-center justify-center w-8 h-8 bg-green-800 text-white rounded-full text-sm">📊</div>
