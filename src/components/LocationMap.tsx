@@ -90,18 +90,13 @@ interface MapBounds {
   getEast: () => number;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-interface LeafletEvent {
-  latlng: { lat: number; lng: number };
-  originalEvent: any;
-}
-
 const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsChange: (bounds: MapBounds) => void; onSelectingChange?: (selecting: boolean) => void }) => {
   const map = useMap();
   const [isSelecting, setIsSelecting] = useState(false);
   const [startPoint, setStartPoint] = useState<[number, number] | null>(null);
   const [currentBounds, setCurrentBounds] = useState<MapBounds | null>(null);
-  const tempRectangleRef = useRef<L.Rectangle | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const tempRectangleRef = useRef<any>(null);
   
   // Add visual feedback for dragging state and notify parent
   useEffect(() => {
