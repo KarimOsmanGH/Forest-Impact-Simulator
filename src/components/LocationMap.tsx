@@ -162,19 +162,21 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       // Don't start selection immediately - wait for long press
       console.log('Touch start:', e.latlng);
       
+      // Prevent default touch behavior to avoid conflicts
+      e.originalEvent.preventDefault();
+      e.originalEvent.stopPropagation();
+      
       // Store touch start position for long-press detection
       const touchStartPos: [number, number] = [e.latlng.lat, e.latlng.lng];
       
-      // Set a timeout for long-press detection (500ms)
+      // Set a timeout for long-press detection (800ms - longer for better reliability)
       const longPressTimeout = setTimeout(() => {
         console.log('Long press detected - starting area selection');
-        e.originalEvent.preventDefault();
-        e.originalEvent.stopPropagation();
         setIsSelecting(true);
         setStartPoint(touchStartPos);
         map.dragging.disable();
         e.originalEvent.stopImmediatePropagation();
-      }, 500);
+      }, 800);
       
       // Store the timeout ID to clear it if touch ends before long press
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -217,6 +219,8 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleTouchMove = (e: any) => {
       if (!isSelecting || !startPoint) return;
+      
+      // Prevent default touch behavior during selection
       e.originalEvent.preventDefault();
       e.originalEvent.stopPropagation();
       
@@ -481,7 +485,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
           {selectedRegion ? (
             <p>🗺️ <strong>Selected region:</strong> {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
           ) : (
-            <p>🗺️ <strong>Desktop:</strong> CTRL+click and drag • <strong>Mobile:</strong> Long press and drag to select a region for forest impact analysis</p>
+            <p>🗺️ Select a region for forest impact analysis</p>
           )}
         </div>
       </div>
