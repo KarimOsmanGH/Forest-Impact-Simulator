@@ -104,15 +104,21 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       document.body.style.cursor = 'crosshair';
       // Prevent text selection on mobile during dragging
       document.body.style.userSelect = 'none';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (document.body.style as any).webkitUserSelect = 'none';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (document.body.style as any).mozUserSelect = 'none';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (document.body.style as any).msUserSelect = 'none';
     } else {
       document.body.style.cursor = 'default';
       // Restore text selection
       document.body.style.userSelect = 'auto';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (document.body.style as any).webkitUserSelect = 'auto';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (document.body.style as any).mozUserSelect = 'auto';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (document.body.style as any).msUserSelect = 'auto';
     }
     
@@ -122,8 +128,11 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
     return () => {
       document.body.style.cursor = 'default';
       document.body.style.userSelect = 'auto';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (document.body.style as any).webkitUserSelect = 'auto';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (document.body.style as any).mozUserSelect = 'auto';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (document.body.style as any).msUserSelect = 'auto';
     };
   }, [isSelecting, onSelectingChange]);
