@@ -72,7 +72,7 @@ export default function Home() {
             Analyze the Impact of Forest Planting
           </h1>
           <p className="text-lg text-gray-600 mb-6 max-w-3xl mx-auto">
-            Select a region on the map to analyze the environmental impact of planting a forest there. Our advanced simulator uses real-world soil, climate, and biodiversity data to estimate carbon sequestration potential, ecosystem benefits, and local species diversity for your chosen location.
+            Select a region on the map to analyze the environmental impact of planting a forest there. The simulator uses real-time soil, climate, and biodiversity data to estimate carbon sequestration, ecosystem benefits, and local species diversity.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mb-6">
             <div className="flex items-center text-sm text-gray-600">
