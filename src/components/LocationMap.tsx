@@ -324,6 +324,7 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
     map.on('touchend', handleTouchEnd);
     
     // Also add click event for mobile as fallback
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     map.on('click', (e: any) => {
       // Only handle clicks on mobile devices (no CTRL key)
       if (!e.originalEvent.ctrlKey && 'ontouchstart' in window) {
