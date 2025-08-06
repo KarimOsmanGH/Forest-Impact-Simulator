@@ -356,6 +356,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Fetch soil and climate data for the selected location
   useEffect(() => {
     if (latitude && longitude) {
       // Validate inputs
@@ -393,7 +394,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       setSoil(null);
       setClimate(null);
     }
-  }, [latitude, longitude]);
+  }, [latitude, longitude, years]);
 
   const calculateImpact = (
     lat: number,

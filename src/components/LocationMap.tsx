@@ -83,7 +83,6 @@ const MapClickHandler = () => {
   return null;
 };
 
-// Define types for bounds and events
 interface MapBounds {
   getSouth: () => number;
   getNorth: () => number;
@@ -91,17 +90,12 @@ interface MapBounds {
   getEast: () => number;
 }
 
-interface LeafletMouseEvent {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface LeafletEvent {
   latlng: { lat: number; lng: number };
-  originalEvent: Event;
+  originalEvent: any;
 }
 
-interface LeafletTouchEvent {
-  latlng: { lat: number; lng: number };
-  originalEvent: TouchEvent;
-}
-
-// Custom region selector component
 const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsChange: (bounds: MapBounds) => void; onSelectingChange?: (selecting: boolean) => void }) => {
   const map = useMap();
   const [isSelecting, setIsSelecting] = useState(false);
@@ -142,6 +136,7 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
   useEffect(() => {
     if (!map) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleMouseStart = (e: any) => {
       // Only activate selection if CTRL key is pressed
       if (!e.originalEvent.ctrlKey) {
@@ -157,13 +152,13 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       e.originalEvent.stopImmediatePropagation();
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleTouchStart = (e: any) => {
       // For mobile devices, use long-press gesture for area selection
       // Don't start selection immediately - wait for long press
       console.log('Touch start:', e.latlng);
       
-      // Store touch start time and position for long-press detection
-      const touchStartTime = Date.now();
+      // Store touch start position for long-press detection
       const touchStartPos: [number, number] = [e.latlng.lat, e.latlng.lng];
       
       // Set a timeout for long-press detection (500ms)
@@ -178,9 +173,11 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       }, 500);
       
       // Store the timeout ID to clear it if touch ends before long press
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (e.originalEvent as any).longPressTimeout = longPressTimeout;
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleMouseMove = (e: any) => {
       if (!isSelecting || !startPoint) return;
       e.originalEvent.preventDefault();
@@ -213,6 +210,7 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       tempRectangleRef.current = newTempRectangle;
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleTouchMove = (e: any) => {
       if (!isSelecting || !startPoint) return;
       e.originalEvent.preventDefault();
@@ -245,6 +243,7 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       tempRectangleRef.current = newTempRectangle;
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleMouseEnd = (e: any) => {
       console.log('Mouse end:', e.latlng, 'isSelecting:', isSelecting, 'currentBounds:', currentBounds);
       if (isSelecting && currentBounds) {
@@ -273,12 +272,16 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       setCurrentBounds(null);
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleTouchEnd = (e: any) => {
       console.log('Touch end:', e.latlng, 'isSelecting:', isSelecting, 'currentBounds:', currentBounds);
       
       // Clear long-press timeout if it exists (touch ended before long press)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((e.originalEvent as any).longPressTimeout) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout((e.originalEvent as any).longPressTimeout);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (e.originalEvent as any).longPressTimeout = null;
       }
       
