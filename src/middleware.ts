@@ -13,7 +13,7 @@ export function middleware(_request: NextRequest) {
   // Content Security Policy
   response.headers.set(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://nominatim.openstreetmap.org https://rest.isric.org https://api.open-meteo.com https://api.gbif.org; frame-ancestors 'none';"
+    "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://nominatim.openstreetmap.org https://rest.isric.org https://api.open-meteo.com https://archive-api.open-meteo.com https://api.gbif.org; frame-ancestors 'none';"
   )
 
   return response

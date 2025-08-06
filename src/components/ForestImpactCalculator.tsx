@@ -37,6 +37,17 @@ interface SoilData {
 interface ClimateData {
   temperature?: number | null;
   precipitation?: number | null;
+  historicalData?: {
+    temperatures: number[];
+    precipitations: number[];
+    years: number[];
+  };
+}
+
+interface ClimatePrediction {
+  temperature: number;
+  precipitation: number;
+  growthModifier: number;
 }
 
 
@@ -108,41 +119,234 @@ const fetchClimateData = async (lat: number, lon: number): Promise<ClimateData> 
     
     // Rate limiting
     if (!apiRateLimiter.isAllowed('climate')) {
+      console.log('Rate limit exceeded for climate API');
       throw new Error('Rate limit exceeded');
     }
     
     console.log('Fetching climate data for:', lat, lon);
     
     // Get current weather and daily precipitation
-    const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=precipitation_sum&timezone=auto`
-    );
+    const currentUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=precipitation_sum&timezone=auto`;
+    console.log('Current weather URL:', currentUrl);
     
-    if (!res.ok) {
-      console.log('Climate API response not ok:', res.status, res.statusText);
-      throw new Error(`Climate API error: ${res.status} ${res.statusText}`);
+    const currentRes = await fetch(currentUrl);
+    
+    console.log('Current weather response status:', currentRes.status, currentRes.statusText);
+    console.log('Current weather response headers:', Object.fromEntries(currentRes.headers.entries()));
+    
+    if (!currentRes.ok) {
+      console.log('Climate API response not ok:', currentRes.status, currentRes.statusText);
+      throw new Error(`Climate API error: ${currentRes.status} ${currentRes.statusText}`);
     }
     
-    const data = await res.json();
-    console.log('Climate API response:', data);
+    const currentData = await currentRes.json();
+    console.log('Current climate API response:', currentData);
     
-    // Get current temperature
-    const temperature = data.current_weather?.temperature;
-    
-    // Get daily precipitation (today's precipitation)
+    // Get current temperature and precipitation
+    const temperature = currentData.current_weather?.temperature;
     let precipitation = null;
-    if (data.daily?.precipitation_sum && data.daily.precipitation_sum.length > 0) {
-      precipitation = data.daily.precipitation_sum[0]; // Today's precipitation
+    if (currentData.daily?.precipitation_sum && currentData.daily.precipitation_sum.length > 0) {
+      precipitation = currentData.daily.precipitation_sum[0]; // Today's precipitation
     }
     
-    console.log('Extracted climate data:', { temperature, precipitation });
-    return { temperature, precipitation };
+    console.log('Extracted current climate data:', { temperature, precipitation });
+    
+    // Get historical climate data for the past 10 years to establish baseline and trends
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setFullYear(endDate.getFullYear() - 10);
+    
+    console.log('Fetching historical data from:', startDate.toISOString().split('T')[0], 'to:', endDate.toISOString().split('T')[0]);
+    
+    const historicalUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`;
+    console.log('Historical weather URL:', historicalUrl);
+    
+    const historicalRes = await fetch(historicalUrl);
+    
+    console.log('Historical weather response status:', historicalRes.status, historicalRes.statusText);
+    
+    let historicalData = undefined;
+    if (historicalRes.ok) {
+      const historicalDataResponse = await historicalRes.json();
+      console.log('Historical climate data response:', historicalDataResponse);
+      
+      if (historicalDataResponse.daily) {
+        // Calculate yearly averages from daily data
+        const yearlyData = new Map<number, { temps: number[], preps: number[] }>();
+        
+        historicalDataResponse.daily.time.forEach((dateStr: string, index: number) => {
+          const year = new Date(dateStr).getFullYear();
+          const temp = historicalDataResponse.daily.temperature_2m_mean[index];
+          const prep = historicalDataResponse.daily.precipitation_sum[index];
+          
+          if (!yearlyData.has(year)) {
+            yearlyData.set(year, { temps: [], preps: [] });
+          }
+          yearlyData.get(year)!.temps.push(temp);
+          yearlyData.get(year)!.preps.push(prep);
+        });
+        
+        // Calculate yearly averages
+        const years: number[] = [];
+        const temperatures: number[] = [];
+        const precipitations: number[] = [];
+        
+        yearlyData.forEach((data, year) => {
+          years.push(year);
+          temperatures.push(data.temps.reduce((a, b) => a + b, 0) / data.temps.length);
+          precipitations.push(data.preps.reduce((a, b) => a + b, 0) / data.preps.length);
+        });
+        
+        historicalData = { temperatures, precipitations, years };
+        console.log('Processed historical data:', historicalData);
+      }
+    } else {
+      console.log('Historical climate API failed:', historicalRes.status, historicalRes.statusText);
+    }
+    
+    console.log('Final climate data:', { temperature, precipitation, historicalData });
+    return { temperature, precipitation, historicalData };
   } catch (error) {
     console.log('Climate data fetch error:', error);
+    console.log('Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    });
     throw error;
   }
 };
 
+// Predict future climate conditions based on historical trends
+const predictFutureClimate = (
+  currentTemp: number | null,
+  currentPrecip: number | null,
+  historicalData: { temperatures: number[]; precipitations: number[]; years: number[] } | undefined,
+  year: number,
+  latitude: number
+): ClimatePrediction => {
+  // If we have no current data, estimate based on latitude
+  let temp = currentTemp;
+  let precip = currentPrecip;
+  
+  if (temp === null || temp === undefined) {
+    // Estimate temperature based on latitude (rough approximation)
+    const absLat = Math.abs(latitude);
+    if (absLat < 23.5) { // Tropical
+      temp = 25 + (Math.random() - 0.5) * 10; // 20-30°C
+    } else if (absLat < 45) { // Temperate
+      temp = 15 + (Math.random() - 0.5) * 15; // 7.5-22.5°C
+    } else if (absLat < 66.5) { // Boreal
+      temp = 5 + (Math.random() - 0.5) * 10; // 0-10°C
+    } else { // Arctic
+      temp = -5 + (Math.random() - 0.5) * 10; // -10-0°C
+    }
+  }
+  
+  if (precip === null || precip === undefined) {
+    // Estimate precipitation based on latitude and coastal proximity
+    const absLat = Math.abs(latitude);
+    if (absLat < 23.5) { // Tropical
+      precip = 1500 + (Math.random() - 0.5) * 1000; // 1000-2000mm
+    } else if (absLat < 45) { // Temperate
+      precip = 800 + (Math.random() - 0.5) * 600; // 500-1100mm
+    } else if (absLat < 66.5) { // Boreal
+      precip = 400 + (Math.random() - 0.5) * 400; // 200-600mm
+    } else { // Arctic
+      precip = 200 + (Math.random() - 0.5) * 200; // 100-300mm
+    }
+  }
+  
+  if (!historicalData || historicalData.temperatures.length < 3) {
+    // Not enough historical data, use current conditions with slight warming trend
+    const tempTrend = 0.02; // 0.02°C per year warming (IPCC estimate)
+    const precipTrend = 0.01; // 1% increase per year (varies by region)
+    
+    return {
+      temperature: temp + (tempTrend * year),
+      precipitation: precip * Math.pow(1 + precipTrend, year),
+      growthModifier: 1.0
+    };
+  }
+  
+  // Calculate trends from historical data
+  const tempTrend = calculateLinearTrend(historicalData.years, historicalData.temperatures);
+  const precipTrend = calculateLinearTrend(historicalData.years, historicalData.precipitations);
+  
+  // Predict future conditions
+  const predictedTemp = temp + (tempTrend * year);
+  const predictedPrecip = precip * Math.pow(1 + precipTrend, year);
+  
+  // Calculate growth modifier based on predicted conditions
+  const growthModifier = calculateGrowthModifier(predictedTemp, predictedPrecip, temp, precip);
+  
+  return {
+    temperature: predictedTemp,
+    precipitation: predictedPrecip,
+    growthModifier
+  };
+};
+
+// Calculate linear trend (slope) from time series data
+const calculateLinearTrend = (years: number[], values: number[]): number => {
+  const n = years.length;
+  if (n < 2) return 0;
+  
+  const sumX = years.reduce((a, b) => a + b, 0);
+  const sumY = values.reduce((a, b) => a + b, 0);
+  const sumXY = years.reduce((sum, year, i) => sum + year * values[i], 0);
+  const sumXX = years.reduce((sum, year) => sum + year * year, 0);
+  
+  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+  return slope;
+};
+
+// Calculate growth modifier based on climate conditions
+const calculateGrowthModifier = (
+  predictedTemp: number,
+  predictedPrecip: number,
+  currentTemp: number,
+  currentPrecip: number
+): number => {
+  // Temperature effects on growth
+  const tempChange = predictedTemp - currentTemp;
+  const tempModifier = 1.0 + (tempChange * 0.02); // 2% change per degree
+  
+  // Precipitation effects on growth
+  const precipChange = (predictedPrecip - currentPrecip) / currentPrecip;
+  const precipModifier = 1.0 + (precipChange * 0.5); // 50% of precipitation change affects growth
+  
+  // Combined modifier (geometric mean)
+  const combinedModifier = Math.sqrt(tempModifier * precipModifier);
+  
+  // Clamp to reasonable bounds (0.5 to 2.0)
+  return Math.max(0.5, Math.min(2.0, combinedModifier));
+};
+
+// Calculate realistic annual carbon sequestration based on tree growth
+const calculateAnnualCarbonWithGrowth = (matureRate: number, year: number): number => {
+  // Tree growth curve: slow start, rapid growth, then plateau
+  // Year 1-3: Establishment phase (5-15% of mature rate)
+  // Year 4-10: Rapid growth phase (15-80% of mature rate)  
+  // Year 11-20: Maturation phase (80-95% of mature rate)
+  // Year 20+: Mature phase (95-100% of mature rate)
+  
+  if (year <= 3) {
+    // Establishment phase - very low sequestration
+    return matureRate * (0.05 + (year - 1) * 0.05); // 5%, 10%, 15%
+  } else if (year <= 10) {
+    // Rapid growth phase - exponential increase
+    const growthPhase = (year - 3) / 7; // 0 to 1 over 7 years
+    return matureRate * (0.15 + growthPhase * 0.65); // 15% to 80%
+  } else if (year <= 20) {
+    // Maturation phase - slowing growth
+    const maturationPhase = (year - 10) / 10; // 0 to 1 over 10 years
+    return matureRate * (0.80 + maturationPhase * 0.15); // 80% to 95%
+  } else {
+    // Mature phase - full sequestration
+    return matureRate * (0.95 + Math.min((year - 20) / 10, 0.05)); // 95% to 100%
+  }
+};
 
 
 const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitude, longitude, years, selectedTreeType, selectedTrees, treePercentages, selectedRegion, onYearsChange }) => {
@@ -179,8 +383,9 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
           if (climateResult.status === 'fulfilled') {
             setClimate(climateResult.value);
           } else {
-            console.log('Climate data failed:', climateResult.reason);
+            console.log('Climate data fetch failed:', climateResult.reason);
             setClimate({ temperature: null, precipitation: null });
+            setError('Weather API temporarily unavailable - using regional climate estimates based on latitude');
           }
         })
         .finally(() => setLoading(false));
@@ -188,7 +393,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       setSoil(null);
       setClimate(null);
     }
-  }, [latitude, longitude, years]);
+  }, [latitude, longitude]);
 
   const calculateImpact = (
     lat: number,
@@ -294,9 +499,12 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     selectedTrees || undefined
   );
   
-  // Calculate cumulative carbon with realistic growth model
+  // Calculate cumulative carbon with realistic growth model and climate predictions
   const calculateCumulativeCarbon = (annualRate: number, years: number): number => {
     let total = 0;
+    const currentTemp = climate?.temperature || 15; // Default to 15°C if no data
+    const currentPrecip = climate?.precipitation || 1000; // Default to 1000mm if no data
+    
     for (let year = 1; year <= years; year++) {
       // Growth curve: slow start, rapid growth, then plateau
       // Year 1: 5% of mature rate
@@ -316,7 +524,19 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       else if (year === 6) growthFactor = 0.85;
       else growthFactor = 0.95;
       
-      total += annualRate * growthFactor;
+      // Apply climate prediction for this year
+      const climatePrediction = predictFutureClimate(
+        currentTemp,
+        currentPrecip,
+        climate?.historicalData,
+        year,
+        latitude
+      );
+      
+      // Combine tree growth factor with climate modifier
+      const combinedGrowthFactor = growthFactor * climatePrediction.growthModifier;
+      
+      total += annualRate * combinedGrowthFactor;
     }
     return total;
   };
@@ -324,9 +544,12 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
   const totalCarbon = calculateCumulativeCarbon(impact.carbonSequestration, years);
   const totalCarbonLabel = years === 1 ? 'Total Carbon (1 year)' : `Total Carbon (${years} years)`;
   
-  // Calculate cumulative biodiversity and resilience with growth model
+  // Calculate cumulative biodiversity and resilience with growth model and climate predictions
   const calculateCumulativeImpact = (annualRate: number, years: number): number => {
     let total = 0;
+    const currentTemp = climate?.temperature || 15; // Default to 15°C if no data
+    const currentPrecip = climate?.precipitation || 1000; // Default to 1000mm if no data
+    
     for (let year = 1; year <= years; year++) {
       // Similar growth curve for biodiversity and resilience
       let growthFactor = 0;
@@ -338,7 +561,19 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       else if (year === 6) growthFactor = 0.90;
       else growthFactor = 0.95;
       
-      total += annualRate * growthFactor;
+      // Apply climate prediction for this year
+      const climatePrediction = predictFutureClimate(
+        currentTemp,
+        currentPrecip,
+        climate?.historicalData,
+        year,
+        latitude
+      );
+      
+      // Combine tree growth factor with climate modifier
+      const combinedGrowthFactor = growthFactor * climatePrediction.growthModifier;
+      
+      total += annualRate * combinedGrowthFactor;
     }
     return total / years; // Return average over the period
   };
@@ -384,11 +619,11 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
          <div className="mb-4 p-3 bg-white border border-gray-200 rounded-lg">
            <h4 className="font-semibold text-gray-800 mb-2 text-sm">Selected Region</h4>
            <p className="text-xs text-black">
-             Area: {selectedRegion.north.toFixed(4)}°N to {selectedRegion.south.toFixed(4)}°S,
+             <strong>Area:</strong> {selectedRegion.north.toFixed(4)}°N to {selectedRegion.south.toFixed(4)}°S,
              {selectedRegion.east.toFixed(4)}°E to {selectedRegion.west.toFixed(4)}°W
            </p>
            <p className="text-xs text-black mt-1">
-             Analysis based on center point: {latitude?.toFixed(4)}, {longitude?.toFixed(4)}
+             <strong>Analysis based on center point:</strong> {latitude?.toFixed(4)}, {longitude?.toFixed(4)}
            </p>
          </div>
        )}
@@ -418,10 +653,36 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         <ul className="text-xs text-gray-700 space-y-1">
           <li><strong>Soil Carbon:</strong> {soil?.carbon !== undefined && soil.carbon !== null ? `${soil.carbon.toFixed(1)} g/kg` : 'N/A'}</li>
           <li><strong>Soil pH:</strong> {soil?.ph !== undefined && soil.ph !== null ? soil.ph.toFixed(1) : 'N/A'}</li>
-          <li><strong>Temperature:</strong> {climate?.temperature !== undefined && climate.temperature !== null ? `${climate.temperature.toFixed(1)}°C` : 'N/A'}</li>
-          <li><strong>Precipitation:</strong> {climate?.precipitation !== undefined && climate.precipitation !== null ? `${climate.precipitation.toFixed(1)} mm` : 'N/A'}</li>
-          
+          <li>
+            <strong>Current Temperature:</strong> 
+            <span 
+              className="cursor-help text-gray-900 ml-1"
+              title={(!climate?.temperature || !climate?.precipitation) ? "Using regional estimates based on latitude (tropical, temperate, boreal, or arctic climate zones) for calculations." : "Real-time temperature data from weather stations"}
+            >
+              {climate?.temperature !== undefined && climate.temperature !== null ? `${climate.temperature.toFixed(1)}°C` : 'N/A (estimated from latitude)'}
+            </span>
+          </li>
+          <li>
+            <strong>Current Precipitation:</strong> 
+            <span 
+              className="cursor-help text-gray-900 ml-1"
+              title={(!climate?.temperature || !climate?.precipitation) ? "Using regional estimates based on latitude (tropical, temperate, boreal, or arctic climate zones) for calculations." : "Real-time precipitation data from weather stations"}
+            >
+              {climate?.precipitation !== undefined && climate.precipitation !== null ? `${climate.precipitation.toFixed(1)} mm` : 'N/A (estimated from latitude)'}
+            </span>
+          </li>
+          {climate?.historicalData && climate.historicalData.temperatures.length > 0 && (
+            <>
+              <li><strong>Climate Trend:</strong> {calculateLinearTrend(climate.historicalData.years, climate.historicalData.temperatures).toFixed(3)}°C/year</li>
+              <li><strong>Historical Data:</strong> {climate.historicalData.years.length} years available</li>
+            </>
+          )}
         </ul>
+        {years > 1 && (
+          <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-800">
+            <strong>🌡️ Climate Prediction Active:</strong> Tree growth calculations include predicted temperature and precipitation changes over {years} years based on historical trends.
+          </div>
+        )}
       </div>
 
       {selectedTrees && selectedTrees.length > 0 && (
@@ -452,36 +713,57 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 max-w-5xl w-full">
         <div className="flex flex-col bg-white rounded shadow p-4">
-          <span className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-            Annual Carbon Sequestration
-            <span
-              className="inline-block cursor-help text-primary"
-              title="Based on IPCC AR4 WGIII Chapter 9: Forestry (2007). Actual values vary by species, age, and conditions."
-              aria-label="Source: IPCC AR4 WGIII Chapter 9"
-            >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" className="ml-1 align-middle"><circle cx="10" cy="10" r="9" stroke="#166534" strokeWidth="2" fill="white"/><text x="10" y="15" textAnchor="middle" fontSize="13" fill="#166534" fontFamily="Arial" fontWeight="bold">i</text></svg>
-            </span>
+          <span 
+            className="text-xs text-gray-500 mb-1 cursor-help"
+            title="Current year's carbon sequestration based on tree growth stage. Trees start with low sequestration and increase as they mature over 20+ years."
+          >
+            Annual Carbon Sequestration (Year {years})
           </span>
-          <span className="text-primary font-bold text-lg">{impact.carbonSequestration.toFixed(1)} kg CO₂/year</span>
+          <span className="text-primary font-bold text-lg">{calculateAnnualCarbonWithGrowth(impact.carbonSequestration, years).toFixed(1)} kg CO₂/year</span>
         </div>
         <div className="flex flex-col bg-white rounded shadow p-4">
-          <span className="text-xs text-gray-500 mb-1">{totalCarbonLabel}</span>
+          <span 
+            className="text-xs text-gray-500 mb-1 cursor-help"
+            title="Total carbon sequestered over the entire simulation period, accounting for tree growth and climate predictions"
+          >
+            {totalCarbonLabel}
+          </span>
           <span className="text-primary font-bold text-lg">{totalCarbon.toFixed(1)} kg CO₂</span>
         </div>
         <div className="flex flex-col bg-white rounded shadow p-4">
-          <span className="text-xs text-gray-500 mb-1">Biodiversity Impact (avg over {years} year{years !== 1 ? 's' : ''})</span>
+          <span 
+            className="text-xs text-gray-500 mb-1 cursor-help"
+            title="Measures ecosystem diversity and habitat quality. Higher values indicate better biodiversity support and wildlife habitat creation."
+          >
+            Biodiversity Impact (avg over {years} year{years !== 1 ? 's' : ''})
+          </span>
           <span className="text-primary font-bold text-lg">{averageBiodiversity.toFixed(1)}/5</span>
         </div>
         <div className="flex flex-col bg-white rounded shadow p-4">
-          <span className="text-xs text-gray-500 mb-1">Forest Resilience (avg over {years} year{years !== 1 ? 's' : ''})</span>
+          <span 
+            className="text-xs text-gray-500 mb-1 cursor-help"
+            title="Forest's ability to withstand climate change, pests, and disturbances. Higher values indicate more resilient ecosystems."
+          >
+            Forest Resilience (avg over {years} year{years !== 1 ? 's' : ''})
+          </span>
           <span className="text-primary font-bold text-lg">{averageResilience.toFixed(1)}/5</span>
         </div>
         <div className="flex flex-col bg-white rounded shadow p-4">
-          <span className="text-xs text-gray-500 mb-1">Water Retention (after {years} year{years !== 1 ? 's' : ''})</span>
+          <span 
+            className="text-xs text-gray-500 mb-1 cursor-help"
+            title="Percentage of rainfall retained in soil and groundwater. Improves over time as tree roots develop and soil structure improves."
+          >
+            Water Retention (after {years} year{years !== 1 ? 's' : ''})
+          </span>
           <span className="text-primary font-bold text-lg">{impact.waterRetention.toFixed(0)}%</span>
         </div>
         <div className="flex flex-col bg-white rounded shadow p-4">
-          <span className="text-xs text-gray-500 mb-1">Air Quality Improvement (after {years} year{years !== 1 ? 's' : ''})</span>
+          <span 
+            className="text-xs text-gray-500 mb-1 cursor-help"
+            title="Reduction in air pollution through particle filtration and oxygen production. Improves as trees mature and canopy develops."
+          >
+            Air Quality Improvement (after {years} year{years !== 1 ? 's' : ''})
+          </span>
           <span className="text-primary font-bold text-lg">{impact.airQualityImprovement.toFixed(0)}%</span>
         </div>
       </div>

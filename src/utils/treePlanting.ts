@@ -185,25 +185,89 @@ export const getPlantingRecommendations = (areaHectares: number): string[] => {
   return recommendations;
 };
 
-// Calculate planting timeline
+// Calculate planting timeline with improved realism
 export const calculatePlantingTimeline = (totalTrees: number): {
   treesPerYear: number;
   yearsToComplete: number;
   treesPerSeason: number;
+  projectScale: string;
+  recommendedApproach: string;
 } => {
-  // Realistic planting rates based on professional tree planting operations
-  const treesPerPersonPerDay = 500; // Professional planters: 500-2000 trees/day depending on terrain
-  const plantingDaysPerYear = 90; // 3 months of planting season (spring/fall)
-  const people = 5; // Smaller, more realistic team size
-  
+  // Determine project scale
+  let projectScale: string;
+  let treesPerPersonPerDay: number;
+  let plantingDaysPerYear: number;
+  let people: number;
+  let recommendedApproach: string;
+
+  if (totalTrees < 1000) {
+    // Small project - community/backyard scale
+    projectScale = "Small-scale (Community/Backyard)";
+    treesPerPersonPerDay = 50; // Manual planting
+    plantingDaysPerYear = 30; // Flexible timing
+    people = 2; // Small team
+    recommendedApproach = "Manual planting with volunteers or small crew";
+  } else if (totalTrees < 10000) {
+    // Medium project - local restoration
+    projectScale = "Medium-scale (Local Restoration)";
+    treesPerPersonPerDay = 200; // Semi-mechanized
+    plantingDaysPerYear = 60; // 2 months
+    people = 5; // Standard crew
+    recommendedApproach = "Semi-mechanized planting with professional crew";
+  } else if (totalTrees < 100000) {
+    // Large project - commercial forestry
+    projectScale = "Large-scale (Commercial Forestry)";
+    treesPerPersonPerDay = 500; // Professional rates
+    plantingDaysPerYear = 90; // 3 months
+    people = 10; // Larger crew
+    recommendedApproach = "Professional forestry crew with mechanized assistance";
+  } else if (totalTrees < 1000000) {
+    // Very large project - regional restoration
+    projectScale = "Very Large-scale (Regional Restoration)";
+    treesPerPersonPerDay = 800; // High-efficiency equipment
+    plantingDaysPerYear = 120; // 4 months
+    people = 25; // Multiple crews
+    recommendedApproach = "Multiple crews with specialized planting equipment";
+  } else {
+    // Massive project - national/international scale
+    projectScale = "Massive-scale (National/International)";
+    treesPerPersonPerDay = 1000; // Advanced mechanization
+    plantingDaysPerYear = 150; // 5 months
+    people = 50; // Large-scale operations
+    recommendedApproach = "Industrial-scale operations with advanced mechanization and multiple teams";
+  }
+
   const treesPerDay = treesPerPersonPerDay * people;
   const treesPerYear = treesPerDay * plantingDaysPerYear;
-  const yearsToComplete = Math.ceil(totalTrees / treesPerYear);
-  const treesPerSeason = Math.ceil(totalTrees / yearsToComplete);
   
+  // Ensure realistic project duration - minimum 1 year, but for very small projects, 
+  // use a more realistic approach based on actual planting time
+  let yearsToComplete: number;
+  
+  if (totalTrees < 100) {
+    // For very small projects, calculate based on actual planting time
+    const treesPerDay = Math.min(treesPerPersonPerDay * people, 200); // Cap at 200 trees/day for small projects
+    const daysToComplete = Math.ceil(totalTrees / treesPerDay);
+    yearsToComplete = Math.max(1, Math.ceil(daysToComplete / 30)); // Assume 30-day planting window
+  } else if (totalTrees < 10000) {
+    // For medium projects, use more conservative rates
+    const treesPerDay = Math.min(treesPerPersonPerDay * people, 1000); // Cap at 1000 trees/day for medium projects
+    const daysToComplete = Math.ceil(totalTrees / treesPerDay);
+    yearsToComplete = Math.max(1, Math.ceil(daysToComplete / 60)); // Assume 60-day planting window
+  } else {
+    // For larger projects, use more realistic rates
+    const treesPerDay = Math.min(treesPerPersonPerDay * people, 2000); // Cap at 2000 trees/day for large projects
+    const daysToComplete = Math.ceil(totalTrees / treesPerDay);
+    yearsToComplete = Math.max(1, Math.ceil(daysToComplete / 90)); // Assume 90-day planting window
+  }
+  
+  const treesPerSeason = Math.ceil(totalTrees / yearsToComplete);
+
   return {
     treesPerYear,
     yearsToComplete,
-    treesPerSeason
+    treesPerSeason,
+    projectScale,
+    recommendedApproach
   };
 }; 

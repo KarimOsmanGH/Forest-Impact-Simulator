@@ -7,9 +7,9 @@ import {
   calculateTreePlanting,
   formatArea,
   formatNumber,
-  getPlantingRecommendations,
   calculatePlantingTimeline,
-  TREE_SPACING_CONFIGS
+  TREE_SPACING_CONFIGS,
+  getRecommendedSpacing
 } from '@/utils/treePlanting';
 
 interface TreePlantingCalculatorProps {
@@ -40,14 +40,49 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
     return null;
   }
 
-  const plantingConfig = calculateTreePlanting(
-    selectedRegion,
-    treeForPlanting.name,
-    customSpacing
-  );
+  // Calculate planting configuration
+  let plantingConfig;
+  
+  if (selectedTrees && selectedTrees.length > 1 && treePercentages) {
+    // For multiple trees, calculate weighted average spacing
+    let totalWeight = 0;
+    let weightedSpacing = 0;
+    
+    selectedTrees.forEach(tree => {
+      const percentage = treePercentages[tree.id] || 0;
+      const spacingKey = getRecommendedSpacing(tree.name);
+      const spacing = TREE_SPACING_CONFIGS[spacingKey].spacing;
+      
+      totalWeight += percentage;
+      weightedSpacing += spacing * (percentage / 100);
+    });
+    
+    // Use weighted average spacing, but ensure it's within reasonable bounds
+    let avgSpacing = totalWeight > 0 ? weightedSpacing : TREE_SPACING_CONFIGS.standard.spacing;
+    
+    // Ensure spacing is within reasonable bounds (2.5m to 6.0m)
+    avgSpacing = Math.max(2.5, Math.min(6.0, avgSpacing));
+    
+    // If percentages don't add up to 100%, adjust to use standard spacing
+    if (Math.abs(totalWeight - 100) > 5) {
+      avgSpacing = TREE_SPACING_CONFIGS.standard.spacing;
+    }
+    
+    plantingConfig = calculateTreePlanting(
+      selectedRegion,
+      'mixed', // Use 'mixed' to trigger custom spacing
+      avgSpacing
+    );
+  } else {
+    // Single tree or no percentages - use normal calculation
+    plantingConfig = calculateTreePlanting(
+      selectedRegion,
+      treeForPlanting.name,
+      customSpacing
+    );
+  }
 
   // Note: Carbon sequestration and mortality calculations removed as requested
-  const recommendations = getPlantingRecommendations(plantingConfig.area);
   const timeline = calculatePlantingTimeline(plantingConfig.totalTrees);
 
   return (
@@ -76,11 +111,21 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
         <h4 className="font-semibold mb-2">Planting Configuration</h4>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500 font-bold">Spacing:</span>
+            <span 
+              className="text-xs text-gray-500 font-bold cursor-help"
+              title="Tree spacing is optimized for healthy growth, allowing adequate sunlight, water, and root space. Denser spacing (2-3m) creates closed canopy faster, while wider spacing (4-6m) allows for understory development and easier maintenance."
+            >
+              Spacing:
+            </span>
             <span className="text-xs font-medium">{plantingConfig.spacing}m between trees</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500 font-bold">Density:</span>
+            <span 
+              className="text-xs text-gray-500 font-bold cursor-help"
+              title="Trees per hectare = 10,000m² ÷ (spacing in meters)². This ensures optimal tree distribution across your area for maximum forest health and carbon sequestration potential."
+            >
+              Density:
+            </span>
             <span className="text-xs font-medium">{formatNumber(plantingConfig.density)} trees/ha</span>
           </div>
           <div className="flex items-center justify-between">
@@ -88,11 +133,20 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
             <span className="text-xs font-medium text-primary">{formatNumber(plantingConfig.totalTrees)}</span>
           </div>
         </div>
+        
+        {selectedTrees && selectedTrees.length > 1 && (
+          <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-800">
+            <strong>🌳 Multi-species spacing:</strong> Spacing calculated as weighted average based on your tree selection and percentages.
+          </div>
+        )}
       </div>
 
       {/* Custom Spacing Option */}
       <div className="mb-4">
-        <label className="block text-xs font-medium text-gray-700 mb-1">
+        <label 
+          className="block text-xs font-medium text-gray-700 mb-1 cursor-help"
+          title="Adjust spacing for specific site conditions, access requirements, or management goals. Wider spacing (5-6m) for equipment access, narrower (2-3m) for rapid canopy closure. Auto uses species-specific recommendations."
+        >
           Custom Spacing (meters)
         </label>
         <div className="flex gap-2">
@@ -115,62 +169,57 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
         </div>
       </div>
 
-
-
-
-
       {/* Planting Timeline */}
       <div className="mb-4 flex flex-col bg-white rounded shadow p-4">
-        <span className="text-xs text-gray-500 mb-1 flex items-center gap-1 underline">
-          Planting Timeline
+        <span className="text-xs text-gray-500 mb-2 flex items-center gap-1 font-semibold">
+          🌱 Planting Timeline (Realistic Project Planning)
         </span>
-        <div className="space-y-1">
+        <div className="space-y-2">
           <div className="flex justify-between text-xs">
-            <span className="text-gray-500"><strong>Trees per year:</strong></span>
-            <span className="font-medium text-primary">{formatNumber(timeline.treesPerYear)}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-500"><strong>Years to complete:</strong></span>
-            <span className="font-medium text-primary">{timeline.yearsToComplete}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-500"><strong>Trees per season:</strong></span>
-            <span className="font-medium text-primary">{formatNumber(timeline.treesPerSeason)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Recommendations */}
-      <div className="mb-4">
-        <h4 className="font-semibold mb-2">Recommendations</h4>
-        <ul className="space-y-1">
-          {recommendations.map((recommendation, index) => (
-            <li key={index} className="text-xs text-gray-600 flex items-start">
-              <span className="text-primary mr-1">•</span>
-              {recommendation}
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Spacing Presets */}
-      <div className="mb-4">
-        <h4 className="font-semibold mb-2">Spacing Presets</h4>
-        <div className="grid grid-cols-2 gap-2">
-          {Object.entries(TREE_SPACING_CONFIGS).map(([key, config]) => (
-            <button
-              key={key}
-              onClick={() => setCustomSpacing(config.spacing)}
-              className={`p-2 text-xs rounded border transition-colors ${
-                customSpacing === config.spacing
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
+            <span 
+              className="text-gray-600 cursor-help"
+              title="Project scale determines planting rates, crew size, and equipment used. Larger projects can use more efficient methods."
             >
-              <div className="font-medium">{config.description}</div>
-              <div className="text-gray-500">{config.density} trees/ha</div>
-            </button>
-          ))}
+              <strong>Project Scale:</strong>
+            </span>
+            <span className="font-medium text-primary">{timeline.projectScale}</span>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span 
+              className="text-gray-600 cursor-help"
+              title="Recommended approach based on project scale, including crew size, equipment, and methodology."
+            >
+              <strong>Recommended Approach:</strong>
+            </span>
+            <span className="font-medium text-primary text-right max-w-xs">{timeline.recommendedApproach}</span>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span 
+              className="text-gray-600 cursor-help"
+              title="Planting rate assumes experienced crew with appropriate equipment for the project scale."
+            >
+              <strong>Planting capacity:</strong>
+            </span>
+            <span className="font-medium text-primary">{formatNumber(timeline.treesPerYear)} trees/year</span>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span 
+              className="text-gray-600 cursor-help"
+              title="Total time to complete all planting based on project scale and recommended approach."
+            >
+              <strong>Project duration:</strong>
+            </span>
+            <span className="font-medium text-primary">{timeline.yearsToComplete} year{timeline.yearsToComplete !== 1 ? 's' : ''}</span>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span 
+              className="text-gray-600 cursor-help"
+              title="Trees planted per planting season, accounting for optimal planting windows and weather conditions."
+            >
+              <strong>Seasonal workload:</strong>
+            </span>
+            <span className="font-medium text-primary">{formatNumber(timeline.treesPerSeason)} trees/season</span>
+          </div>
         </div>
       </div>
     </div>

@@ -96,6 +96,11 @@ interface LeafletMouseEvent {
   originalEvent: Event;
 }
 
+interface LeafletTouchEvent {
+  latlng: { lat: number; lng: number };
+  originalEvent: TouchEvent;
+}
+
 // Custom region selector component
 const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsChange: (bounds: MapBounds) => void; onSelectingChange?: (selecting: boolean) => void }) => {
   const map = useMap();
@@ -108,8 +113,18 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
   useEffect(() => {
     if (isSelecting) {
       document.body.style.cursor = 'crosshair';
+      // Prevent text selection on mobile during dragging
+      document.body.style.userSelect = 'none';
+      (document.body.style as any).webkitUserSelect = 'none';
+      (document.body.style as any).mozUserSelect = 'none';
+      (document.body.style as any).msUserSelect = 'none';
     } else {
       document.body.style.cursor = 'default';
+      // Restore text selection
+      document.body.style.userSelect = 'auto';
+      (document.body.style as any).webkitUserSelect = 'auto';
+      (document.body.style as any).mozUserSelect = 'auto';
+      (document.body.style as any).msUserSelect = 'auto';
     }
     
     // Notify parent component of selecting state
@@ -117,24 +132,44 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
     
     return () => {
       document.body.style.cursor = 'default';
+      document.body.style.userSelect = 'auto';
+      (document.body.style as any).webkitUserSelect = 'auto';
+      (document.body.style as any).mozUserSelect = 'auto';
+      (document.body.style as any).msUserSelect = 'auto';
     };
   }, [isSelecting, onSelectingChange]);
 
   useEffect(() => {
     if (!map) return;
 
-    const handleMouseDown = (e: LeafletMouseEvent) => {
-      console.log('Mouse down:', e.latlng);
+    const handleMouseStart = (e: any) => {
+      // Only activate selection if CTRL key is pressed
+      if (!e.originalEvent.ctrlKey) {
+        return; // Allow normal map panning
+      }
+      
+      console.log('CTRL+Mouse start:', e.latlng);
       e.originalEvent.preventDefault();
       e.originalEvent.stopPropagation();
       setIsSelecting(true);
       setStartPoint([e.latlng.lat, e.latlng.lng]);
       map.dragging.disable();
-      // Prevent any click handlers from firing during region selection
       e.originalEvent.stopImmediatePropagation();
     };
 
-    const handleMouseMove = (e: LeafletMouseEvent) => {
+    const handleTouchStart = (e: any) => {
+      // For touch devices, we'll use a different approach - maybe long press or two-finger touch
+      // For now, let's keep touch behavior as is but add a visual indicator
+      console.log('Touch start:', e.latlng);
+      e.originalEvent.preventDefault();
+      e.originalEvent.stopPropagation();
+      setIsSelecting(true);
+      setStartPoint([e.latlng.lat, e.latlng.lng]);
+      map.dragging.disable();
+      e.originalEvent.stopImmediatePropagation();
+    };
+
+    const handleMouseMove = (e: any) => {
       if (!isSelecting || !startPoint) return;
       e.originalEvent.preventDefault();
       e.originalEvent.stopPropagation();
@@ -166,20 +201,51 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       tempRectangleRef.current = newTempRectangle;
     };
 
-    const handleMouseUp = (e: LeafletMouseEvent) => {
-      console.log('Mouse up:', e.latlng, 'isSelecting:', isSelecting, 'currentBounds:', currentBounds);
+    const handleTouchMove = (e: any) => {
+      if (!isSelecting || !startPoint) return;
+      e.originalEvent.preventDefault();
+      e.originalEvent.stopPropagation();
+      
+      const bounds = {
+        getSouth: () => Math.min(startPoint[0], e.latlng.lat),
+        getNorth: () => Math.max(startPoint[0], e.latlng.lat),
+        getWest: () => Math.min(startPoint[1], e.latlng.lng),
+        getEast: () => Math.max(startPoint[1], e.latlng.lng),
+      };
+      setCurrentBounds(bounds);
+      
+      // Update temporary rectangle for visual feedback
+      if (tempRectangleRef.current) {
+        map.removeLayer(tempRectangleRef.current);
+      }
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const L = require('leaflet');
+      const newTempRectangle = L.rectangle([
+        [bounds.getSouth(), bounds.getWest()],
+        [bounds.getNorth(), bounds.getEast()]
+      ], {
+        color: '#166534',
+        fillColor: '#166534',
+        fillOpacity: 0.2,
+        weight: 2
+      });
+      newTempRectangle.addTo(map);
+      tempRectangleRef.current = newTempRectangle;
+    };
+
+    const handleMouseEnd = (e: any) => {
+      console.log('Mouse end:', e.latlng, 'isSelecting:', isSelecting, 'currentBounds:', currentBounds);
       if (isSelecting && currentBounds) {
         const dragDistance = Math.sqrt(
           Math.pow(e.latlng.lat - startPoint![0], 2) + 
           Math.pow(e.latlng.lng - startPoint![1], 2)
         );
         console.log('Drag distance:', dragDistance);
-        if (dragDistance > 0.0001) { // Very small threshold to allow any meaningful drag
+        if (dragDistance > 0.0001) {
           console.log('Calling onBoundsChange');
           onBoundsChange(currentBounds);
         } else {
           console.log('Drag distance too small, not selecting region');
-          // Prevent the click handler from firing by stopping propagation
           e.originalEvent.preventDefault();
           e.originalEvent.stopPropagation();
         }
@@ -195,14 +261,51 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       setCurrentBounds(null);
     };
 
-    map.on('mousedown', handleMouseDown);
+    const handleTouchEnd = (e: any) => {
+      console.log('Touch end:', e.latlng, 'isSelecting:', isSelecting, 'currentBounds:', currentBounds);
+      if (isSelecting && currentBounds) {
+        const dragDistance = Math.sqrt(
+          Math.pow(e.latlng.lat - startPoint![0], 2) + 
+          Math.pow(e.latlng.lng - startPoint![1], 2)
+        );
+        console.log('Drag distance:', dragDistance);
+        if (dragDistance > 0.0001) {
+          console.log('Calling onBoundsChange');
+          onBoundsChange(currentBounds);
+        } else {
+          console.log('Drag distance too small, not selecting region');
+          e.originalEvent.preventDefault();
+          e.originalEvent.stopPropagation();
+        }
+      }
+      // Remove temporary rectangle
+      if (tempRectangleRef.current) {
+        map.removeLayer(tempRectangleRef.current);
+        tempRectangleRef.current = null;
+      }
+      map.dragging.enable();
+      setIsSelecting(false);
+      setStartPoint(null);
+      setCurrentBounds(null);
+    };
+
+    // Add mouse events for desktop
+    map.on('mousedown', handleMouseStart);
     map.on('mousemove', handleMouseMove);
-    map.on('mouseup', handleMouseUp);
+    map.on('mouseup', handleMouseEnd);
+    
+    // Add touch events for mobile
+    map.on('touchstart', handleTouchStart);
+    map.on('touchmove', handleTouchMove);
+    map.on('touchend', handleTouchEnd);
 
     return () => {
-      map.off('mousedown', handleMouseDown);
+      map.off('mousedown', handleMouseStart);
       map.off('mousemove', handleMouseMove);
-      map.off('mouseup', handleMouseUp);
+      map.off('mouseup', handleMouseEnd);
+      map.off('touchstart', handleTouchStart);
+      map.off('touchmove', handleTouchMove);
+      map.off('touchend', handleTouchEnd);
       if (tempRectangleRef.current) {
         map.removeLayer(tempRectangleRef.current);
       }
@@ -222,9 +325,8 @@ interface LocationMapProps {
 const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSelect, onSearchLocation }) => {
   const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<[number, number, number, number] | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([50.0, 10.0]);
-  const [mapZoom, setMapZoom] = useState<number>(6);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([54.0, 15.0]);
+  const [mapZoom, setMapZoom] = useState<number>(4);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
@@ -241,33 +343,6 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
       });
     }
   }, []);
-
-  // Handle fullscreen toggle
-  const toggleFullscreen = () => {
-    if (!isFullscreen) {
-      if (mapContainerRef.current?.requestFullscreen) {
-        mapContainerRef.current.requestFullscreen();
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
-
-  // Listen for fullscreen changes
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
-
-
 
   const handleSearchLocation = (lat: number, lng: number, name: string) => {
     setMapCenter([lat, lng]);
@@ -310,23 +385,21 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-white' : ''}`}>
-      <div className={`relative ${isFullscreen ? 'h-full w-full' : 'p-3'}`}>
-        {!isFullscreen && <LocationSearch onLocationSelect={handleSearchLocation} />}
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"> 
+      <div className="relative p-3">
+        <LocationSearch onLocationSelect={handleSearchLocation} />
         <div 
           ref={mapContainerRef}
-          className={`relative ${isFullscreen ? 'h-full w-full' : ''}`}
-          style={isFullscreen ? { padding: 0, height: '100vh', width: '100vw' } : {}}
+          className="relative"
         >
           <ClientOnlyMap>
             <MapContainer
               center={mapCenter}
               zoom={mapZoom}
               style={{ 
-                height: isFullscreen ? '100vh' : '384px', 
+                height: '384px', 
                 width: '100%',
                 position: 'relative',
-                zIndex: isFullscreen ? 1000 : 'auto'
               }}
               ref={mapRef}
               zoomControl={false}
@@ -373,38 +446,19 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
                 </svg>
               </button>
             )}
-            
-            {/* Fullscreen toggle button */}
-            <button
-              onClick={toggleFullscreen}
-              className="bg-white hover:bg-gray-100 text-gray-700 rounded-md p-2 shadow-md border border-gray-200 transition-colors"
-              title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-            >
-              {isFullscreen ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-              )}
-            </button>
           </div>
         </div>
       </div>
       
-      {!isFullscreen && (
-        <div className="p-3 bg-gray-50 border-t border-gray-200">
-          <div className="text-sm text-gray-600">
-            {selectedRegion ? (
-              <p>🗺️ <strong>Selected region:</strong> {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
-            ) : (
-              <p>🗺️ <strong>Click and drag</strong> to select a region for forest impact analysis</p>
-            )}
-          </div>
+      <div className="p-3 bg-gray-50 border-t border-gray-200">
+        <div className="text-sm text-gray-600">
+          {selectedRegion ? (
+            <p>🗺️ <strong>Selected region:</strong> {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
+          ) : (
+            <p>🗺️ <strong>CTRL+click and drag</strong> to select a region for forest impact analysis</p>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

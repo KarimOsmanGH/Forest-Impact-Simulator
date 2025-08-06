@@ -2,45 +2,14 @@
 
 A tool to simulate and analyze the environmental impact of forest planting.
 
-## ✨ Features
+## 🌟 Key Features
 
-### 🗺️ **Interactive Region Selection**
-- **Global Map Interface**: Click and drag on the world map to select regions
-- **Precise Coordinates**: Real-time latitude and longitude boundaries
-- **Visual Selection**: Clear rectangle overlay for selected regions
-- **Area Analysis**: Comprehensive impact assessment for selected regions
-- **Selected Region Display**: View area coordinates and boundaries within the simulator
-
-### 🌍 **Real-time Environmental Data**
-- **Soil Analysis**: Carbon content and pH levels from ISRIC SoilGrids
-- **Climate Information**: Temperature and precipitation from Open-Meteo
-- **Biodiversity Data**: Local species information from GBIF
-- **Automatic Fetching**: Instant environmental data for any selected region
-
-### 📊 **Advanced Impact Simulation**
-- **Carbon Sequestration**: Calculate annual and cumulative CO₂ absorption
-- **Real-world Comparisons**: See impact in terms of car emissions, flights, and household electricity
-- **Biodiversity Enhancement**: Assess ecosystem improvement potential
-- **Forest Resilience**: Evaluate climate adaptation capabilities
-- **Water Management**: Analyze hydrological benefits
-- **Air Quality**: Measure atmospheric improvement effects
-- **Weighted Averages**: Accurate calculations for mixed-species forests
-
-### ⏰ **Dynamic Time Analysis**
-- **Flexible Duration**: Simulate impacts from 1 to 100 years
-- **Cumulative Metrics**: View both annual rates and long-term totals
-- **Real-time Updates**: Instant recalculation with parameter changes
-
-### 🌳 **Comprehensive Tree Database**
-- **60 Tree Species**: Extensive collection from all major climate zones
-- **5 Categories**: Deciduous, Coniferous, Tropical, Mediterranean, and Boreal trees
-- **Climate Matching**: Automatic recommendations based on region and latitude
-- **Growth Characteristics**: Detailed information on each species
-- **Carbon Efficiency**: Compare sequestration rates across species
-- **Percentage Distribution**: Set custom percentages for mixed forests (e.g., 60% Oak, 40% Pine)
-- **Equal Split Option**: Quick equal distribution for balanced forest compositions
-- **Boreal Trees**: Specialized northern forest species (Black Spruce, White Spruce, Balsam Fir, Tamarack, Jack Pine)
-- **Unique Species**: Rare trees like Monkey Puzzle and Dragon Blood Tree
+- **Global Map Interface**: CTRL+click and drag on the world map to select regions
+- **Real-time Environmental Data**: Live soil, climate, and biodiversity information
+- **60+ Tree Species**: Comprehensive database covering all major climate zones
+- **Advanced Impact Simulation**: Realistic tree growth curves and climate prediction
+- **Dynamic Time Analysis**: Simulate forest development over 1-100 years
+- **Professional Planning Tools**: Realistic planting timelines and project scale analysis
 
 ## 🚀 Quick Start
 
@@ -75,7 +44,7 @@ This simulator is for educational and planning purposes only. Use at your own ri
 
 ## 📖 How to Use
 
-1. **Select Region**: Click and drag on the interactive map to select your forest region
+1. **Select Region**: CTRL+click and drag on the interactive map to select your forest region
 2. **Review Data**: View automatically fetched environmental information:
    - Soil carbon content and pH
    - Current temperature and precipitation
@@ -161,18 +130,60 @@ Household Electricity: Average US household emits ~7.5 metric tons CO₂/year
 
 **Realistic Growth Model:**
 ```
-Year 1: 5% of mature rate
-Year 2: 15% of mature rate
-Year 3: 30% of mature rate
-Year 4: 50% of mature rate
-Year 5: 70% of mature rate
-Year 6: 85% of mature rate
-Year 7+: 95% of mature rate (approaching full maturity)
+Year 1-3: Establishment phase (5-15% of mature rate)
+Year 4-10: Rapid growth phase (15-80% of mature rate)
+Year 11-20: Maturation phase (80-95% of mature rate)
+Year 20+: Mature phase (95-100% of mature rate)
+```
+
+**Annual Carbon Calculation:**
+```
+Annual Carbon = Mature Rate × Growth Factor (based on year)
+```
+
+### **Climate Prediction**
+
+**Temperature Trend Analysis:**
+```
+Historical Data = 11 years of temperature records
+Linear Regression = Calculate temperature trend (°C/year)
+Future Temperature = Current + (Trend × Years)
+```
+
+**Growth Modifier:**
+```
+Temperature Change = Future Temp - Current Temp
+Growth Modifier = 1 + (Temperature Change × 0.02)
+```
+
+**Regional Estimates (fallback):**
+```
+Tropical: 25°C, Temperate: 15°C, Boreal: 5°C, Arctic: -5°C
 ```
 
 **Cumulative Calculation:**
 ```
 Total Carbon = Σ(Annual Rate × Growth Factor for each year)
+```
+
+### **Planting Timeline**
+
+**Project Scale Classification:**
+```
+< 1,000 trees: Small-scale (Community/Backyard)
+1,000-10,000 trees: Medium-scale (Local Restoration)
+10,000-100,000 trees: Large-scale (Commercial Forestry)
+100,000-1M trees: Very Large-scale (Regional Restoration)
+> 1M trees: Massive-scale (National/International)
+```
+
+**Planting Rates by Scale:**
+```
+Small-scale: 50 trees/person/day, 2 people, 30 days/year
+Medium-scale: 200 trees/person/day, 5 people, 60 days/year
+Large-scale: 500 trees/person/day, 10 people, 90 days/year
+Very Large-scale: 800 trees/person/day, 25 people, 120 days/year
+Massive-scale: 1,000 trees/person/day, 50 people, 150 days/year
 ```
 
 ### **Biodiversity Impact**

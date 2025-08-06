@@ -67,12 +67,28 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">
       <div className="container mx-auto max-w-7xl">
-        <h1 className="text-4xl font-bold text-center mb-2">
-          Analyze the Impact of Forest Planting
-        </h1>
-        <p className="text-center text-gray-600 mb-24 max-w-2xl mx-auto">
-          Click and drag on the map to select a region and analyze the impact of planting a forest there. The simulator uses live soil, climate, and biodiversity data to estimate carbon sequestration, ecosystem benefits, and local species diversity.
-        </p>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-center mb-2">
+            Analyze the Impact of Forest Planting
+          </h1>
+          <p className="text-lg text-gray-600 mb-6 max-w-3xl mx-auto">
+            Click and drag on the map to select a region and analyze the impact of planting a forest there. The simulator uses live soil, climate, and biodiversity data to estimate carbon sequestration, ecosystem benefits, and local species diversity.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
+            <div className="flex items-center text-sm text-gray-600">
+              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+              Real-time environmental data
+            </div>
+            <div className="flex items-center text-sm text-gray-600">
+              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+              60+ tree species database
+            </div>
+            <div className="flex items-center text-sm text-gray-600">
+              <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+              Climate prediction modeling
+            </div>
+          </div>
+        </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="flex flex-col h-full">
@@ -80,7 +96,7 @@ export default function Home() {
               <div className="flex items-center justify-center w-8 h-8 bg-green-800 text-white rounded-full text-sm">📍</div>
               <h2 className="text-xl font-semibold">Select Location</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-4">Click and drag to select a region on the map for forest impact analysis</p>
+            <p className="text-sm text-gray-600 mb-4">Press CTRL + mouse click and drag to select a region on the map.</p>
             <div className="flex-1">
               <LocationMap 
                 onLocationSelect={handleLocationSelect}
@@ -194,7 +210,7 @@ export default function Home() {
                     Our estimates are based on <a href="https://www.ipcc.ch/report/ar4/wg1/" target="_blank" rel="noopener noreferrer" className="text-green-700 hover:text-green-800 underline">IPCC Fourth Assessment Report</a> data, with species-specific rates ranging from 15-30 kg CO₂/year for mature trees. We apply realistic growth curves that account for the fact that young trees sequester much less carbon than mature ones.
                   </p>
                   <p className="text-gray-900 mb-3">
-                    <strong>Growth Model:</strong> Trees don&apos;t reach full capacity immediately. Our realistic model shows: Year 1 (5% of mature rate), Year 2 (15%), Year 3 (30%), Year 4 (50%), Year 5 (70%), Year 6 (85%), and Year 7+ (95%). This reflects real-world tree growth patterns and provides more accurate long-term projections.
+                    <strong>Growth Model:</strong> Trees don&apos;t reach full capacity immediately. Our realistic model shows: Year 1-3 (5-15% of mature rate), Year 4-10 (15-80% of mature rate), Year 11-20 (80-95% of mature rate), and Year 20+ (95-100% of mature rate). This reflects real-world tree growth patterns and provides more accurate long-term projections.
                   </p>
                   <p className="text-gray-900 mb-3">
                     The simulator also factors in local soil conditions and climate data for more accurate predictions.
@@ -344,16 +360,30 @@ export default function Home() {
                     <div>
                       <h4 className="font-semibold text-black mb-2">Tree Growth Model</h4>
                       <div className="bg-gray-50 p-3 rounded text-sm text-black">
-                        <p className="mb-2"><strong>Year-Specific Growth Factors:</strong></p>
+                        <p className="mb-2"><strong>4-Phase Growth Model:</strong></p>
                         <div className="grid grid-cols-2 gap-2 text-sm text-black">
-                          <div><strong>Year 1:</strong> 5% of mature rate</div>
-                          <div><strong>Year 2:</strong> 15% of mature rate</div>
-                          <div><strong>Year 3:</strong> 30% of mature rate</div>
-                          <div><strong>Year 4:</strong> 50% of mature rate</div>
-                          <div><strong>Year 5:</strong> 70% of mature rate</div>
-                          <div><strong>Year 6:</strong> 85% of mature rate</div>
-                          <div><strong>Year 7+:</strong> 95% of mature rate</div>
+                          <div><strong>Years 1-3:</strong> Establishment phase (5-15% of mature rate)</div>
+                          <div><strong>Years 4-10:</strong> Rapid growth phase (15-80% of mature rate)</div>
+                          <div><strong>Years 11-20:</strong> Maturation phase (80-95% of mature rate)</div>
+                          <div><strong>Years 20+:</strong> Mature phase (95-100% of mature rate)</div>
                         </div>
+                        <p className="mt-2 text-sm text-black"><strong>Annual Carbon Calculation:</strong></p>
+                        <code className="block bg-white p-2 rounded text-black">Annual Carbon = Mature Rate × Growth Factor (based on year)</code>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold text-black mb-2">Climate Prediction</h4>
+                      <div className="bg-gray-50 p-3 rounded text-sm text-black">
+                        <p className="mb-2"><strong>Temperature Trend Analysis:</strong></p>
+                        <code className="block bg-white p-2 rounded mb-2 text-black">Historical Data = 11 years of temperature records</code>
+                        <code className="block bg-white p-2 rounded mb-2 text-black">Linear Regression = Calculate temperature trend (°C/year)</code>
+                        <code className="block bg-white p-2 rounded mb-2 text-black">Future Temperature = Current + (Trend × Years)</code>
+                        <p className="mt-2 mb-2 text-sm text-black"><strong>Growth Modifier:</strong></p>
+                        <code className="block bg-white p-2 rounded mb-2 text-black">Temperature Change = Future Temp - Current Temp</code>
+                        <code className="block bg-white p-2 rounded text-black">Growth Modifier = 1 + (Temperature Change × 0.02)</code>
+                        <p className="mt-2 text-sm text-black"><strong>Regional Estimates (fallback):</strong></p>
+                        <code className="block bg-white p-2 rounded text-black">Tropical: 25°C, Temperate: 15°C, Boreal: 5°C, Arctic: -5°C</code>
                       </div>
                     </div>
 
@@ -473,10 +503,7 @@ export default function Home() {
               {faqOpen[8] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
-                    The Forest Impact Simulator was created by <a href="https://kar.im" target="_blank" rel="noopener noreferrer" className="text-green-700 hover:text-green-800 underline">Karim Osman</a> to simulate and analyze the environmental impact of forest planting. For detailed contribution guidelines, please check the project&apos;s GitHub repository and README file.
-                  </p>
-                  <p className="text-gray-900 mb-3">
-                    This tool is completely <a href="https://github.com/KarimOsmanGH/forest-impact-simulator" target="_blank" rel="noopener noreferrer" className="text-green-700 hover:text-green-800 underline">open-source</a> and available on GitHub. We welcome contributions from the community! Whether you&apos;re a developer, environmental scientist, or forestry expert, there are many ways to help improve this simulator.
+                    The Forest Impact Simulator was created by <a href="https://kar.im" target="_blank" rel="noopener noreferrer" className="text-green-700 hover:text-green-800 underline">Karim Osman</a> to simulate and analyze the environmental impact of forest planting. This tool is completely <a href="https://github.com/KarimOsmanGH/forest-impact-simulator" target="_blank" rel="noopener noreferrer" className="text-green-700 hover:text-green-800 underline">open-source</a> and available on GitHub. We welcome contributions from the community! Whether you&apos;re a developer, environmental scientist, or forestry expert, there are many ways to help improve this simulator.
                   </p>
                   <p className="text-gray-900 mt-4">
 
