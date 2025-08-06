@@ -96,7 +96,7 @@ export default function Home() {
               <div className="flex items-center justify-center w-8 h-8 bg-green-800 text-white rounded-full text-sm">📍</div>
               <h2 className="text-xl font-semibold">Select Location</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-4">Press CTRL + mouse click and drag to select a region on the map.</p>
+            <p className="text-sm text-gray-600 mb-4">Desktop: Press CTRL + mouse click and drag. Mobile: Long press and drag to select a region on the map.</p>
             <div className="flex-1">
               <LocationMap 
                 onLocationSelect={handleLocationSelect}

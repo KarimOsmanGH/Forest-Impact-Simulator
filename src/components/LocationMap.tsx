@@ -158,15 +158,27 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
     };
 
     const handleTouchStart = (e: any) => {
-      // For touch devices, we'll use a different approach - maybe long press or two-finger touch
-      // For now, let's keep touch behavior as is but add a visual indicator
+      // For mobile devices, use long-press gesture for area selection
+      // Don't start selection immediately - wait for long press
       console.log('Touch start:', e.latlng);
-      e.originalEvent.preventDefault();
-      e.originalEvent.stopPropagation();
-      setIsSelecting(true);
-      setStartPoint([e.latlng.lat, e.latlng.lng]);
-      map.dragging.disable();
-      e.originalEvent.stopImmediatePropagation();
+      
+      // Store touch start time and position for long-press detection
+      const touchStartTime = Date.now();
+      const touchStartPos: [number, number] = [e.latlng.lat, e.latlng.lng];
+      
+      // Set a timeout for long-press detection (500ms)
+      const longPressTimeout = setTimeout(() => {
+        console.log('Long press detected - starting area selection');
+        e.originalEvent.preventDefault();
+        e.originalEvent.stopPropagation();
+        setIsSelecting(true);
+        setStartPoint(touchStartPos);
+        map.dragging.disable();
+        e.originalEvent.stopImmediatePropagation();
+      }, 500);
+      
+      // Store the timeout ID to clear it if touch ends before long press
+      (e.originalEvent as any).longPressTimeout = longPressTimeout;
     };
 
     const handleMouseMove = (e: any) => {
@@ -263,6 +275,13 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
 
     const handleTouchEnd = (e: any) => {
       console.log('Touch end:', e.latlng, 'isSelecting:', isSelecting, 'currentBounds:', currentBounds);
+      
+      // Clear long-press timeout if it exists (touch ended before long press)
+      if ((e.originalEvent as any).longPressTimeout) {
+        clearTimeout((e.originalEvent as any).longPressTimeout);
+        (e.originalEvent as any).longPressTimeout = null;
+      }
+      
       if (isSelecting && currentBounds) {
         const dragDistance = Math.sqrt(
           Math.pow(e.latlng.lat - startPoint![0], 2) + 
@@ -455,7 +474,7 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
           {selectedRegion ? (
             <p>🗺️ <strong>Selected region:</strong> {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
           ) : (
-            <p>🗺️ <strong>CTRL+click and drag</strong> to select a region for forest impact analysis</p>
+            <p>🗺️ <strong>Desktop:</strong> CTRL+click and drag • <strong>Mobile:</strong> Long press and drag to select a region for forest impact analysis</p>
           )}
         </div>
       </div>
