@@ -98,7 +98,7 @@ export default function Home() {
             </div>
             <p className="text-sm text-gray-600 mb-4">
           <strong>Desktop:</strong> Press CTRL + mouse click and drag.<br />
-          <strong>Mobile:</strong> Long press and drag to select a region on the map.
+          <strong>Mobile:</strong> Tap to create a selection square, then drag to resize.
         </p>
             <div className="flex-1">
               <LocationMap 

@@ -4,7 +4,7 @@ A tool to simulate and analyze the environmental impact of forest planting.
 
 ## 🌟 Key Features
 
-- **Global Map Interface**: CTRL+click and drag on the world map to select regions
+- **Global Map Interface**: Desktop: CTRL+click and drag, Mobile: Tap to create selection square
 - **Real-time Environmental Data**: Live soil, climate, and biodiversity information
 - **60+ Tree Species**: Comprehensive database covering all major climate zones
 - **Advanced Impact Simulation**: Realistic tree growth curves and climate prediction
@@ -44,7 +44,9 @@ This simulator is for educational and planning purposes only. Use at your own ri
 
 ## 📖 How to Use
 
-1. **Select Region**: CTRL+click and drag on the interactive map to select your forest region
+1. **Select Region**: 
+   - **Desktop**: CTRL+click and drag on the interactive map
+   - **Mobile**: Tap to create a selection square, then drag to resize
 2. **Review Data**: View automatically fetched environmental information:
    - Soil carbon content and pH
    - Current temperature and precipitation

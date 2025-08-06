@@ -158,29 +158,45 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleTouchStart = (e: any) => {
-      // For mobile devices, use long-press gesture for area selection
-      // Don't start selection immediately - wait for long press
+      // For mobile devices, use click-to-create-square approach
       console.log('Touch start:', e.latlng);
       
       // Prevent default touch behavior to avoid conflicts
       e.originalEvent.preventDefault();
       e.originalEvent.stopPropagation();
       
-      // Store touch start position for long-press detection
-      const touchStartPos: [number, number] = [e.latlng.lat, e.latlng.lng];
+      // Create a small initial selection square (0.01 degrees in each direction)
+      const initialSize = 0.01;
+      const centerLat = e.latlng.lat;
+      const centerLng = e.latlng.lng;
       
-      // Set a timeout for long-press detection (800ms - longer for better reliability)
-      const longPressTimeout = setTimeout(() => {
-        console.log('Long press detected - starting area selection');
-        setIsSelecting(true);
-        setStartPoint(touchStartPos);
-        map.dragging.disable();
-        e.originalEvent.stopImmediatePropagation();
-      }, 800);
+      const bounds = {
+        getSouth: () => centerLat - initialSize,
+        getNorth: () => centerLat + initialSize,
+        getWest: () => centerLng - initialSize,
+        getEast: () => centerLng + initialSize,
+      };
       
-      // Store the timeout ID to clear it if touch ends before long press
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (e.originalEvent as any).longPressTimeout = longPressTimeout;
+      console.log('Created initial selection square');
+      setIsSelecting(true);
+      setStartPoint([centerLat, centerLng]);
+      setCurrentBounds(bounds);
+      map.dragging.disable();
+      
+      // Create visual rectangle immediately
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const L = require('leaflet');
+      const newTempRectangle = L.rectangle([
+        [bounds.getSouth(), bounds.getWest()],
+        [bounds.getNorth(), bounds.getEast()]
+      ], {
+        color: '#166534',
+        fillColor: '#166534',
+        fillOpacity: 0.2,
+        weight: 2
+      });
+      newTempRectangle.addTo(map);
+      tempRectangleRef.current = newTempRectangle;
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -284,30 +300,12 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
     const handleTouchEnd = (e: any) => {
       console.log('Touch end:', e.latlng, 'isSelecting:', isSelecting, 'currentBounds:', currentBounds);
       
-      // Clear long-press timeout if it exists (touch ended before long press)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((e.originalEvent as any).longPressTimeout) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        clearTimeout((e.originalEvent as any).longPressTimeout);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (e.originalEvent as any).longPressTimeout = null;
+      if (isSelecting && currentBounds) {
+        // For mobile, always confirm the selection since we created it with a tap
+        console.log('Confirming mobile selection');
+        onBoundsChange(currentBounds);
       }
       
-      if (isSelecting && currentBounds) {
-        const dragDistance = Math.sqrt(
-          Math.pow(e.latlng.lat - startPoint![0], 2) + 
-          Math.pow(e.latlng.lng - startPoint![1], 2)
-        );
-        console.log('Drag distance:', dragDistance);
-        if (dragDistance > 0.0001) {
-          console.log('Calling onBoundsChange');
-          onBoundsChange(currentBounds);
-        } else {
-          console.log('Drag distance too small, not selecting region');
-          e.originalEvent.preventDefault();
-          e.originalEvent.stopPropagation();
-        }
-      }
       // Remove temporary rectangle
       if (tempRectangleRef.current) {
         map.removeLayer(tempRectangleRef.current);
