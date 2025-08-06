@@ -161,10 +161,6 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       // For mobile devices, use click-to-create-square approach
       console.log('Touch start:', e.latlng);
       
-      // Prevent default touch behavior to avoid conflicts
-      e.originalEvent.preventDefault();
-      e.originalEvent.stopPropagation();
-      
       // Create a small initial selection square (0.01 degrees in each direction)
       const initialSize = 0.01;
       const centerLat = e.latlng.lat;
@@ -326,6 +322,15 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
     map.on('touchstart', handleTouchStart);
     map.on('touchmove', handleTouchMove);
     map.on('touchend', handleTouchEnd);
+    
+    // Also add click event for mobile as fallback
+    map.on('click', (e: any) => {
+      // Only handle clicks on mobile devices (no CTRL key)
+      if (!e.originalEvent.ctrlKey && 'ontouchstart' in window) {
+        console.log('Mobile click detected:', e.latlng);
+        handleTouchStart(e);
+      }
+    });
 
     return () => {
       map.off('mousedown', handleMouseStart);
@@ -334,6 +339,7 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       map.off('touchstart', handleTouchStart);
       map.off('touchmove', handleTouchMove);
       map.off('touchend', handleTouchEnd);
+      map.off('click');
       if (tempRectangleRef.current) {
         map.removeLayer(tempRectangleRef.current);
       }
