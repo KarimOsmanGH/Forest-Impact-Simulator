@@ -21,6 +21,12 @@ export default function Home() {
   const [years, setYears] = useState<number>(50);
   const [selectedTrees, setSelectedTrees] = useState<TreeType[]>([]);
   const [treePercentages, setTreePercentages] = useState<{ [key: string]: number }>({});
+  const [plantingData, setPlantingData] = useState<{
+    area: number;
+    totalTrees: number;
+    spacing: number;
+    density: number;
+  } | null>(null);
 
   const [faqOpen, setFaqOpen] = useState<{ [key: number]: boolean }>({
     1: false,
@@ -61,6 +67,8 @@ export default function Home() {
     // Clear any existing point selection when region is selected
     setSelectedLatitude(null);
     setSelectedLongitude(null);
+    // Clear planting data as it needs to be recalculated
+    setPlantingData(null);
   };
 
   const handleTreeSelectionChange = (trees: TreeType[]) => {
@@ -71,10 +79,14 @@ export default function Home() {
       newPercentages[tree.id] = 0;
     });
     setTreePercentages(newPercentages);
+    // Clear planting data as it needs to be recalculated
+    setPlantingData(null);
   };
 
   const handleTreePercentagesChange = (percentages: { [key: string]: number }) => {
     setTreePercentages(percentages);
+    // Clear planting data as it needs to be recalculated
+    setPlantingData(null);
   };
 
   const handleImpactDataReady = (data: Partial<ExportData>) => {
@@ -83,6 +95,10 @@ export default function Home() {
 
   const handlePlantingDataReady = (data: Partial<ExportData>) => {
     setExportData(prev => prev ? { ...prev, ...data } : data as ExportData);
+    // Store planting data for ForestImpactCalculator
+    if (data.plantingData) {
+      setPlantingData(data.plantingData);
+    }
   };
 
   return (
@@ -171,6 +187,7 @@ export default function Home() {
                 selectedTrees={selectedTrees.length > 1 ? selectedTrees : undefined}
                 treePercentages={treePercentages}
                 selectedRegion={selectedRegion}
+                plantingData={plantingData}
                 onYearsChange={setYears}
                 onDataReady={handleImpactDataReady}
               />
@@ -186,7 +203,7 @@ export default function Home() {
               <div className="flex items-center justify-center w-10 h-10 bg-orange-600 text-white rounded-full text-lg">🌱</div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">Tree Planting Calculator</h2>
-                <p className="text-sm text-gray-600">Calculate planting density, spacing, and timeline for your selected region</p>
+                <p className="text-sm text-gray-600">Calculate planting density, spacing, and timeline for the region</p>
               </div>
             </div>
             {(selectedRegion || (selectedLatitude && selectedLongitude)) && selectedTrees.length > 0 ? (

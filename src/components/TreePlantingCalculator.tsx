@@ -14,58 +14,46 @@ import {
 } from '@/utils/treePlanting';
 import { ExportData } from '@/utils/exportUtils';
 
-// Custom Tooltip Component
-interface TooltipProps {
+// Collapsible Section Component
+interface CollapsibleSectionProps {
+  title: string;
   children: React.ReactNode;
-  content: string;
+  description: string;
+  isExpanded: boolean;
+  onToggle: () => void;
   className?: string;
 }
 
-const Tooltip: React.FC<TooltipProps> = ({ children, content, className = "" }) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-
-  const showTooltip = (e: React.MouseEvent | React.TouchEvent) => {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setPosition({
-      x: rect.left + rect.width / 2,
-      y: rect.top - 10
-    });
-    setIsVisible(true);
-  };
-
-  const hideTooltip = () => {
-    setIsVisible(false);
-  };
-
+const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ 
+  title, 
+  children, 
+  description, 
+  isExpanded, 
+  onToggle, 
+  className = "" 
+}) => {
   return (
-    <div 
-      className={`relative ${className}`}
-      onMouseEnter={showTooltip}
-      onMouseLeave={hideTooltip}
-      onTouchStart={showTooltip}
-      onTouchEnd={hideTooltip}
-    >
-      {children}
-      {isVisible && (
-        <div 
-          className="absolute z-50 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg max-w-xs"
-          style={{
-            left: `${position.x}px`,
-            top: `${position.y}px`,
-            transform: 'translateX(-50%) translateY(-100%)',
-            pointerEvents: 'none'
-          }}
+    <div className={`bg-white rounded shadow p-4 ${className}`}>
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between text-left hover:bg-gray-50 rounded transition-colors"
+      >
+        <div className="flex-1">
+          <div className="text-xs font-bold text-gray-700 mb-2">{title}</div>
+          {children}
+        </div>
+        <svg
+          className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
         >
-          {content}
-          <div 
-            className="absolute w-2 h-2 bg-gray-900 transform rotate-45"
-            style={{
-              left: '50%',
-              top: '100%',
-              transform: 'translateX(-50%) translateY(-50%)'
-            }}
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isExpanded && (
+        <div className="mt-3 pt-3 border-t border-gray-100">
+          <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
         </div>
       )}
     </div>
@@ -88,6 +76,14 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
   onDataReady
 }) => {
   const [customSpacing, setCustomSpacing] = useState<number | undefined>();
+  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
+
+  const toggleSection = (sectionKey: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
+  };
 
   // Determine which tree to use for planting calculations
   const treeForPlanting = selectedTreeType || (selectedTrees && selectedTrees.length > 0 ? selectedTrees[0] : null);
@@ -264,13 +260,13 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
       </div>
 
       {/* Planting Timeline */}
-      <Tooltip 
-        content="Realistic project planning based on your forest size and recommended planting methods. Includes crew capacity, timeline, and seasonal considerations."
-        className="mb-4 flex flex-col bg-white rounded shadow p-4 cursor-help"
+      <CollapsibleSection
+        title="🌱 Planting Timeline"
+        description="Realistic project planning based on your forest size and recommended planting methods. Includes crew capacity, timeline, and seasonal considerations."
+        isExpanded={expandedSections['planting-timeline'] || false}
+        onToggle={() => toggleSection('planting-timeline')}
+        className="mb-4"
       >
-        <span className="text-xs text-gray-500 mb-2 flex items-center gap-1 font-semibold">
-          🌱 Planting Timeline (Realistic Project Planning)
-        </span>
         <div className="space-y-2">
           <div className="flex justify-between text-xs">
             <span className="text-gray-600">
@@ -303,9 +299,13 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
             <span className="font-medium text-primary">{formatNumber(timeline.treesPerSeason)} trees/season</span>
           </div>
         </div>
-      </Tooltip>
+      </CollapsibleSection>
+
+
     </div>
   );
 };
+
+
 
 export default TreePlantingCalculator; 
