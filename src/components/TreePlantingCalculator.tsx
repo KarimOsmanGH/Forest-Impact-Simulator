@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { TreeType } from '@/types/treeTypes';
 import {
   RegionBounds,
+  TreePlantingConfig,
   calculateTreePlanting,
   formatArea,
   formatNumber,
@@ -11,79 +12,172 @@ import {
   TREE_SPACING_CONFIGS,
   getRecommendedSpacing
 } from '@/utils/treePlanting';
+import { ExportData } from '@/utils/exportUtils';
+
+// Custom Tooltip Component
+interface TooltipProps {
+  children: React.ReactNode;
+  content: string;
+  className?: string;
+}
+
+const Tooltip: React.FC<TooltipProps> = ({ children, content, className = "" }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const showTooltip = (e: React.MouseEvent | React.TouchEvent) => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10
+    });
+    setIsVisible(true);
+  };
+
+  const hideTooltip = () => {
+    setIsVisible(false);
+  };
+
+  return (
+    <div 
+      className={`relative ${className}`}
+      onMouseEnter={showTooltip}
+      onMouseLeave={hideTooltip}
+      onTouchStart={showTooltip}
+      onTouchEnd={hideTooltip}
+    >
+      {children}
+      {isVisible && (
+        <div 
+          className="absolute z-50 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg max-w-xs"
+          style={{
+            left: `${position.x}px`,
+            top: `${position.y}px`,
+            transform: 'translateX(-50%) translateY(-100%)',
+            pointerEvents: 'none'
+          }}
+        >
+          {content}
+          <div 
+            className="absolute w-2 h-2 bg-gray-900 transform rotate-45"
+            style={{
+              left: '50%',
+              top: '100%',
+              transform: 'translateX(-50%) translateY(-50%)'
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface TreePlantingCalculatorProps {
   selectedRegion: RegionBounds | null;
   selectedTreeType: TreeType | null;
   selectedTrees?: TreeType[];
   treePercentages?: { [key: string]: number };
+  onDataReady?: (data: Partial<ExportData>) => void;
 }
 
 const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
   selectedRegion,
   selectedTreeType,
   selectedTrees,
-  treePercentages
+  treePercentages,
+  onDataReady
 }) => {
   const [customSpacing, setCustomSpacing] = useState<number | undefined>();
 
+  // Determine which tree to use for planting calculations
+  const treeForPlanting = selectedTreeType || (selectedTrees && selectedTrees.length > 0 ? selectedTrees[0] : null);
+  
+  // Calculate planting configuration
+  let plantingConfig: TreePlantingConfig | undefined;
+  let timeline: {
+    treesPerYear: number;
+    yearsToComplete: number;
+    treesPerSeason: number;
+    projectScale: string;
+    recommendedApproach: string;
+  } | undefined;
+  
+  if (selectedRegion && treeForPlanting) {
+    if (selectedTrees && selectedTrees.length > 1 && treePercentages) {
+      // For multiple trees, calculate weighted average spacing
+      let totalWeight = 0;
+      let weightedSpacing = 0;
+      
+      selectedTrees.forEach(tree => {
+        const percentage = treePercentages[tree.id] || 0;
+        const spacingKey = getRecommendedSpacing(tree.name);
+        const spacing = TREE_SPACING_CONFIGS[spacingKey].spacing;
+        
+        totalWeight += percentage;
+        weightedSpacing += spacing * (percentage / 100);
+      });
+      
+      // Use weighted average spacing, but ensure it's within reasonable bounds
+      let avgSpacing = totalWeight > 0 ? weightedSpacing : TREE_SPACING_CONFIGS.standard.spacing;
+      
+      // Ensure spacing is within reasonable bounds (2.5m to 6.0m)
+      avgSpacing = Math.max(2.5, Math.min(6.0, avgSpacing));
+      
+      // If percentages don't add up to 100%, adjust to use standard spacing
+      if (Math.abs(totalWeight - 100) > 5) {
+        avgSpacing = TREE_SPACING_CONFIGS.standard.spacing;
+      }
+      
+      plantingConfig = calculateTreePlanting(
+        selectedRegion,
+        'mixed', // Use 'mixed' to trigger custom spacing
+        avgSpacing
+      );
+    } else {
+      // Single tree or no percentages - use normal calculation
+      plantingConfig = calculateTreePlanting(
+        selectedRegion,
+        treeForPlanting.name,
+        customSpacing
+      );
+    }
 
+    // Note: Carbon sequestration and mortality calculations removed as requested
+    timeline = calculatePlantingTimeline(plantingConfig.totalTrees);
+  }
 
+  // Call onDataReady callback when data is available
+  React.useEffect(() => {
+    if (onDataReady && selectedRegion && plantingConfig && timeline) {
+      onDataReady({
+        plantingData: {
+          area: plantingConfig.area,
+          totalTrees: plantingConfig.totalTrees,
+          spacing: plantingConfig.spacing,
+          density: plantingConfig.density,
+          timeline: {
+            yearsToComplete: timeline.yearsToComplete,
+            treesPerSeason: timeline.treesPerSeason
+          }
+        }
+      });
+    }
+  }, [onDataReady, selectedRegion, plantingConfig, timeline]);
+
+  // Early return checks - must be after all hooks
   if (!selectedRegion || (!selectedTreeType && (!selectedTrees || selectedTrees.length === 0))) {
     return null;
   }
-
-  // Determine which tree to use for planting calculations
-  const treeForPlanting = selectedTreeType || (selectedTrees && selectedTrees.length > 0 ? selectedTrees[0] : null);
   
   if (!treeForPlanting) {
     return null;
   }
 
-  // Calculate planting configuration
-  let plantingConfig;
-  
-  if (selectedTrees && selectedTrees.length > 1 && treePercentages) {
-    // For multiple trees, calculate weighted average spacing
-    let totalWeight = 0;
-    let weightedSpacing = 0;
-    
-    selectedTrees.forEach(tree => {
-      const percentage = treePercentages[tree.id] || 0;
-      const spacingKey = getRecommendedSpacing(tree.name);
-      const spacing = TREE_SPACING_CONFIGS[spacingKey].spacing;
-      
-      totalWeight += percentage;
-      weightedSpacing += spacing * (percentage / 100);
-    });
-    
-    // Use weighted average spacing, but ensure it's within reasonable bounds
-    let avgSpacing = totalWeight > 0 ? weightedSpacing : TREE_SPACING_CONFIGS.standard.spacing;
-    
-    // Ensure spacing is within reasonable bounds (2.5m to 6.0m)
-    avgSpacing = Math.max(2.5, Math.min(6.0, avgSpacing));
-    
-    // If percentages don't add up to 100%, adjust to use standard spacing
-    if (Math.abs(totalWeight - 100) > 5) {
-      avgSpacing = TREE_SPACING_CONFIGS.standard.spacing;
-    }
-    
-    plantingConfig = calculateTreePlanting(
-      selectedRegion,
-      'mixed', // Use 'mixed' to trigger custom spacing
-      avgSpacing
-    );
-  } else {
-    // Single tree or no percentages - use normal calculation
-    plantingConfig = calculateTreePlanting(
-      selectedRegion,
-      treeForPlanting.name,
-      customSpacing
-    );
+  if (!plantingConfig || !timeline) {
+    return null;
   }
 
-  // Note: Carbon sequestration and mortality calculations removed as requested
-  const timeline = calculatePlantingTimeline(plantingConfig.totalTrees);
+
 
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
@@ -170,58 +264,46 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
       </div>
 
       {/* Planting Timeline */}
-      <div className="mb-4 flex flex-col bg-white rounded shadow p-4">
+      <Tooltip 
+        content="Realistic project planning based on your forest size and recommended planting methods. Includes crew capacity, timeline, and seasonal considerations."
+        className="mb-4 flex flex-col bg-white rounded shadow p-4 cursor-help"
+      >
         <span className="text-xs text-gray-500 mb-2 flex items-center gap-1 font-semibold">
           🌱 Planting Timeline (Realistic Project Planning)
         </span>
         <div className="space-y-2">
           <div className="flex justify-between text-xs">
-            <span 
-              className="text-gray-600 cursor-help"
-              title="Project scale determines planting rates, crew size, and equipment used. Larger projects can use more efficient methods."
-            >
+            <span className="text-gray-600">
               <strong>Project Scale:</strong>
             </span>
             <span className="font-medium text-primary">{timeline.projectScale}</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span 
-              className="text-gray-600 cursor-help"
-              title="Recommended approach based on project scale, including crew size, equipment, and methodology."
-            >
+            <span className="text-gray-600">
               <strong>Recommended Approach:</strong>
             </span>
             <span className="font-medium text-primary text-right max-w-xs">{timeline.recommendedApproach}</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span 
-              className="text-gray-600 cursor-help"
-              title="Planting rate assumes experienced crew with appropriate equipment for the project scale."
-            >
+            <span className="text-gray-600">
               <strong>Planting capacity:</strong>
             </span>
             <span className="font-medium text-primary">{formatNumber(timeline.treesPerYear)} trees/year</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span 
-              className="text-gray-600 cursor-help"
-              title="Total time to complete all planting based on project scale and recommended approach."
-            >
+            <span className="text-gray-600">
               <strong>Project duration:</strong>
             </span>
             <span className="font-medium text-primary">{timeline.yearsToComplete} year{timeline.yearsToComplete !== 1 ? 's' : ''}</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span 
-              className="text-gray-600 cursor-help"
-              title="Trees planted per planting season, accounting for optimal planting windows and weather conditions."
-            >
+            <span className="text-gray-600">
               <strong>Seasonal workload:</strong>
             </span>
             <span className="font-medium text-primary">{formatNumber(timeline.treesPerSeason)} trees/season</span>
           </div>
         </div>
-      </div>
+      </Tooltip>
     </div>
   );
 };

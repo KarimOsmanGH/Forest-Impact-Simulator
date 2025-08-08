@@ -5,11 +5,12 @@ A tool to simulate and analyze the environmental impact of forest planting.
 ## 🌟 Key Features
 
 - **Global Map Interface**: Desktop: CTRL+click and drag, Mobile: Tap to create selection square
-- **Real-time Environmental Data**: Live soil, climate, and biodiversity information
+- **Real-time Environmental Data**: Live soil, climate, and biodiversity information with intelligent fallbacks
 - **60+ Tree Species**: Comprehensive database covering all major climate zones
 - **Advanced Impact Simulation**: Realistic tree growth curves and climate prediction
 - **Dynamic Time Analysis**: Simulate forest development over 1-100 years
 - **Professional Planning Tools**: Realistic planting timelines and project scale analysis
+- **Export Functionality**: Download results in GeoJSON, JSON, and CSV formats
 
 ## 🚀 Quick Start
 
@@ -49,12 +50,13 @@ This simulator is for educational and planning purposes only. Use at your own ri
    - **Mobile**: Tap to create a selection square, then drag to resize
 2. **Review Data**: View automatically fetched environmental information:
    - Soil carbon content and pH
-   - Current temperature and precipitation
+   - Current temperature and precipitation (with geographic fallbacks when unavailable)
    - Local biodiversity data
 3. **Choose Trees**: Select from 60 tree species across 5 categories (Deciduous, Coniferous, Tropical, Mediterranean, Boreal)
 4. **Set Distribution**: For multiple trees, specify percentage distribution or use equal split
 5. **Set Duration**: Adjust simulation years (1-100) using the slider
 6. **Analyze Results**: Review annual and cumulative environmental impacts with real-world comparisons
+7. **Export Results**: Download your analysis in GeoJSON (GIS), JSON (data), or CSV (spreadsheets) format
 
 ## 🛠️ Technology Stack
 

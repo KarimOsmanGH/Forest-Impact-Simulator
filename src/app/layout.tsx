@@ -50,6 +50,47 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "Forest Impact Simulator",
+              "description": "Simulate the real-world impact of forests using live soil, climate, and biodiversity data. Plan tree planting projects with scientific accuracy and visualize carbon sequestration, biodiversity impact, and environmental benefits.",
+              "url": "https://forest-impact-simulator.vercel.app",
+              "applicationCategory": "EnvironmentalApplication",
+              "operatingSystem": "Web Browser",
+              "author": {
+                "@type": "Person",
+                "name": "Karim Osman",
+                "url": "https://kar.im"
+              },
+              "creator": {
+                "@type": "Person",
+                "name": "Karim Osman",
+                "url": "https://kar.im"
+              },
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              },
+              "featureList": [
+                "Real-time environmental data",
+                "60+ tree species database",
+                "Climate prediction modeling",
+                "Carbon sequestration analysis",
+                "Biodiversity impact assessment",
+                "Export results in multiple formats"
+              ],
+              "screenshot": "https://forest-impact-simulator.vercel.app/og-image.png",
+              "softwareVersion": "1.0.0"
+            })
+          }}
+        />
+      </head>
       <body className={inter.className}>
         <div className="min-h-screen flex flex-col">
           <Header />
