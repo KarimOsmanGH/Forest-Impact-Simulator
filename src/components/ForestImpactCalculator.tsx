@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { TreeType } from '@/types/treeTypes';
 import { validateLatitude, validateLongitude, validateYears, apiRateLimiter } from '@/utils/security';
 import { ExportData } from '@/utils/exportUtils';
-import { calculateRegionArea, getRecommendedSpacing, TREE_SPACING_CONFIGS } from '@/utils/treePlanting';
+import { calculateRegionArea, getRecommendedSpacing, TREE_SPACING_CONFIGS, formatArea } from '@/utils/treePlanting';
 
 // Collapsible Section Component
 interface CollapsibleSectionProps {
@@ -31,7 +31,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         className="w-full flex items-center justify-between text-left hover:bg-gray-50 rounded transition-colors"
       >
         <div className="flex-1">
-          <div className="text-xs text-gray-500 mb-1">{title}</div>
+          <div className="text-xs text-gray-900 font-bold mb-1">{title}</div>
           <div className="text-primary font-bold text-lg">{value}</div>
         </div>
         <svg
@@ -728,19 +728,27 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
   }
 
   return (
-    <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg shadow-md">
-      <h3 className="text-lg font-semibold mb-4">Forest Impact Simulation</h3>
-
+    <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-md">
       {selectedRegion && (
-        <div className="mb-4 p-3 bg-white border border-gray-200 rounded-lg">
-          <h4 className="font-semibold text-gray-800 mb-2 text-sm">Selected Region</h4>
-          <p className="text-xs text-black">
-            <strong>Area:</strong> {selectedRegion.north.toFixed(4)}°N to {selectedRegion.south.toFixed(4)}°S,
-            {selectedRegion.east.toFixed(4)}°E to {selectedRegion.west.toFixed(4)}°W
-          </p>
-          <p className="text-xs text-black mt-1">
-            <strong>Analysis based on center point:</strong> {latitude?.toFixed(4)}, {longitude?.toFixed(4)}
-          </p>
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <h4 className="font-semibold mb-2">Selected Region</h4>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <span className="text-gray-900 font-bold">Area size:</span>
+              <p className="font-medium">{formatArea(calculateRegionArea(selectedRegion))}</p>
+            </div>
+            <div>
+              <span className="text-gray-900 font-bold">Coordinates:</span>
+              <p className="font-medium text-xs">
+                {selectedRegion.south.toFixed(4)}°S to {selectedRegion.north.toFixed(4)}°N<br />
+                {selectedRegion.west.toFixed(4)}°W to {selectedRegion.east.toFixed(4)}°E
+              </p>
+            </div>
+          </div>
+          <div className="mt-2">
+            <span className="text-gray-900 font-bold text-xs">Analysis based on center point:</span>
+            <p className="font-medium text-xs">{latitude?.toFixed(4)}, {longitude?.toFixed(4)}</p>
+          </div>
         </div>
       )}
 
@@ -751,12 +759,21 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Calculation Mode
             </label>
-            <p className="text-xs text-gray-500">
-              {calculationMode === 'perTree' 
-                ? 'Showing impact per individual tree' 
-                : `Showing impact for entire area (${totalTrees.toLocaleString()} trees at ${treeSpacing}m spacing)`
-              }
-            </p>
+            {calculationMode === 'perTree' ? (
+              <p className="text-xs text-gray-500">
+                Showing impact per individual tree
+              </p>
+            ) : (
+              <div className="text-xs text-gray-500">
+                <p className="font-bold">Showing impact for entire area:</p>
+                <ul className="mt-1">
+                  <li className="flex items-start">
+                    <span className="text-gray-400 mr-2">•</span>
+                    <span>{totalTrees.toLocaleString()} trees at {treeSpacing}m spacing</span>
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -811,7 +828,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
 
       <div className="mb-4">
         <h4 className="font-semibold mb-2">Environmental Data</h4>
-        <ul className="text-xs text-gray-700 space-y-1">
+        <ul className="text-xs text-gray-700 space-y-1 list-disc list-inside">
           <li><strong>Soil Carbon:</strong> {soil?.carbon !== undefined && soil.carbon !== null ? `${soil.carbon.toFixed(1)} g/kg` : 'N/A'}</li>
           <li><strong>Soil pH:</strong> {soil?.ph !== undefined && soil.ph !== null ? soil.ph.toFixed(1) : 'N/A'}</li>
           <li>
@@ -877,7 +894,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 max-w-5xl w-full">
         <CollapsibleSection
-          title={`Annual Carbon Sequestration (Year ${years})${calculationMode === 'entireArea' ? ` (${totalTrees.toLocaleString()} trees)` : ''}`}
+          title="Annual Carbon Sequestration"
           value={calculationMode === 'perTree' 
             ? `${calculateAnnualCarbonWithGrowth(impact.carbonSequestration, years).toFixed(1)} kg CO₂/year`
             : `${(calculateAnnualCarbonWithGrowth(impact.carbonSequestration, years) / 1000).toFixed(1)} metric tons CO₂/year`
@@ -891,7 +908,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         />
         
         <CollapsibleSection
-          title={`${calculationMode === 'perTree' ? totalCarbonLabel : `Total Carbon (${years} years)`}${calculationMode === 'entireArea' ? ` (${totalTrees.toLocaleString()} trees)` : ''}`}
+          title="Total Carbon"
           value={`${formatTotalCarbon(totalCarbon)} ${getTotalCarbonUnit()}`}
           description={calculationMode === 'perTree' 
             ? (climate?.temperature !== null && climate?.temperature !== undefined && 
@@ -905,7 +922,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         />
         
         <CollapsibleSection
-          title={`Biodiversity Impact (avg over ${years} year${years !== 1 ? 's' : ''})`}
+          title="Biodiversity Impact"
           value={`${averageBiodiversity.toFixed(1)}/5`}
           description="Measures ecosystem diversity and habitat quality. Higher values indicate better biodiversity support and wildlife habitat creation."
           isExpanded={expandedSections['biodiversity'] || false}
@@ -913,7 +930,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         />
         
         <CollapsibleSection
-          title={`Forest Resilience (avg over ${years} year${years !== 1 ? 's' : ''})`}
+          title="Forest Resilience"
           value={`${averageResilience.toFixed(1)}/5`}
           description="Forest's ability to withstand climate change, pests, and disturbances. Higher values indicate more resilient ecosystems."
           isExpanded={expandedSections['resilience'] || false}
@@ -921,7 +938,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         />
         
         <CollapsibleSection
-          title={`Water Retention (after ${years} year${years !== 1 ? 's' : ''})`}
+          title="Water Retention"
           value={`${impact.waterRetention.toFixed(0)}%`}
           description="Percentage of rainfall retained in soil and groundwater. Improves over time as tree roots develop and soil structure improves."
           isExpanded={expandedSections['water-retention'] || false}
@@ -929,7 +946,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         />
         
         <CollapsibleSection
-          title={`Air Quality Improvement (after ${years} year${years !== 1 ? 's' : ''})`}
+          title="Air Quality Improvement"
           value={`${impact.airQualityImprovement.toFixed(0)}%`}
           description="Reduction in air pollution through particle filtration and oxygen production. Improves as trees mature and canopy develops."
           isExpanded={expandedSections['air-quality'] || false}
@@ -940,16 +957,20 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       {comparisons.length > 0 && (
         <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
           <h4 className="font-semibold text-green-800 mb-2">Real-world Impact Comparison</h4>
-          <p className="text-sm text-green-700 mb-2">
+          <p className="text-xs text-green-700 mb-2 font-bold">
             This forest would sequester the equivalent of:
           </p>
-          <ul className="text-sm text-green-700 space-y-1">
-            {comparisons.map((comparison, index) => (
-              <li key={index} className="flex items-start">
-                <span className="text-green-600 mr-2">•</span>
-                <span><strong>{comparison}</strong></span>
-              </li>
-            ))}
+          <ul className="text-xs text-green-700 space-y-1">
+            {comparisons.map((comparison, index) => {
+              // Make numbers bold, including both the first number and "X years"
+              const formattedText = comparison.replace(/(\d+\.?\d*)/g, '<strong>$1</strong>');
+              return (
+                <li key={index} className="flex items-start">
+                  <span className="text-green-600 mr-2">•</span>
+                  <span dangerouslySetInnerHTML={{ __html: formattedText }} />
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

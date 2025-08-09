@@ -193,7 +193,7 @@ export default function Home() {
               />
             ) : (
               <div className="p-6 bg-white border border-gray-200 rounded-lg">
-                <p className="text-gray-600">Select tree types to see the potential impact of planting a forest at this location.</p>
+                <p className="text-sm text-gray-600">Select tree types to see the potential impact of planting a forest at this location.</p>
               </div>
             )}
           </div>
@@ -221,7 +221,7 @@ export default function Home() {
               />
             ) : (
               <div className="p-6 bg-white border border-gray-200 rounded-lg">
-                <p className="text-gray-600">Select a region and tree types to see planting calculations.</p>
+                <p className="text-sm text-gray-600">Select a region and tree types to see planting calculations.</p>
               </div>
             )}
           </div>

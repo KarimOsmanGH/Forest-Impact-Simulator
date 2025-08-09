@@ -39,7 +39,7 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
         className="w-full flex items-center justify-between text-left hover:bg-gray-50 rounded transition-colors"
       >
         <div className="flex-1">
-          <div className="text-xs font-bold text-gray-700 mb-2">{title}</div>
+          <div className="font-semibold mb-2">{title}</div>
           {children}
         </div>
         <svg
@@ -183,11 +183,11 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
         <h4 className="font-semibold mb-2">Selected Region</h4>
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div>
-            <span className="text-gray-500">Area:</span>
+            <span className="text-gray-900 font-bold">Area size:</span>
             <p className="font-medium">{formatArea(plantingConfig.area)}</p>
           </div>
           <div>
-            <span className="text-gray-500">Coordinates:</span>
+            <span className="text-gray-900 font-bold">Coordinates:</span>
             <p className="font-medium text-xs">
               {selectedRegion.south.toFixed(4)}°S to {selectedRegion.north.toFixed(4)}°N<br />
               {selectedRegion.west.toFixed(4)}°W to {selectedRegion.east.toFixed(4)}°E
@@ -260,46 +260,34 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
       </div>
 
       {/* Planting Timeline */}
-      <CollapsibleSection
-        title="🌱 Planting Timeline"
-        description="Realistic project planning based on your forest size and recommended planting methods. Includes crew capacity, timeline, and seasonal considerations."
-        isExpanded={expandedSections['planting-timeline'] || false}
-        onToggle={() => toggleSection('planting-timeline')}
-        className="mb-4"
-      >
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-600">
-              <strong>Project Scale:</strong>
-            </span>
-            <span className="font-medium text-primary">{timeline.projectScale}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-600">
-              <strong>Recommended Approach:</strong>
-            </span>
-            <span className="font-medium text-primary text-right max-w-xs">{timeline.recommendedApproach}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-600">
-              <strong>Planting capacity:</strong>
-            </span>
-            <span className="font-medium text-primary">{formatNumber(timeline.treesPerYear)} trees/year</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-600">
-              <strong>Project duration:</strong>
-            </span>
-            <span className="font-medium text-primary">{timeline.yearsToComplete} year{timeline.yearsToComplete !== 1 ? 's' : ''}</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-gray-600">
-              <strong>Seasonal workload:</strong>
-            </span>
-            <span className="font-medium text-primary">{formatNumber(timeline.treesPerSeason)} trees/season</span>
-          </div>
-        </div>
-      </CollapsibleSection>
+      <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <h4 className="font-semibold text-green-800 mb-2">Planting Timeline</h4>
+        <p className="text-xs text-green-700 mb-2">
+          Project planning of your forest size and recommended planting methods:
+        </p>
+        <ul className="text-xs text-green-700 space-y-1">
+          <li className="flex items-start">
+            <span className="text-green-600 mr-2">•</span>
+            <span><strong>Project Scale:</strong> {timeline.projectScale}</span>
+          </li>
+          <li className="flex items-start">
+            <span className="text-green-600 mr-2">•</span>
+            <span><strong>Recommended Approach:</strong> {timeline.recommendedApproach}</span>
+          </li>
+          <li className="flex items-start">
+            <span className="text-green-600 mr-2">•</span>
+            <span><strong>Planting Capacity:</strong> {formatNumber(timeline.treesPerYear)} trees/year</span>
+          </li>
+          <li className="flex items-start">
+            <span className="text-green-600 mr-2">•</span>
+            <span><strong>Project Duration:</strong> {timeline.yearsToComplete} year{timeline.yearsToComplete !== 1 ? 's' : ''}</span>
+          </li>
+          <li className="flex items-start">
+            <span className="text-green-600 mr-2">•</span>
+            <span><strong>Seasonal Workload:</strong> {formatNumber(timeline.treesPerSeason)} trees/season</span>
+          </li>
+        </ul>
+      </div>
 
 
     </div>
