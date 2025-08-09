@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TreeType, TREE_TYPES, getTreeTypesByClimate } from '@/types/treeTypes';
 
 interface TreeTypeSelectorProps {
@@ -10,6 +10,12 @@ interface TreeTypeSelectorProps {
   onTreePercentagesChange: (percentages: { [key: string]: number }) => void;
   climate?: string;
   latitude?: number;
+  selectedRegion?: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  } | null;
 }
 
 const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({ 
@@ -18,10 +24,73 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
   treePercentages,
   onTreePercentagesChange,
   climate,
-  latitude 
+  latitude,
+  selectedRegion
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+
+  // Get climate zone based on latitude and longitude
+  const getClimateZone = (lat: number, lng?: number): string => {
+    const absLat = Math.abs(lat);
+    
+    // Arid zones (major desert regions)
+    if (lng !== undefined) {
+      // North American deserts (southwestern US/northwestern Mexico)
+      if (absLat >= 25 && absLat <= 40 && lng >= -125 && lng <= -105) return 'arid';
+      // Australian outback
+      if (absLat >= 15 && absLat <= 35 && lng >= 110 && lng <= 155) return 'arid';
+      // Middle East/North Africa
+      if (absLat >= 15 && absLat <= 35 && lng >= -10 && lng <= 60) return 'arid';
+      // Sahara region
+      if (absLat >= 10 && absLat <= 30 && lng >= -20 && lng <= 35) return 'arid';
+    }
+    
+    // Subtropical zones
+    if (absLat >= 23.5 && absLat <= 35) {
+      // Check for subtropical regions (southeastern US, southern China, etc.)
+      if (lng !== undefined) {
+        // Southeastern US
+        if (lng >= -95 && lng <= -75) return 'subtropical';
+        // Southern China/East Asia
+        if (lng >= 100 && lng <= 130) return 'subtropical';
+        // Eastern Australia
+        if (lng >= 145 && lng <= 155) return 'subtropical';
+        // Northern Argentina/Southern Brazil
+        if (lng >= -65 && lng <= -45) return 'subtropical';
+      }
+      return 'subtropical'; // Default for this latitude band
+    }
+    
+    // Other climate zones
+    if (absLat < 23.5) return 'tropical';
+    if (absLat < 45) return 'temperate';
+    if (absLat < 66.5) return 'temperate';
+    return 'boreal';
+  };
+
+  // Get recommended species for the selected region
+  const getRecommendedSpecies = (): TreeType[] => {
+    if (!selectedRegion) return [];
+    
+    const centerLat = (selectedRegion.north + selectedRegion.south) / 2;
+    const centerLng = (selectedRegion.east + selectedRegion.west) / 2;
+    const climateZone = getClimateZone(centerLat, centerLng);
+    
+    // Get trees suitable for this climate zone
+    const suitableTrees = TREE_TYPES.filter(tree => 
+      tree.climateZones.includes(climateZone)
+    );
+    
+    // Sort by biodiversity value and return top 3
+    return suitableTrees
+      .sort((a, b) => b.biodiversityValue - a.biodiversityValue)
+      .slice(0, 3);
+  };
+
+  const recommendedSpecies = getRecommendedSpecies();
+
+
 
   // Filter trees based on climate and latitude
   const getSuitableTrees = () => {
@@ -54,9 +123,19 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
                          tree.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || tree.category === selectedCategory;
     return matchesSearch && matchesCategory;
+  }).sort((a, b) => {
+    // Sort recommended species to the top
+    const aIsRecommended = recommendedSpecies.some(rec => rec.id === a.id);
+    const bIsRecommended = recommendedSpecies.some(rec => rec.id === b.id);
+    
+    if (aIsRecommended && !bIsRecommended) return -1;
+    if (!aIsRecommended && bIsRecommended) return 1;
+    
+    // If both or neither are recommended, maintain original order
+    return 0;
   });
 
-  const categories = ['all', 'deciduous', 'coniferous', 'tropical', 'mediterranean', 'boreal'];
+  const categories = ['all', 'deciduous', 'coniferous', 'tropical', 'mediterranean', 'boreal', 'arid', 'subtropical'];
 
   const handleTreeToggle = (tree: TreeType) => {
     const isSelected = selectedTrees.some(t => t.id === tree.id);
@@ -75,14 +154,6 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
 
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 min-h-[450px]">
-      <div className="flex items-center justify-end mb-3">
-        <button
-          onClick={clearAll}
-          className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
-        >
-          Clear All
-        </button>
-      </div>
       
       {/* Search and Filter */}
       <div className="mb-3 space-y-2">
@@ -106,6 +177,8 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
                     category === 'tropical' ? 'bg-green-600 text-white' :
                     category === 'mediterranean' ? 'bg-green-900 text-white' :
                     category === 'boreal' ? 'bg-green-950 text-white' :
+                    category === 'arid' ? 'bg-yellow-600 text-white' :
+                    category === 'subtropical' ? 'bg-green-500 text-white' :
                     'bg-green-700 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -116,12 +189,29 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
         </div>
       </div>
 
+      {/* Recommended species text - shown when region is selected */}
+      {recommendedSpecies.length > 0 && (
+        <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded">
+          <p className="text-xs text-green-600">
+            <span className="font-medium">Recommended for this region:</span> {recommendedSpecies.map(tree => tree.name).join(', ')}
+          </p>
+        </div>
+      )}
+
       {/* Selected Trees Summary */}
       {selectedTrees.length > 0 && (
         <div className="mb-3 p-2 bg-gray-100 border border-gray-200 rounded">
-          <p className="text-sm text-gray-700">
-            <span className="font-medium">{selectedTrees.length}</span> tree{selectedTrees.length !== 1 ? 's' : ''} selected
-          </p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm text-gray-700">
+              <span className="font-medium">{selectedTrees.length}</span> tree{selectedTrees.length !== 1 ? 's' : ''} selected
+            </p>
+            <button
+              onClick={clearAll}
+              className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              Clear All
+            </button>
+          </div>
           <div className="flex flex-wrap gap-1 mt-1">
             {selectedTrees.map(tree => (
               <div
@@ -215,6 +305,8 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
                       tree.category === 'tropical' ? 'bg-green-600' :
                       tree.category === 'mediterranean' ? 'bg-green-900' :
                       tree.category === 'boreal' ? 'bg-green-950' :
+                      tree.category === 'arid' ? 'bg-yellow-600' :
+                      tree.category === 'subtropical' ? 'bg-green-500' :
                       'bg-green-700'
                     }`}
                     style={{ width: `${treePercentages[tree.id] || 0}%` }}
@@ -247,6 +339,7 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
       <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto">
         {filteredTrees.map(tree => {
           const isSelected = selectedTrees.some(t => t.id === tree.id);
+          const isRecommended = recommendedSpecies.some(rec => rec.id === tree.id);
           return (
             <div
               key={tree.id}
@@ -258,6 +351,8 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
                     tree.category === 'tropical' ? 'border-green-600 bg-green-50' :
                     tree.category === 'mediterranean' ? 'border-green-900 bg-green-50' :
                     tree.category === 'boreal' ? 'border-green-950 bg-green-50' :
+                    tree.category === 'arid' ? 'border-yellow-600 bg-yellow-50' :
+                    tree.category === 'subtropical' ? 'border-green-500 bg-green-50' :
                     'border-green-700 bg-green-50'
                   : 'border-gray-200 hover:border-green-500/50'
               }`}
@@ -266,7 +361,10 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1 mr-2">
-                    <h4 className="font-semibold text-gray-900 text-sm">{tree.name} <span className="font-normal text-gray-500">- {tree.scientificName}</span></h4>
+                    <h4 className="font-semibold text-gray-900 text-sm">
+                      {isRecommended && <span className="text-green-600 mr-1">★</span>}
+                      {tree.name} <span className="font-normal text-gray-500">- {tree.scientificName}</span>
+                    </h4>
                   </div>
                   <div className="flex items-center gap-2">
                     {/* Selection Indicator */}
@@ -277,6 +375,8 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
                         tree.category === 'tropical' ? 'bg-green-600' :
                         tree.category === 'mediterranean' ? 'bg-green-900' :
                         tree.category === 'boreal' ? 'bg-green-950' :
+                        tree.category === 'arid' ? 'bg-yellow-600' :
+                        tree.category === 'subtropical' ? 'bg-green-500' :
                         'bg-green-700'
                       }`}>
                         ✓
@@ -288,6 +388,8 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
                       tree.category === 'tropical' ? 'bg-green-600 text-white' :
                       tree.category === 'mediterranean' ? 'bg-green-900 text-white' :
                       tree.category === 'boreal' ? 'bg-green-950 text-white' :
+                      tree.category === 'arid' ? 'bg-yellow-600 text-white' :
+                      tree.category === 'subtropical' ? 'bg-green-500 text-white' :
                       'bg-green-700 text-white'
                     }`}>
                       {tree.category.charAt(0).toUpperCase() + tree.category.slice(1)}

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useMap } from 'react-leaflet';
 import LocationSearch from './LocationSearch';
+import { calculateRegionArea, formatArea, type RegionBounds } from '@/utils/treePlanting';
 
 // Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(
@@ -488,9 +489,17 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
       <div className="p-3 bg-gray-50 border-t border-gray-200">
         <div className="text-sm text-gray-600">
           {selectedRegion ? (
-            <p>🗺️ <strong>Selected region:</strong> {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
+            <div className="space-y-1">
+              <p><strong>Selected region:</strong> {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
+              <p><strong>Area size:</strong> {formatArea(calculateRegionArea({
+                north: selectedRegion[0],
+                south: selectedRegion[2], 
+                east: selectedRegion[3],
+                west: selectedRegion[1]
+              }))}</p>
+            </div>
           ) : (
-            <p>🗺️ Select a region for forest impact analysis</p>
+            <p>Select a region for forest impact analysis</p>
           )}
         </div>
       </div>

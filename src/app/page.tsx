@@ -118,7 +118,7 @@ export default function Home() {
             </div>
             <div className="flex items-center text-sm text-gray-700 bg-white px-4 py-2 rounded-lg shadow-sm border border-blue-100">
               <span className="w-3 h-3 bg-blue-500 rounded-full mr-3"></span>
-              <span className="font-medium">60+ tree species database</span>
+                              <span className="font-medium">80 tree species database</span>
             </div>
             <div className="flex items-center text-sm text-gray-700 bg-white px-4 py-2 rounded-lg shadow-sm border border-purple-100">
               <span className="w-3 h-3 bg-purple-500 rounded-full mr-3"></span>
@@ -163,6 +163,7 @@ export default function Home() {
                 treePercentages={treePercentages}
                 onTreePercentagesChange={handleTreePercentagesChange}
                 latitude={selectedLatitude || undefined}
+                selectedRegion={selectedRegion}
               />
             </div>
           </div>
@@ -556,17 +557,16 @@ export default function Home() {
               {faqOpen[7] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
-                    Our comprehensive tree database includes 60 species from around the world, covering diverse ecosystems and climate zones:
+                    Our comprehensive tree database includes 80 species from around the world, covering diverse ecosystems and 7 major climate zones:
                   </p>
                   <ul className="text-gray-900 mb-3 space-y-1">
-                    <li><strong>European Trees:</strong> Oak, Beech, Ash, Rowan, Juniper, and more</li>
-                    <li><strong>North American Trees:</strong> Coast Redwood, Tulip Poplar, Sugar Maple, and others</li>
-                    <li><strong>Mediterranean Trees:</strong> Olive, Cork Oak, Aleppo Pine, and Mediterranean species</li>
-                    <li><strong>Tropical Trees:</strong> Mahogany, Teak, Mango, and tropical hardwoods</li>
-                    <li><strong>African Trees:</strong> Baobab, Acacia, and African native species</li>
-                    <li><strong>Asian Trees:</strong> Bamboo, Ginkgo, Cherry, and Asian varieties</li>
+                    <li><strong>Temperate Trees:</strong> Oak, Beech, Ash, Maple, Birch, and European/North American species</li>
+                    <li><strong>Coniferous Trees:</strong> Pine, Spruce, Cedar, Redwood, and other evergreens</li>
+                    <li><strong>Tropical Trees:</strong> Mahogany, Teak, Mango, Mangrove, and tropical hardwoods</li>
+                    <li><strong>Mediterranean Trees:</strong> Olive, Cork Oak, Aleppo Pine, and Mediterranean climate species</li>
                     <li><strong>Boreal Trees:</strong> Black Spruce, White Spruce, Balsam Fir, Tamarack, Jack Pine, and northern forest species</li>
-                    <li><strong>Coniferous Trees:</strong> Pine, Spruce, Cedar, and other evergreens</li>
+                    <li><strong>Arid Zone Trees:</strong> Mesquite, Palo Verde, Desert Ironwood, Joshua Tree, and drought-resistant species</li>
+                    <li><strong>Subtropical Trees:</strong> Live Oak, Bald Cypress, Southern Magnolia, Pecan, and warm climate species</li>
                   </ul>
                   <p className="text-gray-900 mb-3">
                     Each tree species includes detailed data on carbon sequestration rates, growth characteristics, biodiversity value, climate preferences, and environmental impact factors. The database is continuously updated with new species and improved data.

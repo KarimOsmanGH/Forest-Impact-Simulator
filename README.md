@@ -6,9 +6,10 @@ A tool to simulate and analyze the environmental impact of forest planting.
 
 - **Global Map Interface**: Desktop: CTRL+click and drag, Mobile: Tap to create selection square
 - **Real-time Environmental Data**: Live soil, climate, and biodiversity information with intelligent fallbacks
-- **60+ Tree Species**: Comprehensive database covering all major climate zones
+- **80 Tree Species Database**: Comprehensive coverage across 7 major climate zones (Tropical, Temperate, Mediterranean, Boreal, Coniferous, Arid, Subtropical)
 - **Advanced Impact Simulation**: Realistic tree growth curves and climate prediction
 - **Dynamic Time Analysis**: Simulate forest development over 1-100 years
+- **Comprehensive Ecosystem Benefits**: Carbon sequestration, biodiversity impact, forest resilience, water retention, and air quality improvement
 - **Professional Planning Tools**: Realistic planting timelines and project scale analysis
 - **Export Functionality**: Download results in GeoJSON, JSON, and CSV formats
 
@@ -52,7 +53,9 @@ This simulator is for educational and planning purposes only. Use at your own ri
    - Soil carbon content and pH
    - Current temperature and precipitation (with geographic fallbacks when unavailable)
    - Local biodiversity data
-3. **Choose Trees**: Select from 60 tree species across 5 categories (Deciduous, Coniferous, Tropical, Mediterranean, Boreal)
+3. **Choose Trees**: Select from 80 tree species across 7 climate zones (Tropical, Temperate, Mediterranean, Boreal, Coniferous, Arid, Subtropical)
+   - **Auto-recommendations**: System automatically suggests climate-appropriate species for your selected region
+   - **Visual indicators**: Recommended species are marked with stars and sorted to the top
 4. **Set Distribution**: For multiple trees, specify percentage distribution or use equal split
 5. **Set Duration**: Adjust simulation years (1-100) using the slider
 6. **Analyze Results**: Review annual and cumulative environmental impacts with real-world comparisons
@@ -99,7 +102,7 @@ The Forest Impact Simulator helps users understand the potential benefits of for
 - **Real-world Comparisons**: Impact expressed in relatable terms (car emissions, flights, household electricity)
 - **Long-term Planning**: Multi-decade simulation capabilities
 - **Global Perspective**: Analysis for any region worldwide
-- **Comprehensive Tree Database**: 60 species from all major climate zones
+- **Comprehensive Tree Database**: 80 species from all major climate zones including arid and subtropical regions
 
 ## 🧮 Calculations
 

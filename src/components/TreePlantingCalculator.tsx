@@ -178,28 +178,14 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
       
-      {/* Region Information */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-        <h4 className="font-semibold mb-2">Selected Region</h4>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div>
-            <span className="text-gray-900 font-bold">Area size:</span>
-            <p className="font-medium">{formatArea(plantingConfig.area)}</p>
-          </div>
-          <div>
-            <span className="text-gray-900 font-bold">Coordinates:</span>
-            <p className="font-medium text-xs">
-              {selectedRegion.south.toFixed(4)}°S to {selectedRegion.north.toFixed(4)}°N<br />
-              {selectedRegion.west.toFixed(4)}°W to {selectedRegion.east.toFixed(4)}°E
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Tree Spacing Configuration */}
       <div className="mb-4">
         <h4 className="font-semibold mb-2">Planting Configuration</h4>
         <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500 font-bold">Area size:</span>
+            <span className="text-xs font-medium">{formatArea(plantingConfig.area)}</span>
+          </div>
           <div className="flex items-center justify-between">
             <span 
               className="text-xs text-gray-500 font-bold cursor-help"
@@ -209,7 +195,7 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
             </span>
             <span className="text-xs font-medium">{plantingConfig.spacing}m between trees</span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pb-2 border-b border-gray-200">
             <span 
               className="text-xs text-gray-500 font-bold cursor-help"
               title="Trees per hectare = 10,000m² ÷ (spacing in meters)². This ensures optimal tree distribution across your area for maximum forest health and carbon sequestration potential."
@@ -218,7 +204,7 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
             </span>
             <span className="text-xs font-medium">{formatNumber(plantingConfig.density)} trees/ha</span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pt-1">
             <span className="text-xs text-gray-500 font-bold">Total Trees:</span>
             <span className="text-xs font-medium text-primary">{formatNumber(plantingConfig.totalTrees)}</span>
           </div>

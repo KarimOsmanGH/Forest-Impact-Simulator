@@ -79,10 +79,11 @@ export default function RootLayout({
               },
               "featureList": [
                 "Real-time environmental data",
-                "60+ tree species database",
+                "80 tree species across 7 climate zones",
                 "Climate prediction modeling",
                 "Carbon sequestration analysis",
                 "Biodiversity impact assessment",
+                "Comprehensive ecosystem benefits analysis",
                 "Export results in multiple formats"
               ],
               "screenshot": "https://forest-impact-simulator.vercel.app/og-image.png",
