@@ -13,6 +13,20 @@ export interface TreeType {
   biodiversityValue: number; // 1-5 scale
   resilienceScore: number; // 1-5 scale
   description: string;
+  // Economic impact properties
+  carbonCreditValue?: number; // USD per tree per year (carbon credits)
+  maintenanceCost?: number; // USD per tree per year
+  plantingCost?: number; // USD per tree (one-time)
+  timberValue?: number; // USD per tree (mature harvest value)
+  jobCreationFactor?: number; // jobs per 1000 trees (maintenance/planting)
+  // Social impact properties
+  recreationValue?: number; // 1-5 scale (aesthetic/recreation appeal)
+  healthBenefit?: number; // 1-5 scale (air purification, mental health)
+  communityEngagement?: number; // 1-5 scale (educational/volunteer opportunities)
+  // Land use impact properties
+  erosionPrevention?: number; // 1-5 scale (soil stabilization)
+  floodManagement?: number; // 1-5 scale (water absorption/retention)
+  fireResistance?: number; // 1-5 scale (fire prevention/resistance)
 }
 
 export const TREE_TYPES: TreeType[] = [
@@ -30,7 +44,21 @@ export const TREE_TYPES: TreeType[] = [
     waterNeeds: 'medium',
     biodiversityValue: 5,
     resilienceScore: 4,
-    description: 'Majestic trees known for their strength and longevity. Excellent for wildlife habitat and carbon sequestration.'
+    description: 'Majestic trees known for their strength and longevity. Excellent for wildlife habitat and carbon sequestration.',
+    // Economic properties
+    carbonCreditValue: 12,
+    maintenanceCost: 8,
+    plantingCost: 25,
+    timberValue: 800,
+    jobCreationFactor: 0.8,
+    // Social properties
+    recreationValue: 5,
+    healthBenefit: 4,
+    communityEngagement: 5,
+    // Land use properties
+    erosionPrevention: 4,
+    floodManagement: 3,
+    fireResistance: 3
   },
   {
     id: 'pine',
@@ -46,7 +74,21 @@ export const TREE_TYPES: TreeType[] = [
     waterNeeds: 'low',
     biodiversityValue: 3,
     resilienceScore: 5,
-    description: 'Evergreen conifers that thrive in various climates. Great for erosion control and timber production.'
+    description: 'Evergreen conifers that thrive in various climates. Great for erosion control and timber production.',
+    // Economic properties
+    carbonCreditValue: 10,
+    maintenanceCost: 5,
+    plantingCost: 15,
+    timberValue: 350,
+    jobCreationFactor: 0.6,
+    // Social properties
+    recreationValue: 4,
+    healthBenefit: 4,
+    communityEngagement: 3,
+    // Land use properties
+    erosionPrevention: 5,
+    floodManagement: 2,
+    fireResistance: 2
   },
   {
     id: 'maple',

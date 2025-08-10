@@ -1,6 +1,6 @@
 # Forest Impact Simulator
 
-A tool to simulate and analyze the environmental impact of forest planting.
+A comprehensive tool to simulate and analyze the environmental, economic, social, and land use impact of forest planting.
 
 ## 🌟 Key Features
 
@@ -9,7 +9,7 @@ A tool to simulate and analyze the environmental impact of forest planting.
 - **80 Tree Species Database**: Comprehensive coverage across 7 major climate zones (Tropical, Temperate, Mediterranean, Boreal, Coniferous, Arid, Subtropical)
 - **Advanced Impact Simulation**: Realistic tree growth curves and climate prediction
 - **Dynamic Time Analysis**: Simulate forest development over 1-100 years
-- **Comprehensive Ecosystem Benefits**: Carbon sequestration, biodiversity impact, forest resilience, water retention, and air quality improvement
+- **Comprehensive Impact Analysis**: Four detailed tabs covering Environment, Economic, Social, and Land Use impacts
 - **Professional Planning Tools**: Realistic planting timelines and project scale analysis
 - **Export Functionality**: Download results in GeoJSON, JSON, and CSV formats
 
@@ -58,7 +58,11 @@ This simulator is for educational and planning purposes only. Use at your own ri
    - **Visual indicators**: Recommended species are marked with stars and sorted to the top
 4. **Set Distribution**: For multiple trees, specify percentage distribution or use equal split
 5. **Set Duration**: Adjust simulation years (1-100) using the slider
-6. **Analyze Results**: Review annual and cumulative environmental impacts with real-world comparisons
+6. **Analyze Results**: Review comprehensive impacts across four tabs:
+   - **Environment**: Soil data, climate data, carbon sequestration, biodiversity, and ecosystem benefits
+   - **Economic**: Job creation and conservation benefits
+   - **Social**: Community benefits and social impact scores
+   - **Land Use**: Erosion reduction, soil improvement, and habitat creation
 7. **Export Results**: Download your analysis in GeoJSON (GIS), JSON (data), or CSV (spreadsheets) format
 
 ## 🛠️ Technology Stack

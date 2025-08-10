@@ -37,7 +37,8 @@ export default function Home() {
     6: false,
     7: false,
     8: false,
-    9: false
+    9: false,
+    10: false
   });
   const [exportData, setExportData] = useState<ExportData | null>(null);
 
@@ -109,7 +110,7 @@ export default function Home() {
             Analyze the Impact of Forest Planting
           </h1>
           <p className="text-lg text-gray-600 mb-6 max-w-3xl mx-auto">
-            Select a region on the map to analyze the environmental impact of planting a forest there. The simulator uses real-time soil, climate, and biodiversity data to estimate carbon sequestration, ecosystem benefits, and local species diversity.
+            Select a region on the map to analyze the comprehensive impact of planting a forest there. The simulator uses real-time environmental data to estimate carbon sequestration, biodiversity benefits, economic value, social impact, and land use improvements.
           </p>
           <div className="flex flex-wrap justify-center gap-6 mb-8">
             <div className="flex items-center text-sm text-gray-700 bg-white px-4 py-2 rounded-lg shadow-sm border border-green-100">
@@ -169,36 +170,8 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Environmental Impact Results and Tree Planting Calculator - Side by Side */}
-        <div className="mt-24 grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div className="bg-white border border-green-100 rounded-xl p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 bg-purple-600 text-white rounded-full text-lg">📊</div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-800">Environmental Impact Results</h2>
-                <p className="text-sm text-gray-600">See carbon sequestration, biodiversity, and environmental benefits</p>
-              </div>
-            </div>
-            {selectedTrees.length > 0 ? (
-              <ForestImpactCalculator 
-                latitude={selectedLatitude || (selectedRegion ? (selectedRegion.north + selectedRegion.south) / 2 : null)} 
-                longitude={selectedLongitude || (selectedRegion ? (selectedRegion.east + selectedRegion.west) / 2 : null)} 
-                years={years}
-                selectedTreeType={selectedTrees.length === 1 ? selectedTrees[0] : null}
-                selectedTrees={selectedTrees.length > 1 ? selectedTrees : undefined}
-                treePercentages={treePercentages}
-                selectedRegion={selectedRegion}
-                plantingData={plantingData}
-                onYearsChange={setYears}
-                onDataReady={handleImpactDataReady}
-              />
-            ) : (
-              <div className="p-6 bg-white border border-gray-200 rounded-lg">
-                <p className="text-sm text-gray-600">Select tree types to see the potential impact of planting a forest at this location.</p>
-              </div>
-            )}
-          </div>
-          
+        {/* Impact Results and Tree Planting Calculator - Side by Side */}
+                <div className="mt-24 grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="bg-white border border-green-100 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
               <div className="flex items-center justify-center w-10 h-10 bg-orange-600 text-white rounded-full text-lg">🌱</div>
@@ -223,6 +196,34 @@ export default function Home() {
             ) : (
               <div className="p-6 bg-white border border-gray-200 rounded-lg">
                 <p className="text-sm text-gray-600">Select a region and tree types to see planting calculations.</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="bg-white border border-green-100 rounded-xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center justify-center w-10 h-10 bg-purple-600 text-white rounded-full text-lg">📊</div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800">Impact Results</h2>
+                <p className="text-sm text-gray-600">See carbon sequestration, biodiversity, and environmental benefits</p>
+              </div>
+            </div>
+            {selectedTrees.length > 0 ? (
+              <ForestImpactCalculator 
+                latitude={selectedLatitude || (selectedRegion ? (selectedRegion.north + selectedRegion.south) / 2 : null)}
+                longitude={selectedLongitude || (selectedRegion ? (selectedRegion.east + selectedRegion.west) / 2 : null)}
+                years={years}
+                selectedTreeType={selectedTrees.length === 1 ? selectedTrees[0] : null}
+                selectedTrees={selectedTrees.length > 1 ? selectedTrees : undefined}
+                treePercentages={treePercentages}
+                selectedRegion={selectedRegion}
+                plantingData={plantingData}
+                onYearsChange={setYears}
+                onDataReady={handleImpactDataReady}
+              />
+            ) : (
+              <div className="p-6 bg-white border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-600">Select tree types to see the potential impact of planting a forest at this location.</p>
               </div>
             )}
           </div>
@@ -608,13 +609,13 @@ export default function Home() {
               )}
             </div>
 
-            {/* FAQ Item 9 - Who Made This & How to Contribute */}
+            {/* FAQ Item 9 - Impact Analysis Tabs */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
                 onClick={() => setFaqOpen(prev => ({ ...prev, 9: !prev[9] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
-                <h3 className="text-lg font-semibold text-gray-800">Who made this tool and how can I contribute?</h3>
+                <h3 className="text-lg font-semibold text-gray-800">What do the different impact analysis tabs show?</h3>
                 <svg
                   className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[9] ? 'rotate-180' : ''}`}
                   fill="none"
@@ -625,6 +626,40 @@ export default function Home() {
                 </svg>
               </button>
               {faqOpen[9] && (
+                <div className="px-6 pb-6">
+                  <p className="text-gray-900 mb-3">
+                    The simulator provides comprehensive impact analysis across four specialized tabs:
+                  </p>
+                  <ul className="text-gray-900 mb-3 space-y-2">
+                    <li><strong>Environment:</strong> Soil data, climate information, carbon sequestration rates, biodiversity impact, forest resilience, water retention, and air quality improvement. Shows both current environmental conditions and projected benefits.</li>
+                    <li><strong>Economic:</strong> Job creation estimates based on project scale and conservation benefits. Focuses on employment opportunities and ecosystem services rather than monetary values.</li>
+                    <li><strong>Social:</strong> Community benefits, social impact scores, and factors like tree diversity bonuses, time investment, and area scale. Highlights recreational, educational, and community engagement opportunities.</li>
+                    <li><strong>Land Use:</strong> Erosion reduction, soil quality improvement, habitat creation, and water quality enhancement. Shows how the forest improves land management and ecosystem health.</li>
+                  </ul>
+                  <p className="text-gray-900 mb-3">
+                    Each tab provides detailed metrics and qualitative benefits, helping you understand the full scope of your forest planting project&apos;s impact.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* FAQ Item 10 - Who Made This & How to Contribute */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <button
+                onClick={() => setFaqOpen(prev => ({ ...prev, 10: !prev[10] }))}
+                className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <h3 className="text-lg font-semibold text-gray-800">Who made this tool and how can I contribute?</h3>
+                <svg
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[10] ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {faqOpen[10] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
                     The Forest Impact Simulator was created by <a href="https://kar.im" target="_blank" rel="noopener noreferrer" className="text-green-700 hover:text-green-800 underline">Karim Osman</a> to simulate and analyze the environmental impact of forest planting. This tool is completely <a href="https://github.com/KarimOsmanGH/forest-impact-simulator" target="_blank" rel="noopener noreferrer" className="text-green-700 hover:text-green-800 underline">open-source</a> and available on GitHub. We welcome contributions from the community! Whether you&apos;re a developer, environmental scientist, or forestry expert, there are many ways to help improve this simulator.

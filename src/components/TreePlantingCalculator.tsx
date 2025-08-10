@@ -88,59 +88,63 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
   // Determine which tree to use for planting calculations
   const treeForPlanting = selectedTreeType || (selectedTrees && selectedTrees.length > 0 ? selectedTrees[0] : null);
   
-  // Calculate planting configuration
-  let plantingConfig: TreePlantingConfig | undefined;
-  let timeline: {
-    treesPerYear: number;
-    yearsToComplete: number;
-    treesPerSeason: number;
-    projectScale: string;
-    recommendedApproach: string;
-  } | undefined;
-  
-  if (selectedRegion && treeForPlanting) {
-    if (selectedTrees && selectedTrees.length > 1 && treePercentages) {
-      // For multiple trees, calculate weighted average spacing
-      let totalWeight = 0;
-      let weightedSpacing = 0;
-      
-      selectedTrees.forEach(tree => {
-        const percentage = treePercentages[tree.id] || 0;
-        const spacingKey = getRecommendedSpacing(tree.name);
-        const spacing = TREE_SPACING_CONFIGS[spacingKey].spacing;
+  // Calculate planting configuration with useMemo to recalculate when customSpacing changes
+  const { plantingConfig, timeline } = React.useMemo(() => {
+    let config: TreePlantingConfig | undefined;
+    let timeline: {
+      treesPerYear: number;
+      yearsToComplete: number;
+      treesPerSeason: number;
+      projectScale: string;
+      recommendedApproach: string;
+    } | undefined;
+    
+    if (selectedRegion && treeForPlanting) {
+      if (selectedTrees && selectedTrees.length > 1 && treePercentages) {
+        // For multiple trees, calculate weighted average spacing
+        let totalWeight = 0;
+        let weightedSpacing = 0;
         
-        totalWeight += percentage;
-        weightedSpacing += spacing * (percentage / 100);
-      });
-      
-      // Use weighted average spacing, but ensure it's within reasonable bounds
-      let avgSpacing = totalWeight > 0 ? weightedSpacing : TREE_SPACING_CONFIGS.standard.spacing;
-      
-      // Ensure spacing is within reasonable bounds (2.5m to 6.0m)
-      avgSpacing = Math.max(2.5, Math.min(6.0, avgSpacing));
-      
-      // If percentages don't add up to 100%, adjust to use standard spacing
-      if (Math.abs(totalWeight - 100) > 5) {
-        avgSpacing = TREE_SPACING_CONFIGS.standard.spacing;
+        selectedTrees.forEach(tree => {
+          const percentage = treePercentages[tree.id] || 0;
+          const spacingKey = getRecommendedSpacing(tree.name);
+          const spacing = TREE_SPACING_CONFIGS[spacingKey].spacing;
+          
+          totalWeight += percentage;
+          weightedSpacing += spacing * (percentage / 100);
+        });
+        
+        // Use weighted average spacing, but ensure it's within reasonable bounds
+        let avgSpacing = totalWeight > 0 ? weightedSpacing : TREE_SPACING_CONFIGS.standard.spacing;
+        
+        // Ensure spacing is within reasonable bounds (2.5m to 6.0m)
+        avgSpacing = Math.max(2.5, Math.min(6.0, avgSpacing));
+        
+        // If percentages don't add up to 100%, adjust to use standard spacing
+        if (Math.abs(totalWeight - 100) > 5) {
+          avgSpacing = TREE_SPACING_CONFIGS.standard.spacing;
+        }
+        
+        config = calculateTreePlanting(
+          selectedRegion,
+          'mixed', // Use 'mixed' to trigger custom spacing
+          avgSpacing
+        );
+      } else {
+        // Single tree or no percentages - use normal calculation
+        config = calculateTreePlanting(
+          selectedRegion,
+          treeForPlanting.name,
+          customSpacing
+        );
       }
-      
-      plantingConfig = calculateTreePlanting(
-        selectedRegion,
-        'mixed', // Use 'mixed' to trigger custom spacing
-        avgSpacing
-      );
-    } else {
-      // Single tree or no percentages - use normal calculation
-      plantingConfig = calculateTreePlanting(
-        selectedRegion,
-        treeForPlanting.name,
-        customSpacing
-      );
-    }
 
-    // Note: Carbon sequestration and mortality calculations removed as requested
-    timeline = calculatePlantingTimeline(plantingConfig.totalTrees);
-  }
+      // Note: Carbon sequestration and mortality calculations removed as requested
+      timeline = calculatePlantingTimeline(config.totalTrees);
+    }
+    
+    return { plantingConfig: config, timeline };
+  }, [selectedRegion, treeForPlanting, selectedTrees, treePercentages, customSpacing]);
 
   // Call onDataReady callback when data is available
   React.useEffect(() => {
@@ -158,7 +162,7 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
         }
       });
     }
-  }, [onDataReady, selectedRegion, plantingConfig, timeline]);
+  }, [onDataReady, selectedRegion, plantingConfig, timeline, customSpacing]);
 
   // Early return checks - must be after all hooks
   if (!selectedRegion || (!selectedTreeType && (!selectedTrees || selectedTrees.length === 0))) {
