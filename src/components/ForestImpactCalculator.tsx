@@ -6,6 +6,34 @@ import { validateLatitude, validateLongitude, validateYears, apiRateLimiter } fr
 import { ExportData } from '@/utils/exportUtils';
 import { calculateRegionArea, getRecommendedSpacing, TREE_SPACING_CONFIGS, formatArea } from '@/utils/treePlanting';
 
+// Simple cache for environmental data
+const environmentalDataCache = new Map<string, {
+  soil: SoilData;
+  climate: ClimateData;
+  timestamp: number;
+}>();
+
+// Cache timeout: 30 minutes
+const CACHE_TIMEOUT = 30 * 60 * 1000;
+
+// Simple fetch with timeout
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout: number = 15000): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
+
 // Collapsible Section Component
 interface CollapsibleSectionProps {
   title: string;
@@ -84,14 +112,13 @@ interface ImpactMetrics {
 }
 
 interface SoilData {
-  carbon?: number | null;
-  ph?: number | null;
-  texture?: string;
+  carbon: number | null;
+  ph: number | null;
 }
 
 interface ClimateData {
-  temperature?: number | null;
-  precipitation?: number | null;
+  temperature: number | null;
+  precipitation: number | null;
   historicalData?: {
     temperatures: number[];
     precipitations: number[];
@@ -117,23 +144,25 @@ const fetchSoilData = async (lat: number, lon: number): Promise<SoilData> => {
       throw new Error('Rate limit exceeded');
     }
     
-
+    console.log('Fetching soil data for:', lat, lon);
     
-    // Use the ISRIC SoilGrids API endpoint with correct properties
-    const res = await fetch(`https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lon}&lat=${lat}&property=soc&property=phh2o&depth=0-5cm&value=mean`, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'ForestFuture/1.0'
+    // Use the ISRIC SoilGrids API endpoint with timeout
+    const res = await fetchWithTimeout(
+      `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lon}&lat=${lat}&property=soc&property=phh2o&depth=0-5cm&value=mean`,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'ForestFuture/1.0'
+        }
       }
-    });
+    );
     
     if (!res.ok) {
-  
       throw new Error(`Soil API error: ${res.status} ${res.statusText}`);
     }
     
     const data = await res.json();
-    console.log('Soil API response:', data);
+    console.log('Soil API response received');
     
     // Extract organic carbon and pH from the response
     let carbon = null;
@@ -154,7 +183,7 @@ const fetchSoilData = async (lat: number, lon: number): Promise<SoilData> => {
       }
     }
     
-    console.log('Extracted soil data:', { carbon, ph });
+    console.log('Soil data extracted:', { carbon, ph });
     return { carbon, ph };
   } catch (error) {
     console.error('Error fetching soil data:', error);
@@ -207,27 +236,31 @@ const fetchClimateData = async (lat: number, lon: number): Promise<ClimateData> 
     
     console.log('Fetching climate data for:', lat, lon);
     
-    // Fetch current weather data
-    const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&timezone=auto`);
+    // Fetch current weather data with timeout
+    const weatherRes = await fetchWithTimeout(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&timezone=auto`
+    );
     
     if (!weatherRes.ok) {
       throw new Error(`Weather API error: ${weatherRes.status} ${weatherRes.statusText}`);
     }
     
     const weatherData = await weatherRes.json();
-    console.log('Weather API response:', weatherData);
+    console.log('Current weather data received');
     
-    // Fetch historical data for climate trend analysis
+    // Fetch historical data for climate trend analysis (reduced to 5 years for performance)
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setFullYear(startDate.getFullYear() - 11); // 11 years of data
+    startDate.setFullYear(startDate.getFullYear() - 5); // Reduced from 11 to 5 years
     
-    const historicalRes = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`);
+    const historicalRes = await fetchWithTimeout(
+      `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`
+    );
     
     let historicalData = undefined;
     if (historicalRes.ok) {
       const historicalWeatherData = await historicalRes.json();
-      console.log('Historical weather data:', historicalWeatherData);
+      console.log('Historical weather data received');
       
       if (historicalWeatherData.daily) {
         const temperatures = historicalWeatherData.daily.temperature_2m_mean || [];
@@ -249,7 +282,7 @@ const fetchClimateData = async (lat: number, lon: number): Promise<ClimateData> 
     const currentTemp = weatherData.current?.temperature_2m || null;
     const currentPrecip = weatherData.current?.precipitation || null;
     
-    console.log('Extracted climate data:', { currentTemp, currentPrecip, historicalData });
+    console.log('Climate data extracted:', { currentTemp, currentPrecip, historicalData });
     return {
       temperature: currentTemp,
       precipitation: currentPrecip,
@@ -264,6 +297,8 @@ const fetchClimateData = async (lat: number, lon: number): Promise<ClimateData> 
         console.error('Rate limit exceeded - try again in a minute');
       } else if (error.message.includes('Weather API error')) {
         console.error('Weather API is temporarily unavailable');
+      } else if (error.message.includes('Request timeout')) {
+        console.error('API request timed out');
       }
     }
     return { temperature: null, precipitation: null };
@@ -349,6 +384,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
   const [soil, setSoil] = useState<SoilData | null>(null);
   const [climate, setClimate] = useState<ClimateData | null>(null);
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const [calculationMode, setCalculationMode] = useState<'perTree' | 'entireArea'>('entireArea');
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
@@ -394,7 +430,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     }));
   };
 
-  // Fetch soil and climate data for the selected location
+  // Fetch soil and climate data for the selected location with caching
   useEffect(() => {
     if (latitude && longitude) {
       // Validate inputs
@@ -403,8 +439,24 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         return;
       }
       
+      // Check cache first
+      const cacheKey = `${latitude.toFixed(2)},${longitude.toFixed(2)}`;
+      const cachedData = environmentalDataCache.get(cacheKey);
+      
+      if (cachedData && (Date.now() - cachedData.timestamp < CACHE_TIMEOUT)) {
+        console.log('Using cached environmental data');
+        setSoil(cachedData.soil);
+        setClimate(cachedData.climate);
+        setLoading(false);
+        setError(null);
+        return;
+      }
+      
       setLoading(true);
       setError(null);
+      
+      console.log('Fetching environmental data for:', latitude, longitude);
+      
       Promise.allSettled([
         fetchSoilData(latitude, longitude),
         fetchClimateData(latitude, longitude)
@@ -412,20 +464,38 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         .then((results) => {
           const [soilResult, climateResult] = results;
           
+          let soilData: SoilData = { carbon: null, ph: null };
+          let climateData: ClimateData = { temperature: null, precipitation: null };
+          
           if (soilResult.status === 'fulfilled') {
-            setSoil(soilResult.value);
+            soilData = soilResult.value;
+            setSoil(soilData);
           } else {
             console.log('Soil data failed:', soilResult.reason);
-            setSoil({ carbon: null, ph: null });
+            setSoil(soilData);
           }
           
           if (climateResult.status === 'fulfilled') {
-            setClimate(climateResult.value);
+            climateData = climateResult.value;
+            setClimate(climateData);
           } else {
             console.log('Climate data fetch failed:', climateResult.reason);
-            setClimate({ temperature: null, precipitation: null });
+            setClimate(climateData);
             setError('Weather API temporarily unavailable - using regional climate estimates based on latitude');
           }
+          
+          // Cache the results
+          environmentalDataCache.set(cacheKey, {
+            soil: soilData,
+            climate: climateData,
+            timestamp: Date.now()
+          });
+          
+          console.log('Environmental data cached for:', cacheKey);
+        })
+        .catch((error) => {
+          console.error('Unexpected error fetching environmental data:', error);
+          setError('Failed to load environmental data. Please try again.');
         })
         .finally(() => setLoading(false));
     } else {
@@ -778,7 +848,10 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
   if (loading) {
     return (
       <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
-        <p className="text-gray-600">Loading environmental data...</p>
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+          <span className="ml-3 text-gray-600">Loading environmental data...</span>
+        </div>
       </div>
     );
   }

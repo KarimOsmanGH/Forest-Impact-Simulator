@@ -5,7 +5,7 @@ A comprehensive tool to simulate and analyze the environmental, economic, social
 ## 🌟 Key Features
 
 - **Global Map Interface**: Desktop: CTRL+click and drag, Mobile: Tap to create selection square
-- **Real-time Environmental Data**: Live soil, climate, and biodiversity information with intelligent fallbacks
+- **Real-time Environmental Data**: Live soil, climate, and biodiversity information with intelligent fallbacks and performance optimizations
 - **80 Tree Species Database**: Comprehensive coverage across 7 major climate zones (Tropical, Temperate, Mediterranean, Boreal, Coniferous, Arid, Subtropical)
 - **Advanced Impact Simulation**: Realistic tree growth curves and climate prediction
 - **Dynamic Time Analysis**: Simulate forest development over 1-100 years
@@ -92,6 +92,7 @@ This application implements comprehensive security measures to protect users and
 
 - **Input Validation**: All user inputs are validated and sanitized
 - **Rate Limiting**: API calls are limited to prevent abuse
+- **Performance Optimizations**: Caching, timeouts, and reduced data fetching for faster loading
 - **Content Security Policy**: XSS protection and resource restrictions
 - **No Data Collection**: All processing is done client-side
 
@@ -156,7 +157,7 @@ Annual Carbon = Mature Rate × Growth Factor (based on year)
 
 **Temperature Trend Analysis:**
 ```
-Historical Data = 11 years of temperature records
+Historical Data = 5 years of temperature records (optimized for performance)
 Linear Regression = Calculate temperature trend (°C/year)
 Future Temperature = Current + (Trend × Years)
 ```
