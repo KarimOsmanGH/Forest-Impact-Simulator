@@ -23,25 +23,25 @@ export const TREE_SPACING_CONFIGS = {
   dense: {
     spacing: 2.5, // 2.5m spacing
     density: 1600, // 1600 trees/ha
-    description: "Dense planting (2.5m spacing)"
+    description: "Dense planting (2.5m spacing, 6.25m² per tree)"
   },
   // Standard commercial forestry
   standard: {
     spacing: 3.0, // 3m spacing
     density: 1111, // 1111 trees/ha
-    description: "Standard spacing (3m spacing)"
+    description: "Standard spacing (3m spacing, 9m² per tree)"
   },
   // Wide spacing for large trees
   wide: {
     spacing: 4.0, // 4m spacing
     density: 625, // 625 trees/ha
-    description: "Wide spacing (4m spacing)"
+    description: "Wide spacing (4m spacing, 16m² per tree)"
   },
   // Very wide for giant trees
   veryWide: {
     spacing: 6.0, // 6m spacing
     density: 278, // 278 trees/ha
-    description: "Very wide spacing (6m spacing)"
+    description: "Very wide spacing (6m spacing, 36m² per tree)"
   }
 };
 

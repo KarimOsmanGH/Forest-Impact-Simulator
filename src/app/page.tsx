@@ -446,7 +446,10 @@ export default function Home() {
                         <code className="block bg-white p-2 rounded mb-2">Carbon = Σ(Tree_i × Percentage_i) / 100</code>
                         <p className="mb-2"><strong>Environmental Modifiers:</strong></p>
                         <code className="block bg-white p-2 rounded mb-2">Soil Bonus = Soil Carbon (g/kg) × 0.1 kg CO₂/year</code>
-                        <code className="block bg-white p-2 rounded">Final Carbon = Base Carbon + Soil Bonus</code>
+                        <code className="block bg-white p-2 rounded mb-2">Final Carbon = Base Carbon + Soil Bonus</code>
+                        <p className="mt-2 text-sm text-black"><strong>Display Values:</strong></p>
+                        <code className="block bg-white p-2 rounded text-black">Annual Carbon = Yearly sequestration rate</code>
+                        <code className="block bg-white p-2 rounded text-black">Total Carbon = Cumulative over entire simulation period</code>
                       </div>
                     </div>
 

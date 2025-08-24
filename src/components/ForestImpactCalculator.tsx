@@ -670,6 +670,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
   
   const totalCarbon = useMemo(() => calculateCumulativeCarbon(impact.carbonSequestration, years), [impact.carbonSequestration, years]);
   const totalCarbonLabel = years === 1 ? 'Total Carbon (1 year)' : `Total Carbon (${years} years)`;
+  const annualCarbonLabel = 'Annual Carbon Sequestration';
   
   // Calculate job creation based on project scale
   const economicImpact = useMemo(() => {
@@ -906,7 +907,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                 <ul className="mt-1">
                   <li className="flex items-start">
                     <span className="text-gray-400 mr-2">•</span>
-                    <span>{totalTrees.toLocaleString()} trees at {treeSpacing}m spacing</span>
+                    <span>{totalTrees.toLocaleString()} trees at {treeSpacing}m spacing ({treeSpacing * treeSpacing}m² per tree)</span>
                   </li>
                 </ul>
               </div>
@@ -1268,6 +1269,13 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       {/* Horizontal separator line */}
       <div className="my-6 border-t border-gray-200"></div>
 
+      {/* Carbon Calculation Explanation */}
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-xs text-blue-800">
+          <strong>💡 Carbon Calculation Note:</strong> "Annual Carbon Sequestration" shows the yearly rate, while "Total Carbon" shows the cumulative amount over the entire simulation period (accounting for tree growth from sapling to maturity).
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 max-w-5xl w-full">
         <CollapsibleSection
           title="Annual Carbon Sequestration"
@@ -1277,7 +1285,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
           }
           description={calculationMode === 'perTree' 
             ? "Current year's carbon sequestration per tree based on growth stage. Trees start with low sequestration and increase as they mature over 20+ years."
-            : `Current year's carbon sequestration for all ${totalTrees.toLocaleString()} trees in the selected area, based on tree growth stage.`
+            : `Current year's carbon sequestration for all ${totalTrees.toLocaleString()} trees in the selected area, based on tree growth stage. This is the yearly rate, not cumulative.`
           }
           isExpanded={expandedSections['annual-carbon'] || false}
           onToggle={() => toggleSection('annual-carbon')}
