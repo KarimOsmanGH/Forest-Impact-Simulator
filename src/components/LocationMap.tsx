@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useMap } from 'react-leaflet';
 import LocationSearch from './LocationSearch';
-import { calculateRegionArea, formatArea, type RegionBounds } from '@/utils/treePlanting';
+import { calculateRegionArea, formatArea } from '@/utils/treePlanting';
 
 // Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(

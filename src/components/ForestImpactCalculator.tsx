@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { TreeType } from '@/types/treeTypes';
-import { validateLatitude, validateLongitude, validateYears, apiRateLimiter } from '@/utils/security';
+import { validateLatitude, validateLongitude, apiRateLimiter } from '@/utils/security';
 import { ExportData } from '@/utils/exportUtils';
-import { calculateRegionArea, getRecommendedSpacing, TREE_SPACING_CONFIGS, formatArea } from '@/utils/treePlanting';
+import { calculateRegionArea, formatArea } from '@/utils/treePlanting';
 
 // Simple cache for environmental data
 const environmentalDataCache = new Map<string, {
@@ -393,7 +393,6 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
   // Use planting data if available, otherwise calculate fallback
   const totalTrees = plantingData?.totalTrees || (selectedRegion ? calculateRegionArea(selectedRegion) * 1111 : 1);
   const treeSpacing = plantingData?.spacing || 3.0;
-  const treeDensity = plantingData?.density || 1111;
 
   // Calculate social, economic, and land use impacts with useMemo
   const socialImpact = useMemo(() => {
@@ -504,7 +503,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     }
   }, [latitude, longitude]);
 
-  const calculateImpact = (
+  const calculateImpact = useCallback((
     lat: number,
     lng: number,
     soil?: SoilData,
@@ -608,7 +607,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       waterRetention: Math.max(0, waterRetention),
       airQualityImprovement: Math.max(0, airQualityImprovement)
     };
-  };
+  }, [treePercentages, calculationMode, totalTrees, years]);
 
   // Calculate impact and all derived values BEFORE early returns to ensure consistent hook order
   const impact = useMemo(() => calculateImpact(
@@ -618,10 +617,10 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     climate || undefined,
     selectedTreeType || undefined,
     selectedTrees || undefined
-  ), [latitude, longitude, soil, climate, selectedTreeType, selectedTrees]);
+  ), [latitude, longitude, soil, climate, selectedTreeType, selectedTrees, calculateImpact]);
   
   // Calculate cumulative carbon with realistic growth model and climate predictions
-  const calculateCumulativeCarbon = (annualRate: number, years: number): number => {
+  const calculateCumulativeCarbon = useCallback((annualRate: number, years: number): number => {
     let total = 0;
     
     // Only apply climate predictions if we have actual climate data
@@ -666,11 +665,9 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       total += annualRate * combinedGrowthFactor;
     }
     return total;
-  };
+  }, [climate, latitude]);
   
-  const totalCarbon = useMemo(() => calculateCumulativeCarbon(impact.carbonSequestration, years), [impact.carbonSequestration, years]);
-  const totalCarbonLabel = years === 1 ? 'Total Carbon (1 year)' : `Total Carbon (${years} years)`;
-  const annualCarbonLabel = 'Annual Carbon Sequestration';
+  const totalCarbon = useMemo(() => calculateCumulativeCarbon(impact.carbonSequestration, years), [impact.carbonSequestration, years, calculateCumulativeCarbon]);
   
   // Calculate job creation based on project scale
   const economicImpact = useMemo(() => {
@@ -696,7 +693,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     return {
       jobCreation
     };
-  }, [totalTrees, plantingData, selectedRegion]);
+  }, [plantingData, selectedRegion]);
   
   // Format total carbon based on calculation mode
   const formatTotalCarbon = (carbon: number) => {
@@ -835,7 +832,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         }
       });
     }
-  }, [onDataReady, latitude, longitude, loading, error, selectedRegion, years, selectedTrees, selectedTreeType, treePercentages, soil, climate]);
+  }, [onDataReady, latitude, longitude, loading, error, selectedRegion, years, selectedTrees, selectedTreeType, treePercentages, soil, climate, impact, totalCarbon, averageBiodiversity, averageResilience]);
 
   // Early return checks - must be after all hooks and calculations
   if (!latitude || !longitude) {
@@ -1272,7 +1269,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       {/* Carbon Calculation Explanation */}
       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-xs text-blue-800">
-          <strong>💡 Carbon Calculation Note:</strong> "Annual Carbon Sequestration" shows the yearly rate, while "Total Carbon" shows the cumulative amount over the entire simulation period (accounting for tree growth from sapling to maturity).
+          <strong>💡 Carbon Calculation Note:</strong> &ldquo;Annual Carbon Sequestration&rdquo; shows the yearly rate, while &ldquo;Total Carbon&rdquo; shows the cumulative amount over the entire simulation period (accounting for tree growth from sapling to maturity).
         </p>
       </div>
 

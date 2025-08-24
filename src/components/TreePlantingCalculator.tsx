@@ -14,51 +14,7 @@ import {
 } from '@/utils/treePlanting';
 import { ExportData } from '@/utils/exportUtils';
 
-// Collapsible Section Component
-interface CollapsibleSectionProps {
-  title: string;
-  children: React.ReactNode;
-  description: string;
-  isExpanded: boolean;
-  onToggle: () => void;
-  className?: string;
-}
-
-const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({ 
-  title, 
-  children, 
-  description, 
-  isExpanded, 
-  onToggle, 
-  className = "" 
-}) => {
-  return (
-    <div className={`bg-white rounded shadow p-4 ${className}`}>
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center justify-between text-left hover:bg-gray-50 rounded transition-colors"
-      >
-        <div className="flex-1">
-          <div className="font-semibold mb-2">{title}</div>
-          {children}
-        </div>
-        <svg
-          className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-      {isExpanded && (
-        <div className="mt-3 pt-3 border-t border-gray-100">
-          <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
-        </div>
-      )}
-    </div>
-  );
-};
+// CollapsibleSection component and interface removed as they're unused
 
 interface TreePlantingCalculatorProps {
   selectedRegion: RegionBounds | null;
@@ -76,14 +32,6 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
   onDataReady
 }) => {
   const [customSpacing, setCustomSpacing] = useState<number | undefined>();
-  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
-
-  const toggleSection = (sectionKey: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [sectionKey]: !prev[sectionKey]
-    }));
-  };
 
   // Determine which tree to use for planting calculations
   const treeForPlanting = selectedTreeType || (selectedTrees && selectedTrees.length > 0 ? selectedTrees[0] : null);
