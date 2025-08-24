@@ -1266,12 +1266,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       {/* Horizontal separator line */}
       <div className="my-6 border-t border-gray-200"></div>
 
-      {/* Carbon Calculation Explanation */}
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-xs text-blue-800">
-          <strong>💡 Carbon Calculation Note:</strong> &ldquo;Annual Carbon Sequestration&rdquo; shows the yearly rate, while &ldquo;Total Carbon&rdquo; shows the cumulative amount over the entire simulation period (accounting for tree growth from sapling to maturity).
-        </p>
-      </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 max-w-5xl w-full">
         <CollapsibleSection
