@@ -1,16 +1,17 @@
 # Forest Impact Simulator
 
-A comprehensive tool to simulate and analyze the environmental, economic, social, and land use impact of forest planting.
+A comprehensive tool to simulate and analyze the environmental, economic, social, and land use impact of forest planting and clear-cutting operations.
 
 ## 🌟 Key Features
 
 - **Global Map Interface**: Desktop: CTRL+click and drag, Mobile: Tap to create selection square
 - **Real-time Environmental Data**: Live soil, climate, and biodiversity information with intelligent fallbacks and performance optimizations
-- **80 Tree Species Database**: Comprehensive coverage across 7 major climate zones (Tropical, Temperate, Mediterranean, Boreal, Coniferous, Arid, Subtropical)
+- **Available as [TypeScript](https://github.com/KarimOsmanGH/forest-impact-simulator), [Python](https://github.com/KarimOsmanGH/forest-impact-simulator-python), [R](https://github.com/KarimOsmanGH/forest-impact-simulator-r)**: Multiple deployment options for different use cases
+- **Dual Simulation Modes**: Analyze both forest planting benefits and clear-cutting impacts
 - **Advanced Impact Simulation**: Realistic tree growth curves and climate prediction
 - **Dynamic Time Analysis**: Simulate forest development over 1-100 years
 - **Comprehensive Impact Analysis**: Four detailed tabs covering Environment, Economic, Social, and Land Use impacts
-- **Professional Planning Tools**: Realistic planting timelines and project scale analysis
+- **Professional Planning Tools**: Realistic planting/removal configurations and project scale analysis
 - **Export Functionality**: Download results in GeoJSON, JSON, and CSV formats
 
 ## 🚀 Quick Start
@@ -49,21 +50,29 @@ This simulator is for educational and planning purposes only. Use at your own ri
 1. **Select Region**: 
    - **Desktop**: CTRL+click and drag on the interactive map
    - **Mobile**: Tap to create a selection square, then drag to resize
-2. **Review Data**: View automatically fetched environmental information:
+2. **Choose Simulation Mode**: 
+   - **🌱 Planting Mode**: Analyze the benefits of forest restoration and tree planting
+   - **🪓 Clear-cutting Mode**: Analyze the environmental impacts of forest removal
+3. **Review Data**: View automatically fetched environmental information:
    - Soil carbon content and pH
    - Current temperature and precipitation (with geographic fallbacks when unavailable)
    - Local biodiversity data
-3. **Choose Trees**: Select from 80 tree species across 7 climate zones (Tropical, Temperate, Mediterranean, Boreal, Coniferous, Arid, Subtropical)
-   - **Auto-recommendations**: System automatically suggests climate-appropriate species for your selected region
+4. **Choose Trees/Forest Types**: Select from comprehensive tree species database across 7 climate zones (Tropical, Temperate, Mediterranean, Boreal, Coniferous, Arid, Subtropical)
+   - **Planting Mode**: Auto-recommendations for climate-appropriate species
+   - **Clear-cutting Mode**: Shows forest types present in the selected region
    - **Visual indicators**: Recommended species are marked with stars and sorted to the top
-4. **Set Distribution**: For multiple trees, specify percentage distribution or use equal split
-5. **Set Duration**: Adjust simulation years (1-100) using the slider
-6. **Analyze Results**: Review comprehensive impacts across four tabs:
-   - **Environment**: Soil data, climate data, carbon sequestration, biodiversity, and ecosystem benefits
-   - **Economic**: Job creation and conservation benefits
-   - **Social**: Community benefits and social impact scores
-   - **Land Use**: Erosion reduction, soil improvement, and habitat creation
-7. **Export Results**: Download your analysis in GeoJSON (GIS), JSON (data), or CSV (spreadsheets) format
+5. **Set Distribution**: For multiple trees, specify percentage distribution or use equal split
+6. **Configure Settings**: 
+   - **Calculation Mode**: Per tree or per area analysis
+   - **Simulation Duration**: Adjust years (1-100) using the slider
+   - **Spacing**: Customize tree spacing for planting configurations
+   - **Tree Age** (Clear-cutting mode): Specify average age of existing trees for accurate carbon emission calculations
+7. **Analyze Results**: Review comprehensive impacts across four tabs:
+   - **Environment**: Soil data, climate data, carbon sequestration/emissions, biodiversity, and ecosystem benefits
+   - **Economic**: Job creation/affected and economic considerations (varies by simulation mode)
+   - **Social**: Community benefits and social impact assessment (varies by simulation mode)
+   - **Land Use**: Erosion reduction/risk, soil improvement/degradation, and habitat creation/loss (varies by simulation mode)
+8. **Export Results**: Download your analysis in GeoJSON (GIS), JSON (data), or CSV (spreadsheets) format
 
 ## 🛠️ Technology Stack
 
@@ -107,11 +116,11 @@ The Forest Impact Simulator helps users understand the potential benefits of for
 - **Real-world Comparisons**: Impact expressed in relatable terms (car emissions, flights, household electricity)
 - **Long-term Planning**: Multi-decade simulation capabilities
 - **Global Perspective**: Analysis for any region worldwide
-- **Comprehensive Tree Database**: 80 species from all major climate zones including arid and subtropical regions
+- **Comprehensive Tree Database**: Extensive species coverage from all major climate zones including arid and subtropical regions
 
 ## 🧮 Calculations
 
-### **Carbon Sequestration**
+### **Carbon Sequestration (Planting Mode)**
 
 **Single Tree:**
 ```
@@ -132,6 +141,38 @@ Carbon = (Σ Tree_i) / n + Soil Modifier
 ```
 Soil Modifier = Soil Carbon (g/kg) × 0.1
 ```
+
+### **Carbon Emissions (Clear-cutting Mode)**
+
+**Immediate Carbon Release:**
+```
+Immediate Release = Σ(Base Rate × Growth Factor(age)) for age 1 to tree_age
+```
+
+**Lost Future Sequestration:**
+```
+Lost Future = Σ(Base Rate × Growth Factor(tree_age + year)) for year 1 to simulation_years
+```
+
+**Total Carbon Emissions:**
+```
+Total Emissions = Immediate Release + Lost Future Sequestration
+```
+
+**Tree Age Growth Factors:**
+```
+Age 1: 5% of mature rate
+Age 2: 15% of mature rate  
+Age 3: 30% of mature rate
+Age 4: 50% of mature rate
+Age 5: 70% of mature rate
+Age 6: 85% of mature rate
+Age 7-20: 95% of mature rate (mature trees)
+Age 21-50: 90% of mature rate (older mature trees)
+Age 50+: 85% of mature rate (very old trees)
+```
+
+**Note**: Clear-cutting mode calculates both immediate carbon release (carbon currently stored in tree biomass) and lost future sequestration (carbon that would have been absorbed over the simulation period). The calculation provides accurate emission estimates based on the actual age of trees being removed.
 
 **Real-world Comparisons:**
 ```

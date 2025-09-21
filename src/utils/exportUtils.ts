@@ -55,7 +55,7 @@ export interface ExportData {
     totalTrees: number;
     spacing: number;
     density: number;
-    timeline: {
+    timeline?: {
       yearsToComplete: number;
       treesPerSeason: number;
     };
@@ -119,8 +119,8 @@ export const generateGeoJSON = (data: ExportData): string => {
         totalTrees: data.plantingData?.totalTrees || null,
         spacing: data.plantingData?.spacing || null,
         density: data.plantingData?.density || null,
-        yearsToComplete: data.plantingData?.timeline.yearsToComplete || null,
-        treesPerSeason: data.plantingData?.timeline.treesPerSeason || null
+        yearsToComplete: data.plantingData?.timeline?.yearsToComplete || null,
+        treesPerSeason: data.plantingData?.timeline?.treesPerSeason || null
       }
     });
   }
@@ -210,8 +210,10 @@ export const generateCSV = (data: ExportData): string => {
     csvRows.push(`Total Trees,${data.plantingData.totalTrees}`);
     csvRows.push(`Spacing (meters),${data.plantingData.spacing}`);
     csvRows.push(`Density (trees/hectare),${data.plantingData.density.toFixed(0)}`);
-    csvRows.push(`Years to Complete,${data.plantingData.timeline.yearsToComplete}`);
-    csvRows.push(`Trees per Season,${data.plantingData.timeline.treesPerSeason}`);
+    if (data.plantingData.timeline) {
+      csvRows.push(`Years to Complete,${data.plantingData.timeline.yearsToComplete}`);
+      csvRows.push(`Trees per Season,${data.plantingData.timeline.treesPerSeason}`);
+    }
   }
   
   return csvRows.join("\n");

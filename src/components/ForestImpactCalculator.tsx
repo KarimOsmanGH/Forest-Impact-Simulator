@@ -101,6 +101,10 @@ interface ForestImpactCalculatorProps {
   } | null;
   onYearsChange: (years: number) => void;
   onDataReady?: (data: Partial<ExportData>) => void;
+  simulationMode?: 'planting' | 'clear-cutting';
+  calculationMode?: 'perTree' | 'perArea';
+  averageTreeAge?: number;
+  onSoilClimateDataReady?: (soil: SoilData | null, climate: ClimateData | null) => void;
 }
 
 interface ImpactMetrics {
@@ -379,14 +383,53 @@ const calculateAnnualCarbonWithGrowth = (matureRate: number, year: number): numb
   return matureRate * growthFactor;
 };
 
-const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitude, longitude, years, selectedTreeType, selectedTrees, treePercentages, selectedRegion, plantingData, onYearsChange, onDataReady }) => {
+// Helper function to get growth factor based on tree age
+const getGrowthFactor = (age: number): number => {
+  if (age <= 1) return 0.05;
+  else if (age <= 2) return 0.15;
+  else if (age <= 3) return 0.30;
+  else if (age <= 4) return 0.50;
+  else if (age <= 5) return 0.70;
+  else if (age <= 6) return 0.85;
+  else if (age <= 20) return 0.95; // Mature trees
+  else if (age <= 50) return 0.90; // Older mature trees
+  else return 0.85; // Very old trees
+};
+
+// New function for clear-cutting carbon calculations
+const calculateClearCuttingCarbon = (matureRate: number, treeAge: number, simulationYears: number): { immediate: number, lostFuture: number, total: number } => {
+  // Calculate current carbon content based on tree age
+  // This represents the carbon stored in the tree biomass at the current age
+  const currentCarbonContent = matureRate * getGrowthFactor(treeAge);
+  
+  // Immediate carbon release (carbon that would be released in the first year after cutting)
+  // This is more realistic than showing total lifetime carbon
+  const immediateRelease = currentCarbonContent * 5; // 5 years worth of current carbon content
+  
+  // Calculate lost future sequestration over simulation period
+  let lostFutureSequestration = 0;
+  for (let year = 1; year <= simulationYears; year++) {
+    const futureAge = treeAge + year;
+    const annualSequestration = matureRate * getGrowthFactor(futureAge);
+    lostFutureSequestration += annualSequestration;
+  }
+  
+  const total = immediateRelease + lostFutureSequestration;
+  
+  return {
+    immediate: immediateRelease,
+    lostFuture: lostFutureSequestration,
+    total: total
+  };
+};
+
+const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitude, longitude, years, selectedTreeType, selectedTrees, treePercentages, selectedRegion, plantingData, onYearsChange, onDataReady, simulationMode = 'planting', calculationMode = 'perArea', averageTreeAge = 20, onSoilClimateDataReady }) => {
 
   const [soil, setSoil] = useState<SoilData | null>(null);
   const [climate, setClimate] = useState<ClimateData | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [error, setError] = useState<string | null>(null);
-  const [calculationMode, setCalculationMode] = useState<'perTree' | 'entireArea'>('entireArea');
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
   const [activeEnvTab, setActiveEnvTab] = useState<'environment' | 'economic' | 'social' | 'landuse'>('environment');
 
@@ -448,6 +491,11 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         setClimate(cachedData.climate);
         setLoading(false);
         setError(null);
+        
+        // Notify parent component about cached soil and climate data
+        if (onSoilClimateDataReady) {
+          onSoilClimateDataReady(cachedData.soil, cachedData.climate);
+        }
         return;
       }
       
@@ -490,6 +538,11 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
             timestamp: Date.now()
           });
           
+          // Notify parent component about soil and climate data
+          if (onSoilClimateDataReady) {
+            onSoilClimateDataReady(soilData, climateData);
+          }
+          
           console.log('Environmental data cached for:', cacheKey);
         })
         .catch((error) => {
@@ -500,6 +553,11 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     } else {
       setSoil(null);
       setClimate(null);
+      
+      // Notify parent component that no data is available
+      if (onSoilClimateDataReady) {
+        onSoilClimateDataReady(null, null);
+      }
     }
   }, [latitude, longitude]);
 
@@ -553,7 +611,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     if (climate?.precipitation) resilienceBase += climate.precipitation / 1000;
     
     // Apply calculation mode multiplier
-    const multiplier = calculationMode === 'entireArea' ? totalTrees : 1;
+    const multiplier = calculationMode === 'perArea' ? totalTrees : 1;
     const carbonSequestration = carbonBase * multiplier;
     const biodiversityImpact = Math.min(5, biodiversityBase);
     const forestResilience = Math.min(5, resilienceBase);
@@ -669,13 +727,15 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
   
   const totalCarbon = useMemo(() => calculateCumulativeCarbon(impact.carbonSequestration, years), [impact.carbonSequestration, years, calculateCumulativeCarbon]);
   
-  // Calculate job creation based on project scale
+  // Calculate job creation based on project scale and simulation mode
   const economicImpact = useMemo(() => {
     // Get area in hectares for more realistic job calculation
     const areaHectares = plantingData?.area || (selectedRegion ? calculateRegionArea(selectedRegion) : 0);
     
-    // Realistic job creation based on area and project scale
     let jobCreation;
+    
+    if (simulationMode === 'planting') {
+      // Planting operations: fewer workers, more long-term
     if (areaHectares < 1) {
       jobCreation = 1; // Small projects: 1 person
     } else if (areaHectares < 5) {
@@ -688,12 +748,28 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       jobCreation = 8; // Large projects: 8 people (full team)
     } else {
       jobCreation = Math.floor(areaHectares / 10); // Very large projects: 1 job per 10 hectares
+      }
+    } else {
+      // Clear-cutting operations: more workers, intensive short-term operations
+      if (areaHectares < 1) {
+        jobCreation = 2; // Small operations: 2 people (logger, equipment operator)
+      } else if (areaHectares < 5) {
+        jobCreation = 4; // Small operations: 4 people (logging crew, equipment)
+      } else if (areaHectares < 20) {
+        jobCreation = 8; // Medium operations: 8 people (logging crew, heavy machinery, transport)
+      } else if (areaHectares < 50) {
+        jobCreation = 15; // Larger operations: 15 people (full logging team, multiple crews)
+      } else if (areaHectares < 100) {
+        jobCreation = 25; // Large operations: 25 people (multiple crews, processing, transport)
+      } else {
+        jobCreation = Math.floor(areaHectares / 3); // Very large operations: 1 job per 3 hectares (intensive)
+      }
     }
     
     return {
       jobCreation
     };
-  }, [plantingData, selectedRegion]);
+  }, [plantingData, selectedRegion, simulationMode]);
   
   // Format total carbon based on calculation mode
   const formatTotalCarbon = (carbon: number) => {
@@ -784,7 +860,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     }
     
     // Add area-specific comparisons for entire area mode
-    if (calculationMode === 'entireArea' && selectedRegion) {
+    if (calculationMode === 'perArea' && selectedRegion) {
       const area = calculateRegionArea(selectedRegion);
       if (area > 0) {
         // Carbon sequestration per hectare
@@ -847,7 +923,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     return (
       <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
         <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
           <span className="ml-3 text-gray-600">Loading environmental data...</span>
         </div>
       </div>
@@ -864,102 +940,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
 
   return (
     <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-md">
-      {selectedRegion && (
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <h4 className="font-semibold mb-2">Selected Region</h4>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="text-gray-900 font-bold">Area size:</span>
-              <p className="font-medium">{formatArea(calculateRegionArea(selectedRegion))}</p>
-            </div>
-            <div>
-              <span className="text-gray-900 font-bold">Coordinates:</span>
-              <p className="font-medium text-xs">
-                {selectedRegion.south.toFixed(4)}°S to {selectedRegion.north.toFixed(4)}°N<br />
-                {selectedRegion.west.toFixed(4)}°W to {selectedRegion.east.toFixed(4)}°E
-              </p>
-            </div>
-          </div>
-          <div className="mt-2">
-            <span className="text-gray-900 font-bold text-xs">Analysis based on center point:</span>
-            <p className="font-medium text-xs">{latitude?.toFixed(4)}, {longitude?.toFixed(4)}</p>
-          </div>
-        </div>
-      )}
 
-      <div className="mb-6 space-y-4">
-        {/* Calculation Mode Toggle */}
-        <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Calculation Mode
-            </label>
-            {calculationMode === 'perTree' ? (
-              <p className="text-xs text-gray-500">
-                Showing impact per individual tree
-              </p>
-            ) : (
-              <div className="text-xs text-gray-500">
-                <p className="font-bold">Showing impact for entire area:</p>
-                <ul className="mt-1">
-                  <li className="flex items-start">
-                    <span className="text-gray-400 mr-2">•</span>
-                    <span>{totalTrees.toLocaleString()} trees at {treeSpacing}m spacing ({treeSpacing * treeSpacing}m² per tree)</span>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setCalculationMode('perTree')}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                calculationMode === 'perTree'
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Per Tree
-            </button>
-            <button
-              onClick={() => setCalculationMode('entireArea')}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                calculationMode === 'entireArea'
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Entire Area
-            </button>
-          </div>
-        </div>
-
-        {/* Simulation Duration */}
-        <div>
-          <label htmlFor="years" className="block text-sm font-medium text-gray-700 mb-2">
-            <span className="font-bold">Simulation Duration:</span> <span className="font-bold text-primary">{years} year{years !== 1 ? 's' : ''}</span>
-          </label>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-500 w-8 text-center">1</span>
-            <input
-              id="years"
-              type="range"
-              min={1}
-              max={100}
-              value={years}
-              onChange={e => onYearsChange(Number(e.target.value))}
-              onWheel={e => {
-                e.preventDefault();
-                const delta = e.deltaY > 0 ? -1 : 1;
-                const newValue = Math.max(1, Math.min(100, years + delta));
-                onYearsChange(newValue);
-              }}
-              className="flex-1 accent-primary"
-            />
-            <span className="text-xs text-gray-500 w-8 text-center">100</span>
-          </div>
-        </div>
-      </div>
 
       <div className="mb-4">
         <h4 className="font-semibold mb-2">Impact Analysis</h4>
@@ -970,7 +951,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
             onClick={() => setActiveEnvTab('environment')}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeEnvTab === 'environment'
-                ? 'border-green-500 text-green-600'
+                ? 'border-primary text-primary'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -980,7 +961,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
             onClick={() => setActiveEnvTab('economic')}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeEnvTab === 'economic'
-                ? 'border-green-500 text-green-600'
+                ? 'border-primary text-primary'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -990,7 +971,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
             onClick={() => setActiveEnvTab('social')}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeEnvTab === 'social'
-                ? 'border-green-500 text-green-600'
+                ? 'border-primary text-primary'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -1000,7 +981,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
             onClick={() => setActiveEnvTab('landuse')}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeEnvTab === 'landuse'
-                ? 'border-green-500 text-green-600'
+                ? 'border-primary text-primary'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -1012,78 +993,100 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         <div className="min-h-[100px]">
           {activeEnvTab === 'environment' && (
             <div className="space-y-3">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <h5 className="font-semibold text-green-800 mb-2">
-                  Soil Data
-                </h5>
-                <div className="space-y-2 text-xs text-green-700">
-                  <div className="flex justify-between">
-                    <span>Soil Carbon Content:</span>
-                    <span className="font-medium">
-                      {soil?.carbon !== undefined && soil.carbon !== null ? `${soil.carbon.toFixed(1)} g/kg` : 'Not available'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Soil pH Level:</span>
-                    <span className="font-medium">
-                      {soil?.ph !== undefined && soil.ph !== null ? soil.ph.toFixed(1) : 'Not available'}
-                    </span>
-                  </div>
-                  {soil?.carbon && (
-                    <div className="mt-2 pt-2 border-t border-green-200">
-                      <div className="text-xs text-green-700">
-                        <span className="font-semibold">Carbon Bonus:</span> +{(soil.carbon * 0.1).toFixed(1)} kg CO₂/year per tree
-                      </div>
-                    </div>
-                  )}
+
+              {/* Environmental Impact Analysis */}
+              <div className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <CollapsibleSection
+                    title={simulationMode === 'planting' ? "Annual Carbon Sequestration" : "Immediate Carbon Release"}
+                    value={calculationMode === 'perTree' 
+                      ? simulationMode === 'planting'
+                        ? `+${calculateAnnualCarbonWithGrowth(impact.carbonSequestration, years).toFixed(1)} kg CO₂/yr`
+                        : `${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).immediate.toFixed(1)} kg CO₂`
+                      : simulationMode === 'planting'
+                        ? `+${(calculateAnnualCarbonWithGrowth(impact.carbonSequestration, years) / 1000).toFixed(1)} metric ton CO₂/yr`
+                        : `${(calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).immediate * totalTrees / 1000).toFixed(1)} metric tons CO₂`
+                    }
+                    description={calculationMode === 'perTree' 
+                      ? simulationMode === 'planting' 
+                        ? "Current year's carbon sequestration per tree based on growth stage. Trees start with low sequestration and increase as they mature over 20+ years."
+                        : `Immediate carbon release per tree when cut down at age ${averageTreeAge} years. Represents carbon that would be released in the first few years after cutting.`
+                      : simulationMode === 'planting'
+                        ? `Current year's carbon sequestration for all ${totalTrees.toLocaleString()} trees in the selected area, based on tree growth stage. This is the yearly rate, not cumulative.`
+                        : `Immediate carbon release for all ${totalTrees.toLocaleString()} trees when cut down at age ${averageTreeAge} years. This represents the carbon currently stored in tree biomass.`
+                    }
+                    isExpanded={expandedSections['annual-carbon'] || false}
+                    onToggle={() => toggleSection('annual-carbon')}
+                  />
+                  
+                  <CollapsibleSection
+                    title={simulationMode === 'planting' ? "Total Carbon" : "Total Carbon Emissions"}
+                    value={simulationMode === 'planting' 
+                      ? `+${formatTotalCarbon(totalCarbon)} ${getTotalCarbonUnit().replace('metric tons', 't').replace('kg CO₂', 'kg CO₂')}`
+                      : calculationMode === 'perTree'
+                        ? `${formatTotalCarbon(calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).total)} kg CO₂`
+                        : `${formatTotalCarbon(calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).total * totalTrees / 1000)} metric tons CO₂`
+                    }
+                    description={calculationMode === 'perTree' 
+                      ? simulationMode === 'planting'
+                        ? (climate?.temperature !== null && climate?.temperature !== undefined && 
+                           climate?.precipitation !== null && climate?.precipitation !== undefined 
+                           ? "Total carbon sequestered per tree over the entire simulation period, accounting for tree growth and climate predictions"
+                           : "Total carbon sequestered per tree over the entire simulation period, accounting for tree growth (climate predictions excluded due to unavailable data)")
+                        : `Total carbon emissions per tree: immediate release (${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).immediate.toFixed(1)} kg) + lost future sequestration (${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).lostFuture.toFixed(1)} kg) over ${years} years`
+                      : simulationMode === 'planting'
+                        ? `Total carbon sequestered by all ${totalTrees.toLocaleString()} trees over the entire simulation period, accounting for tree growth and climate predictions`
+                        : `Total carbon emissions for all ${totalTrees.toLocaleString()} trees: immediate release + lost future sequestration over ${years} years when cut at age ${averageTreeAge}`
+                    }
+                    isExpanded={expandedSections['total-carbon'] || false}
+                    onToggle={() => toggleSection('total-carbon')}
+                  />
+                  
+                  <CollapsibleSection
+                    title="Biodiversity Impact"
+                    value={`${averageBiodiversity.toFixed(1)}/5`}
+                    description="Measures ecosystem diversity and habitat quality. Higher values indicate better biodiversity support and wildlife habitat creation."
+                    isExpanded={expandedSections['biodiversity'] || false}
+                    onToggle={() => toggleSection('biodiversity')}
+                  />
+                  
+                  <CollapsibleSection
+                    title="Forest Resilience"
+                    value={`${averageResilience.toFixed(1)}/5`}
+                    description="Forest's ability to withstand climate change, pests, and disturbances. Higher values indicate more resilient ecosystems."
+                    isExpanded={expandedSections['resilience'] || false}
+                    onToggle={() => toggleSection('resilience')}
+                  />
+                  
+                  <CollapsibleSection
+                    title="Water Retention"
+                    value={`${impact.waterRetention.toFixed(0)}%`}
+                    description="Percentage of rainfall retained in soil and groundwater. Improves over time as tree roots develop and soil structure improves."
+                    isExpanded={expandedSections['water-retention'] || false}
+                    onToggle={() => toggleSection('water-retention')}
+                  />
+                  
+                  <CollapsibleSection
+                    title="Air Quality Improvement"
+                    value={`${impact.airQualityImprovement.toFixed(0)}%`}
+                    description="Reduction in air pollution through particle filtration and oxygen production. Improves as trees mature and canopy develops."
+                    isExpanded={expandedSections['air-quality'] || false}
+                    onToggle={() => toggleSection('air-quality')}
+                  />
                 </div>
               </div>
-
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <h5 className="font-semibold text-green-800 mb-2">
-                  Climate Data
-                </h5>
-                <div className="space-y-2 text-xs text-green-700">
-                  <div className="flex justify-between">
-                    <span>Temperature:</span>
-                    <span className="font-medium">
-                      {climate?.temperature !== undefined && climate.temperature !== null 
-                        ? `${climate.temperature.toFixed(1)}°C` 
-                        : 'Estimated from latitude'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Annual Precipitation:</span>
-                    <span className="font-medium">
-                      {climate?.precipitation !== undefined && climate.precipitation !== null 
-                        ? `${climate.precipitation.toFixed(1)} mm` 
-                        : 'Estimated from latitude'}
-                    </span>
-                  </div>
-
-                  {climate?.historicalData && climate.historicalData.temperatures.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-green-200">
-                      <div className="text-xs text-green-700">
-                        <span className="font-semibold">Climate Trend:</span> {calculateLinearTrend(climate.historicalData.years, climate.historicalData.temperatures).toFixed(3)}°C/year
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
 
             </div>
           )}
 
 
-
           {activeEnvTab === 'social' && (
             <div className="space-y-3">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                 <h5 className="font-semibold text-green-800 mb-2 flex items-center">
-                  Community Benefits
+                  {simulationMode === 'planting' ? 'Community Benefits' : 'Social Impact Assessment'}
                 </h5>
-                <div className="space-y-2 text-xs text-green-700">
+                <div className="space-y-2 text-xs text-primary">
                   <div className="flex justify-between">
                     <span>Social Impact Score:</span>
                     <span className="font-medium">
@@ -1091,20 +1094,20 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Tree Diversity Bonus:</span>
+                    <span>{simulationMode === 'planting' ? 'Tree Diversity Bonus:' : 'Forest Diversity Factor:'}</span>
                     <span className="font-medium">
                       {selectedTrees && selectedTrees.length > 1 ? `+${Math.min(selectedTrees.length * 0.2, 1).toFixed(1)}` : '+0.0'}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Time Investment Bonus:</span>
+                    <span>{simulationMode === 'planting' ? 'Time Investment Bonus:' : 'Duration Impact:'}</span>
                     <span className="font-medium">
                       +{Math.min(years * 0.02, 1).toFixed(1)}
                     </span>
                   </div>
                   {selectedRegion && (
                     <div className="flex justify-between">
-                      <span>Area Scale Bonus:</span>
+                      <span>{simulationMode === 'planting' ? 'Area Scale Bonus:' : 'Area Impact Factor:'}</span>
                       <span className="font-medium">
                         +{Math.min(calculateRegionArea(selectedRegion) * 0.1, 1).toFixed(1)}
                       </span>
@@ -1113,56 +1116,90 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                 </div>
               </div>
               
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                 <h5 className="font-semibold text-green-800 mb-2 flex items-center">
-                  Social Benefits
+                  {simulationMode === 'planting' ? 'Social Benefits' : 'Social Considerations'}
                 </h5>
-                <ul className="text-xs text-green-700 space-y-1">
+                <ul className="text-xs text-primary space-y-1">
+                  {simulationMode === 'planting' ? (
+                    <>
                   <li>• Recreational opportunities and outdoor activities</li>
                   <li>• Educational value for environmental learning</li>
                   <li>• Community engagement and volunteer opportunities</li>
                   <li>• Mental health benefits from green spaces</li>
                   <li>• Cultural and spiritual significance</li>
                   <li>• Social cohesion and community building</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>• Community concerns about forest loss</li>
+                      <li>• Impact on recreational and aesthetic value</li>
+                      <li>• Cultural and spiritual significance of forests</li>
+                      <li>• Public health implications of deforestation</li>
+                      <li>• Educational opportunities about forest conservation</li>
+                      <li>• Long-term community environmental awareness</li>
+                    </>
+                  )}
                 </ul>
               </div>
               
               <div className="text-xs text-gray-500 italic">
-                Social impact increases with tree diversity, time investment, and project scale
+                {simulationMode === 'planting' 
+                  ? 'Social impact increases with tree diversity, time investment, and project scale'
+                  : 'Social impact assessment considers community concerns, cultural values, and long-term environmental awareness'
+                }
               </div>
             </div>
           )}
 
           {activeEnvTab === 'economic' && (
             <div className="space-y-3">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                 <h5 className="font-semibold text-green-800 mb-2 flex items-center">
-                  Employment Impact
+                  {simulationMode === 'planting' ? 'Employment Impact' : 'Economic Impact'}
                 </h5>
-                <div className="space-y-2 text-xs text-green-700">
+                <div className="space-y-2 text-xs text-primary">
                   <div className="flex justify-between">
-                    <span className="font-semibold">Jobs Created:</span>
+                    <span className="font-semibold">
+                      {simulationMode === 'planting' ? 'Jobs Created:' : 'Jobs Affected:'}
+                    </span>
                     <span className="font-medium">
                       {economicImpact.jobCreation} jobs
                     </span>
                   </div>
-                  <div className="text-xs text-green-700 mt-2">
-                    Based on typical forest project staffing needs for planting, maintenance, and monitoring.
+                  <div className="text-xs text-primary mt-2">
+                    {simulationMode === 'planting' 
+                      ? 'Based on typical forest project staffing needs for planting, maintenance, and monitoring.'
+                      : 'Based on typical forest management operations including logging, transportation, and processing activities.'
+                    }
                   </div>
                 </div>
               </div>
               
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                 <h5 className="font-semibold text-green-800 mb-2 flex items-center">
-                  Conservation Benefits
+                  {simulationMode === 'planting' ? 'Conservation Benefits' : 'Economic Considerations'}
                 </h5>
-                <ul className="text-xs text-green-700 space-y-1">
+                <ul className="text-xs text-primary space-y-1">
+                  {simulationMode === 'planting' ? (
+                    <>
                   <li>• Conservation and restoration employment opportunities</li>
                   <li>• Ecosystem services (clean water, air quality improvement)</li>
                   <li>• Biodiversity protection and habitat creation</li>
                   <li>• Environmental education and research opportunities</li>
                   <li>• Climate resilience and adaptation benefits</li>
                   <li>• Community engagement and stewardship</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>• Logging and timber industry employment</li>
+                      <li>• Transportation and processing activities</li>
+                      <li>• Land development and conversion opportunities</li>
+                      <li>• Economic trade-offs with environmental costs</li>
+                      <li>• Short-term vs. long-term economic impacts</li>
+                      <li>• Alternative land use revenue potential</li>
+                    </>
+                  )}
                 </ul>
               </div>
               
@@ -1172,58 +1209,86 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
 
           {activeEnvTab === 'landuse' && (
             <div className="space-y-3">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                 <h5 className="font-semibold text-green-800 mb-2 flex items-center">
-                  Land Use Improvements
+                  {simulationMode === 'planting' ? 'Land Use Improvements' : 'Land Use Impact Assessment'}
                 </h5>
-                <div className="space-y-2 text-xs text-green-700">
+                <div className="space-y-2 text-xs text-primary">
                   {selectedRegion && (
                     <div className="flex justify-between">
-                      <span>Erosion Reduction:</span>
+                      <span>{simulationMode === 'planting' ? 'Erosion Reduction:' : 'Erosion Risk Increase:'}</span>
                       <span className="font-medium">
-                        {landUseImpact.erosionReduction.toFixed(0)}%
+                        {simulationMode === 'planting' 
+                          ? `${landUseImpact.erosionReduction.toFixed(0)}%`
+                          : `${(100 - landUseImpact.erosionReduction).toFixed(0)}%`
+                        }
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>Soil Quality Improvement:</span>
+                    <span>{simulationMode === 'planting' ? 'Soil Quality Improvement:' : 'Soil Quality Degradation:'}</span>
                     <span className="font-medium">
-                      {landUseImpact.soilImprovement.toFixed(0)}%
+                      {simulationMode === 'planting' 
+                        ? `${landUseImpact.soilImprovement.toFixed(0)}%`
+                        : `${(100 - landUseImpact.soilImprovement).toFixed(0)}%`
+                      }
                     </span>
                   </div>
                   {selectedRegion && (
                     <div className="flex justify-between">
-                      <span>Habitat Creation:</span>
+                      <span>{simulationMode === 'planting' ? 'Habitat Creation:' : 'Habitat Loss:'}</span>
                       <span className="font-medium">
-                        {landUseImpact.habitatCreation.toFixed(0)}%
+                        {simulationMode === 'planting' 
+                          ? `${landUseImpact.habitatCreation.toFixed(0)}%`
+                          : `${(100 - landUseImpact.habitatCreation).toFixed(0)}%`
+                        }
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>Water Quality Improvement:</span>
+                    <span>{simulationMode === 'planting' ? 'Water Quality Improvement:' : 'Water Quality Degradation:'}</span>
                     <span className="font-medium">
-                      {landUseImpact.waterQuality.toFixed(0)}%
+                      {simulationMode === 'planting' 
+                        ? `${landUseImpact.waterQuality.toFixed(0)}%`
+                        : `${(100 - landUseImpact.waterQuality).toFixed(0)}%`
+                      }
                     </span>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                 <h5 className="font-semibold text-green-800 mb-2 flex items-center">
-                  Land Use Benefits
+                  {simulationMode === 'planting' ? 'Land Use Benefits' : 'Land Use Impacts'}
                 </h5>
-                <ul className="text-xs text-green-700 space-y-1">
+                <ul className="text-xs text-primary space-y-1">
+                  {simulationMode === 'planting' ? (
+                    <>
                   <li>• Soil erosion prevention and stabilization</li>
                   <li>• Improved soil fertility and structure</li>
                   <li>• Wildlife habitat creation and connectivity</li>
                   <li>• Water filtration and quality improvement</li>
                   <li>• Microclimate regulation and temperature moderation</li>
                   <li>• Land restoration and ecosystem recovery</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>• Increased soil erosion and instability</li>
+                      <li>• Reduced soil fertility and structure degradation</li>
+                      <li>• Wildlife habitat loss and fragmentation</li>
+                      <li>• Reduced water filtration and quality decline</li>
+                      <li>• Microclimate disruption and temperature changes</li>
+                      <li>• Land degradation and ecosystem disruption</li>
+                    </>
+                  )}
                 </ul>
               </div>
               
               <div className="text-xs text-gray-500 italic">
-                Land use improvements increase over time as the forest develops and matures
+                {simulationMode === 'planting' 
+                  ? 'Land use improvements increase over time as the forest develops and matures'
+                  : 'Land use impacts represent the environmental costs of forest removal and land conversion'
+                }
               </div>
             </div>
           )}
@@ -1234,8 +1299,8 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         <div className="mb-4 flex flex-col bg-white rounded shadow p-4 max-w-3xl w-full">
           <span className="text-xs font-bold text-gray-700 mb-2">
             Selected Trees: {selectedTrees.length} species
-            {calculationMode === 'entireArea' && selectedRegion && (
-              <span className="text-green-600 ml-2">• {totalTrees.toLocaleString()} total trees in area</span>
+            {calculationMode === 'perArea' && selectedRegion && (
+              <span className="text-primary ml-2">• {totalTrees.toLocaleString()} total trees in area</span>
             )}
           </span>
           <ul className="space-y-2 text-xs text-gray-700">
@@ -1246,7 +1311,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                   <span className="font-medium">{tree.name} <span className="font-normal text-gray-500">- {tree.scientificName}</span></span>
                   <span className="text-gray-600">({tree.carbonSequestration} kg CO₂/year)</span>
                   {selectedTrees.length > 1 && percentage > 0 && (
-                    <span className="text-green-700 font-medium">({percentage}%)</span>
+                    <span className="text-primary font-medium">({percentage}%)</span>
                   )}
                 </li>
               );
@@ -1268,81 +1333,21 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
 
 
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 max-w-5xl w-full">
-        <CollapsibleSection
-          title="Annual Carbon Sequestration"
-          value={calculationMode === 'perTree' 
-            ? `${calculateAnnualCarbonWithGrowth(impact.carbonSequestration, years).toFixed(1)} kg CO₂/yr`
-            : `${(calculateAnnualCarbonWithGrowth(impact.carbonSequestration, years) / 1000).toFixed(1)} metric ton CO₂/yr`
-          }
-          description={calculationMode === 'perTree' 
-            ? "Current year's carbon sequestration per tree based on growth stage. Trees start with low sequestration and increase as they mature over 20+ years."
-            : `Current year's carbon sequestration for all ${totalTrees.toLocaleString()} trees in the selected area, based on tree growth stage. This is the yearly rate, not cumulative.`
-          }
-          isExpanded={expandedSections['annual-carbon'] || false}
-          onToggle={() => toggleSection('annual-carbon')}
-        />
-        
-        <CollapsibleSection
-          title="Total Carbon"
-          value={`${formatTotalCarbon(totalCarbon)} ${getTotalCarbonUnit().replace('metric tons', 't').replace('kg CO₂', 'kg CO₂')}`}
-          description={calculationMode === 'perTree' 
-            ? (climate?.temperature !== null && climate?.temperature !== undefined && 
-               climate?.precipitation !== null && climate?.precipitation !== undefined 
-               ? "Total carbon sequestered per tree over the entire simulation period, accounting for tree growth and climate predictions"
-               : "Total carbon sequestered per tree over the entire simulation period, accounting for tree growth (climate predictions excluded due to unavailable data)")
-            : `Total carbon sequestered by all ${totalTrees.toLocaleString()} trees over the entire simulation period, accounting for tree growth and climate predictions`
-          }
-          isExpanded={expandedSections['total-carbon'] || false}
-          onToggle={() => toggleSection('total-carbon')}
-        />
-        
-        <CollapsibleSection
-          title="Biodiversity Impact"
-          value={`${averageBiodiversity.toFixed(1)}/5`}
-          description="Measures ecosystem diversity and habitat quality. Higher values indicate better biodiversity support and wildlife habitat creation."
-          isExpanded={expandedSections['biodiversity'] || false}
-          onToggle={() => toggleSection('biodiversity')}
-        />
-        
-        <CollapsibleSection
-          title="Forest Resilience"
-          value={`${averageResilience.toFixed(1)}/5`}
-          description="Forest's ability to withstand climate change, pests, and disturbances. Higher values indicate more resilient ecosystems."
-          isExpanded={expandedSections['resilience'] || false}
-          onToggle={() => toggleSection('resilience')}
-        />
-        
-        <CollapsibleSection
-          title="Water Retention"
-          value={`${impact.waterRetention.toFixed(0)}%`}
-          description="Percentage of rainfall retained in soil and groundwater. Improves over time as tree roots develop and soil structure improves."
-          isExpanded={expandedSections['water-retention'] || false}
-          onToggle={() => toggleSection('water-retention')}
-        />
-        
-        <CollapsibleSection
-          title="Air Quality Improvement"
-          value={`${impact.airQualityImprovement.toFixed(0)}%`}
-          description="Reduction in air pollution through particle filtration and oxygen production. Improves as trees mature and canopy develops."
-          isExpanded={expandedSections['air-quality'] || false}
-          onToggle={() => toggleSection('air-quality')}
-        />
-      </div>
+      {/* Impact boxes moved to Environment tab */}
 
       {comparisons.length > 0 && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h4 className="font-semibold text-green-800 mb-2">Real-world Impact Comparison</h4>
-          <p className="text-xs text-green-700 mb-2 font-bold">
+        <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-lg">
+          <h4 className="font-semibold text-primary mb-2">Real-world Impact Comparison</h4>
+          <p className="text-xs text-primary mb-2 font-bold">
             This forest would sequester the equivalent of:
           </p>
-          <ul className="text-xs text-green-700 space-y-1">
+          <ul className="text-xs text-primary space-y-1">
             {comparisons.map((comparison, index) => {
               // Make numbers bold, including both the first number and "X years"
               const formattedText = comparison.replace(/(\d+\.?\d*)/g, '<strong>$1</strong>');
               return (
                 <li key={index} className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
+                  <span className="text-primary mr-2">•</span>
                   <span dangerouslySetInnerHTML={{ __html: formattedText }} />
                 </li>
               );

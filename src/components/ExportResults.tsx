@@ -73,7 +73,7 @@ const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = fa
         <button
           onClick={() => handleExport('geojson')}
           disabled={isExporting}
-          className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="text-2xl mb-2">🗺️</div>
           <span className="text-sm font-medium">GeoJSON</span>
@@ -83,7 +83,7 @@ const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = fa
         <button
           onClick={() => handleExport('json')}
           disabled={isExporting}
-          className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="text-2xl mb-2">📄</div>
           <span className="text-sm font-medium">JSON</span>
@@ -93,7 +93,7 @@ const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = fa
         <button
           onClick={() => handleExport('csv')}
           disabled={isExporting}
-          className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="text-2xl mb-2">📊</div>
           <span className="text-sm font-medium">CSV</span>
@@ -104,20 +104,20 @@ const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = fa
       {isExporting && (
         <div className="mt-3 text-center">
           <div className="inline-flex items-center text-sm text-gray-600">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
             Preparing export...
           </div>
         </div>
       )}
       
-      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-        <h4 className="text-sm font-medium text-green-800 mb-2">Export Includes:</h4>
-        <ul className="text-xs text-green-700 space-y-1">
+      <div className="mt-4 p-3 bg-primary/10 border border-primary/30 rounded-lg">
+        <h4 className="text-sm font-medium text-primary mb-2">Export Includes:</h4>
+        <ul className="text-xs text-primary space-y-1">
           <li>• Location coordinates and region boundaries</li>
-          <li>• Selected tree species and percentages</li>
+          <li>• Selected tree species/forest types and percentages</li>
           <li>• Environmental data (soil, climate)</li>
-          <li>• Impact calculations (carbon, biodiversity, etc.)</li>
-          <li>• Planting specifications and timeline</li>
+          <li>• Impact calculations (carbon sequestration/emissions, biodiversity, etc.)</li>
+          <li>• Planting/removal specifications and configuration</li>
           <li>• Simulation metadata and timestamp</li>
         </ul>
       </div>

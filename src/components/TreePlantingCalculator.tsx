@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TreeType } from '@/types/treeTypes';
 import {
   RegionBounds,
@@ -8,13 +8,40 @@ import {
   calculateTreePlanting,
   formatArea,
   formatNumber,
-  calculatePlantingTimeline,
   TREE_SPACING_CONFIGS,
   getRecommendedSpacing
 } from '@/utils/treePlanting';
 import { ExportData } from '@/utils/exportUtils';
 
+// Types for soil and climate data
+interface SoilData {
+  carbon: number;
+  ph: number;
+}
+
+interface ClimateData {
+  temperature: number;
+  precipitation: number;
+  historicalData?: {
+    years: number[];
+    temperatures: number[];
+  };
+}
+
 // CollapsibleSection component and interface removed as they're unused
+
+// Helper function for climate trend calculation
+const calculateLinearTrend = (years: number[], values: number[]): number => {
+  if (years.length !== values.length || years.length < 2) return 0;
+  
+  const n = years.length;
+  const sumX = years.reduce((a, b) => a + b, 0);
+  const sumY = values.reduce((a, b) => a + b, 0);
+  const sumXY = years.reduce((sum, year, i) => sum + year * values[i], 0);
+  const sumXX = years.reduce((sum, year) => sum + year * year, 0);
+  
+  return (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+};
 
 interface TreePlantingCalculatorProps {
   selectedRegion: RegionBounds | null;
@@ -22,6 +49,13 @@ interface TreePlantingCalculatorProps {
   selectedTrees?: TreeType[];
   treePercentages?: { [key: string]: number };
   onDataReady?: (data: Partial<ExportData>) => void;
+  simulationMode?: 'planting' | 'clear-cutting';
+  years?: number;
+  onYearsChange?: (years: number) => void;
+  onCalculationModeChange?: (mode: 'perTree' | 'perArea') => void;
+  onTreeAgeChange?: (age: number) => void;
+  soil?: SoilData | null;
+  climate?: ClimateData | null;
 }
 
 const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
@@ -29,23 +63,39 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
   selectedTreeType,
   selectedTrees,
   treePercentages,
-  onDataReady
+  onDataReady,
+  simulationMode = 'planting',
+  years = 50,
+  onYearsChange,
+  onCalculationModeChange,
+  onTreeAgeChange,
+  soil,
+  climate
 }) => {
   const [customSpacing, setCustomSpacing] = useState<number | undefined>();
+  const [calculationMode, setCalculationMode] = useState<'perTree' | 'perArea'>('perArea');
+  const [averageTreeAge, setAverageTreeAge] = useState<number>(20); // Default to 20 years for mature forests
+
+  // Notify parent when calculation mode changes
+  useEffect(() => {
+    if (onCalculationModeChange) {
+      onCalculationModeChange(calculationMode);
+    }
+  }, [calculationMode, onCalculationModeChange]);
+
+  // Notify parent when tree age changes
+  useEffect(() => {
+    if (onTreeAgeChange) {
+      onTreeAgeChange(averageTreeAge);
+    }
+  }, [averageTreeAge, onTreeAgeChange]);
 
   // Determine which tree to use for planting calculations
   const treeForPlanting = selectedTreeType || (selectedTrees && selectedTrees.length > 0 ? selectedTrees[0] : null);
   
   // Calculate planting configuration with useMemo to recalculate when customSpacing changes
-  const { plantingConfig, timeline } = React.useMemo(() => {
+  const plantingConfig = React.useMemo(() => {
     let config: TreePlantingConfig | undefined;
-    let timeline: {
-      treesPerYear: number;
-      yearsToComplete: number;
-      treesPerSeason: number;
-      projectScale: string;
-      recommendedApproach: string;
-    } | undefined;
     
     if (selectedRegion && treeForPlanting) {
       if (selectedTrees && selectedTrees.length > 1 && treePercentages) {
@@ -87,30 +137,24 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
         );
       }
 
-      // Note: Carbon sequestration and mortality calculations removed as requested
-      timeline = calculatePlantingTimeline(config.totalTrees);
     }
     
-    return { plantingConfig: config, timeline };
+    return config;
   }, [selectedRegion, treeForPlanting, selectedTrees, treePercentages, customSpacing]);
 
   // Call onDataReady callback when data is available
   React.useEffect(() => {
-    if (onDataReady && selectedRegion && plantingConfig && timeline) {
+    if (onDataReady && selectedRegion && plantingConfig) {
       onDataReady({
         plantingData: {
           area: plantingConfig.area,
           totalTrees: plantingConfig.totalTrees,
           spacing: plantingConfig.spacing,
-          density: plantingConfig.density,
-          timeline: {
-            yearsToComplete: timeline.yearsToComplete,
-            treesPerSeason: timeline.treesPerSeason
-          }
+          density: plantingConfig.density
         }
       });
     }
-  }, [onDataReady, selectedRegion, plantingConfig, timeline, customSpacing]);
+  }, [onDataReady, selectedRegion, plantingConfig, customSpacing]);
 
   // Early return checks - must be after all hooks
   if (!selectedRegion || (!selectedTreeType && (!selectedTrees || selectedTrees.length === 0))) {
@@ -121,7 +165,7 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
     return null;
   }
 
-  if (!plantingConfig || !timeline) {
+  if (!plantingConfig) {
     return null;
   }
 
@@ -130,14 +174,95 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
       
-      {/* Tree Spacing Configuration */}
+      {/* Calculation Mode - At the very top */}
       <div className="mb-4">
-        <h4 className="font-semibold mb-2">Planting Configuration</h4>
+        <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Calculation Mode
+            </label>
+            {calculationMode === 'perTree' ? (
+              <p className="text-xs text-gray-500">
+                Showing impact per individual tree
+              </p>
+            ) : (
+              <p className="text-xs text-gray-500">
+                Showing impact for entire area
+              </p>
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCalculationMode('perTree')}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                calculationMode === 'perTree'
+                  ? 'bg-primary text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Per Tree
+            </button>
+            <button
+              onClick={() => setCalculationMode('perArea')}
+              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                calculationMode === 'perArea'
+                  ? 'bg-primary text-white'
+                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              Per Area
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Simulation Duration - Right below Calculation Mode */}
+      {onYearsChange && (
+        <div className="mb-4">
+          <label htmlFor="years" className="block text-sm font-medium text-gray-700 mb-2">
+            <span className="font-bold">Simulation Duration:</span> <span className="font-bold text-primary">{years} year{years !== 1 ? 's' : ''}</span>
+          </label>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-500 w-8 text-center">1</span>
+            <input
+              id="years"
+              type="range"
+              min={1}
+              max={100}
+              value={years}
+              onChange={e => onYearsChange(Number(e.target.value))}
+              onWheel={e => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -1 : 1;
+                const newValue = Math.max(1, Math.min(100, years + delta));
+                onYearsChange(newValue);
+              }}
+              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+              style={{
+                background: `linear-gradient(to right, #1B4D3E 0%, #1B4D3E ${((years - 1) / 99) * 100}%, #e5e7eb ${((years - 1) / 99) * 100}%, #e5e7eb 100%)`
+              }}
+            />
+            <span className="text-xs text-gray-500 w-8 text-center">100</span>
+          </div>
+        </div>
+      )}
+
+      {/* Region and Configuration */}
+      <div className="mb-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-500 font-bold">Area size:</span>
             <span className="text-xs font-medium">{formatArea(plantingConfig.area)}</span>
           </div>
+          {selectedRegion && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500 font-bold">Coordinates:</span>
+              <span className="text-xs font-medium">
+                {selectedRegion.south.toFixed(4)}°S to {selectedRegion.north.toFixed(4)}°N<br />
+                {selectedRegion.west.toFixed(4)}°W to {selectedRegion.east.toFixed(4)}°E
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <span 
               className="text-xs text-gray-500 font-bold cursor-help"
@@ -163,14 +288,20 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
         </div>
         
         {selectedTrees && selectedTrees.length > 1 && (
-          <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-800">
+          <div className="mt-2 p-2 bg-primary/10 border border-primary/30 rounded text-xs text-primary">
             <strong>🌳 Multi-species spacing:</strong> Spacing calculated as weighted average based on your tree selection and percentages.
           </div>
         )}
       </div>
 
+
+      {/* Configuration Settings - Conditional based on calculation mode */}
+      <div className="mb-4 space-y-4">
+        {/* Per Area Mode Settings */}
+        {calculationMode === 'perArea' && (
+          <>
       {/* Custom Spacing Option */}
-      <div className="mb-4">
+            <div>
         <label 
           className="block text-xs font-medium text-gray-700 mb-1 cursor-help"
           title="Adjust spacing for specific site conditions, access requirements, or management goals. Wider spacing (5-6m) for equipment access, narrower (2-3m) for rapid canopy closure. Auto uses species-specific recommendations."
@@ -196,36 +327,110 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
           </button>
         </div>
       </div>
+          </>
+        )}
 
-      {/* Planting Timeline */}
-      <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-        <h4 className="font-semibold text-green-800 mb-2">Planting Timeline</h4>
-        <p className="text-xs text-green-700 mb-2">
-          Project planning of your forest size and recommended planting methods:
-        </p>
-        <ul className="text-xs text-green-700 space-y-1">
-          <li className="flex items-start">
-            <span className="text-green-600 mr-2">•</span>
-            <span><strong>Project Scale:</strong> {timeline.projectScale}</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-600 mr-2">•</span>
-            <span><strong>Recommended Approach:</strong> {timeline.recommendedApproach}</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-600 mr-2">•</span>
-            <span><strong>Planting Capacity:</strong> {formatNumber(timeline.treesPerYear)} trees/year</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-600 mr-2">•</span>
-            <span><strong>Project Duration:</strong> {timeline.yearsToComplete} year{timeline.yearsToComplete !== 1 ? 's' : ''}</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-green-600 mr-2">•</span>
-            <span><strong>Seasonal Workload:</strong> {formatNumber(timeline.treesPerSeason)} trees/season</span>
-          </li>
-        </ul>
+        {/* Average Tree Age (Clear-cutting mode only) */}
+        {simulationMode === 'clear-cutting' && (
+          <div>
+            <label 
+              className="block text-xs font-medium text-gray-700 mb-1 cursor-help"
+              title="Enter the average age of trees in this forest area. Young forests: 5-15 years, Mature forests: 20-50 years, Old-growth: 50+ years. This affects carbon emission calculations."
+            >
+              Average Tree Age (years)
+            </label>
+            <div className="flex gap-2">
+            <input
+              type="number"
+              min="1"
+              max="200"
+              step="1"
+              value={averageTreeAge || ''}
+              onChange={(e) => setAverageTreeAge(e.target.value ? parseInt(e.target.value) : 20)}
+              className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+              <div className="text-xs text-gray-500 flex items-center">
+                {averageTreeAge < 10 && "Young"}
+                {averageTreeAge >= 10 && averageTreeAge < 30 && "Mature"}
+                {averageTreeAge >= 30 && averageTreeAge < 60 && "Mature"}
+                {averageTreeAge >= 60 && "Ancient"}
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {/* Soil and Climate Data */}
+        {(soil || climate) && (
+          <div className="mt-4 space-y-3">
+            <h4 className="font-semibold text-gray-800 text-sm">Environmental Data</h4>
+            
+            {soil && (
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+                <h5 className="font-semibold text-primary mb-2 text-xs">
+                  Soil Data
+                </h5>
+                <div className="space-y-1 text-xs text-primary">
+                  <div className="flex justify-between">
+                    <span>Soil Carbon Content:</span>
+                    <span className="font-medium">
+                      {soil?.carbon !== undefined && soil.carbon !== null ? `${soil.carbon.toFixed(1)} g/kg` : 'Not available'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Soil pH Level:</span>
+                    <span className="font-medium">
+                      {soil?.ph !== undefined && soil.ph !== null ? soil.ph.toFixed(1) : 'Not available'}
+                    </span>
+                  </div>
+                  {soil?.carbon && (
+                    <div className="mt-2 pt-2 border-t border-primary/30">
+                      <div className="text-xs text-primary">
+                        <span className="font-semibold">Carbon Bonus:</span> +{(soil.carbon * 0.1).toFixed(1)} kg CO₂/year per tree
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {climate && (
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+                <h5 className="font-semibold text-primary mb-2 text-xs">
+                  Climate Data
+                </h5>
+                <div className="space-y-1 text-xs text-primary">
+                  <div className="flex justify-between">
+                    <span>Temperature:</span>
+                    <span className="font-medium">
+                      {climate?.temperature !== undefined && climate.temperature !== null 
+                        ? `${climate.temperature.toFixed(1)}°C` 
+                        : 'Estimated from latitude'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Annual Precipitation:</span>
+                    <span className="font-medium">
+                      {climate?.precipitation !== undefined && climate.precipitation !== null 
+                        ? `${climate.precipitation.toFixed(1)} mm` 
+                        : 'Estimated from latitude'}
+                    </span>
+                  </div>
+
+                  {climate?.historicalData && climate.historicalData.temperatures.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-primary/30">
+                      <div className="text-xs text-primary">
+                        <span className="font-semibold">Climate Trend:</span> {calculateLinearTrend(climate.historicalData.years, climate.historicalData.temperatures).toFixed(3)}°C/year
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
 
 
     </div>
