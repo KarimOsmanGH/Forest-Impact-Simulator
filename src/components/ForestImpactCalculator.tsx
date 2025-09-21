@@ -398,17 +398,10 @@ const getGrowthFactor = (age: number): number => {
 
 // New function for clear-cutting carbon calculations
 const calculateClearCuttingCarbon = (matureRate: number, treeAge: number, simulationYears: number): { immediate: number, lostFuture: number, total: number } => {
-  // Calculate total carbon stored in tree biomass at current age
-  // This represents the cumulative carbon sequestered over the tree's lifetime
-  let totalStoredCarbon = 0;
-  for (let age = 1; age <= treeAge; age++) {
-    const annualSequestration = matureRate * getGrowthFactor(age);
-    totalStoredCarbon += annualSequestration;
-  }
-  
-  // Immediate carbon release represents carbon released in the first few years after cutting
-  // This is a fraction of the total stored carbon (not all carbon is released immediately)
-  const immediateRelease = totalStoredCarbon * 0.3; // 30% released in first few years
+  // Immediate carbon release represents carbon released immediately when tree is cut down
+  // This is based on the current annual sequestration rate (carbon currently being sequestered)
+  const currentAnnualSequestration = matureRate * getGrowthFactor(treeAge);
+  const immediateRelease = currentAnnualSequestration; // Just the current year's rate
   
   // Calculate lost future sequestration over simulation period
   let lostFutureSequestration = 0;
@@ -442,31 +435,59 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
 
   // Calculate social, economic, and land use impacts with useMemo
   const socialImpact = useMemo(() => {
-    const baseSocialScore = 3.5; // Base social benefit score (1-5)
-    const treeDiversityBonus = selectedTrees && selectedTrees.length > 1 ? Math.min(selectedTrees.length * 0.2, 1) : 0;
-    const timeBonus = Math.min(years * 0.02, 1); // Benefits increase over time
-    const areaBonus = selectedRegion ? Math.min(calculateRegionArea(selectedRegion) * 0.1, 1) : 0;
-    
-    return Math.min(baseSocialScore + treeDiversityBonus + timeBonus + areaBonus, 5);
-  }, [selectedTrees, years, selectedRegion]);
+    if (simulationMode === 'planting') {
+      // Planting mode: positive social benefits
+      const baseSocialScore = 3.5; // Base social benefit score (1-5)
+      const treeDiversityBonus = selectedTrees && selectedTrees.length > 1 ? Math.min(selectedTrees.length * 0.2, 1) : 0;
+      const timeBonus = Math.min(years * 0.02, 1); // Benefits increase over time
+      const areaBonus = selectedRegion ? Math.min(calculateRegionArea(selectedRegion) * 0.1, 1) : 0;
+      
+      return Math.min(baseSocialScore + treeDiversityBonus + timeBonus + areaBonus, 5);
+    } else {
+      // Clear-cutting mode: negative social impacts
+      const baseSocialScore = 2.0; // Lower base score due to negative impacts
+      const treeDiversityPenalty = selectedTrees && selectedTrees.length > 1 ? Math.min(selectedTrees.length * 0.1, 0.5) : 0;
+      const timePenalty = Math.min(years * 0.01, 0.5); // Negative impacts increase over time
+      const areaPenalty = selectedRegion ? Math.min(calculateRegionArea(selectedRegion) * 0.05, 0.5) : 0;
+      
+      return Math.max(baseSocialScore - treeDiversityPenalty - timePenalty - areaPenalty, 1);
+    }
+  }, [selectedTrees, years, selectedRegion, simulationMode]);
 
 
 
   const landUseImpact = useMemo(() => {
     // Use planting data area if available, otherwise calculate from selected region
     const area = plantingData?.area || (selectedRegion ? calculateRegionArea(selectedRegion) : 0);
-    const erosionReduction = Math.min(area * 0.5, 95); // Erosion reduction percentage
-    const soilImprovement = Math.min(years * 1.5, 80); // Soil quality improvement
-    const habitatCreation = Math.min(area * 2, 90); // Habitat creation percentage
-    const waterQuality = Math.min(years * 1.2, 85); // Water quality improvement
     
-    return {
-      erosionReduction,
-      soilImprovement,
-      habitatCreation,
-      waterQuality
-    };
-  }, [selectedRegion, years, plantingData]);
+    if (simulationMode === 'planting') {
+      // Planting mode: positive land use improvements
+      const erosionReduction = Math.min(area * 0.5, 95); // Erosion reduction percentage
+      const soilImprovement = Math.min(years * 1.5, 80); // Soil quality improvement
+      const habitatCreation = Math.min(area * 2, 90); // Habitat creation percentage
+      const waterQuality = Math.min(years * 1.2, 85); // Water quality improvement
+      
+      return {
+        erosionReduction,
+        soilImprovement,
+        habitatCreation,
+        waterQuality
+      };
+    } else {
+      // Clear-cutting mode: negative land use impacts
+      const erosionIncrease = Math.min(area * 0.8, 95); // Erosion increase percentage
+      const soilDegradation = Math.min(years * 2.0, 80); // Soil quality degradation
+      const habitatLoss = Math.min(area * 3, 90); // Habitat loss percentage
+      const waterQualityDecline = Math.min(years * 1.8, 85); // Water quality decline
+      
+      return {
+        erosionReduction: erosionIncrease, // Using same property name for display
+        soilImprovement: soilDegradation, // Using same property name for display
+        habitatCreation: habitatLoss, // Using same property name for display
+        waterQuality: waterQualityDecline // Using same property name for display
+      };
+    }
+  }, [selectedRegion, years, plantingData, simulationMode]);
 
   const toggleSection = (sectionKey: string) => {
     setExpandedSections(prev => ({
@@ -617,15 +638,23 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     const multiplier = calculationMode === 'perArea' ? totalTrees : 1;
     const carbonSequestration = carbonBase * multiplier;
     
-    // Biodiversity and resilience improve over time and scale with forest size
-    const biodiversityTimeBonus = Math.min(1, years * 0.05); // +0.05 per year, max +1
-    const resilienceTimeBonus = Math.min(1, years * 0.03); // +0.03 per year, max +1
+    // Biodiversity and resilience change based on simulation mode
+    let biodiversityTimeBonus, resilienceTimeBonus, forestSizeBonus;
     
-    // Scale with forest size (more trees = more diverse ecosystem)
-    const forestSizeBonus = calculationMode === 'perArea' ? Math.min(1, Math.log10(totalTrees) * 0.2) : 0;
+    if (simulationMode === 'planting') {
+      // Planting mode: improve over time and scale with forest size
+      biodiversityTimeBonus = Math.min(1, years * 0.05); // +0.05 per year, max +1
+      resilienceTimeBonus = Math.min(1, years * 0.03); // +0.03 per year, max +1
+      forestSizeBonus = calculationMode === 'perArea' ? Math.min(1, Math.log10(totalTrees) * 0.2) : 0;
+    } else {
+      // Clear-cutting mode: degrade over time and scale with forest size (more trees = more damage)
+      biodiversityTimeBonus = Math.max(-1, -years * 0.05); // -0.05 per year, max -1
+      resilienceTimeBonus = Math.max(-1, -years * 0.03); // -0.03 per year, max -1
+      forestSizeBonus = calculationMode === 'perArea' ? Math.min(1, Math.log10(totalTrees) * 0.2) : 0; // More trees = more damage
+    }
     
-    const biodiversityImpact = Math.min(5, biodiversityBase + biodiversityTimeBonus + forestSizeBonus);
-    const forestResilience = Math.min(5, resilienceBase + resilienceTimeBonus + forestSizeBonus);
+    const biodiversityImpact = Math.min(5, Math.max(0, biodiversityBase + biodiversityTimeBonus + forestSizeBonus));
+    const forestResilience = Math.min(5, Math.max(0, resilienceBase + resilienceTimeBonus + forestSizeBonus));
 
     // Water retention calculation
     let waterBase = 70; // Default base
@@ -641,10 +670,20 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       waterBase = Math.max(60, Math.min(90, 70 + precipBonus));
     }
     
-    // Water retention improves over time and scales with forest size
-    const waterTimeBonus = years * 0.3; // Improves by ~0.3% per year
-    const waterSizeBonus = calculationMode === 'perArea' ? Math.min(10, Math.log10(totalTrees) * 2) : 0; // More trees = better water retention
-    const waterRetention = Math.min(95, waterBase + waterTimeBonus + waterSizeBonus);
+    // Water retention changes based on simulation mode
+    let waterTimeBonus, waterSizeBonus;
+    
+    if (simulationMode === 'planting') {
+      // Planting mode: improve over time and scale with forest size
+      waterTimeBonus = years * 0.3; // Improves by ~0.3% per year
+      waterSizeBonus = calculationMode === 'perArea' ? Math.min(10, Math.log10(totalTrees) * 2) : 0; // More trees = better water retention
+    } else {
+      // Clear-cutting mode: degrade over time and scale with forest size (more trees = more damage)
+      waterTimeBonus = -years * 0.5; // Degrades by ~0.5% per year
+      waterSizeBonus = calculationMode === 'perArea' ? Math.min(15, Math.log10(totalTrees) * 3) : 0; // More trees = more damage
+    }
+    
+    const waterRetention = Math.min(95, Math.max(0, waterBase + waterTimeBonus + waterSizeBonus));
 
     // Air quality improves over time as trees mature and grow larger
     // Base air quality improvement varies by climate zone (more impact in polluted areas)
@@ -669,10 +708,20 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       airQualityBase = Math.max(40, Math.min(80, 60 + tempBonus + precipBonus));
     }
     
-    // Air quality improves over time and scales with forest size
-    const airTimeBonus = years * 0.7; // Improves by ~0.7% per year
-    const airSizeBonus = calculationMode === 'perArea' ? Math.min(15, Math.log10(totalTrees) * 3) : 0; // More trees = better air quality
-    const airQualityImprovement = Math.min(95, airQualityBase + airTimeBonus + airSizeBonus);
+    // Air quality changes based on simulation mode
+    let airTimeBonus, airSizeBonus;
+    
+    if (simulationMode === 'planting') {
+      // Planting mode: improve over time and scale with forest size
+      airTimeBonus = years * 0.7; // Improves by ~0.7% per year
+      airSizeBonus = calculationMode === 'perArea' ? Math.min(15, Math.log10(totalTrees) * 3) : 0; // More trees = better air quality
+    } else {
+      // Clear-cutting mode: degrade over time and scale with forest size (more trees = more damage)
+      airTimeBonus = -years * 1.0; // Degrades by ~1.0% per year
+      airSizeBonus = calculationMode === 'perArea' ? Math.min(20, Math.log10(totalTrees) * 4) : 0; // More trees = more damage
+    }
+    
+    const airQualityImprovement = Math.min(95, Math.max(0, airQualityBase + airTimeBonus + airSizeBonus));
 
     return {
       carbonSequestration: Math.max(0, carbonSequestration),
@@ -768,17 +817,17 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     } else {
       // Clear-cutting operations: more workers, intensive short-term operations
       if (areaHectares < 1) {
-        jobCreation = 2; // Small operations: 2 people (logger, equipment operator)
+        jobCreation = 3; // Small operations: 3 people (logger, equipment operator, supervisor)
       } else if (areaHectares < 5) {
-        jobCreation = 4; // Small operations: 4 people (logging crew, equipment)
+        jobCreation = 6; // Small operations: 6 people (logging crew, equipment, transport)
       } else if (areaHectares < 20) {
-        jobCreation = 8; // Medium operations: 8 people (logging crew, heavy machinery, transport)
+        jobCreation = 12; // Medium operations: 12 people (logging crew, heavy machinery, transport, processing)
       } else if (areaHectares < 50) {
-        jobCreation = 15; // Larger operations: 15 people (full logging team, multiple crews)
+        jobCreation = 25; // Larger operations: 25 people (full logging team, multiple crews, processing)
       } else if (areaHectares < 100) {
-        jobCreation = 25; // Large operations: 25 people (multiple crews, processing, transport)
+        jobCreation = 40; // Large operations: 40 people (multiple crews, processing, transport, management)
       } else {
-        jobCreation = Math.floor(areaHectares / 3); // Very large operations: 1 job per 3 hectares (intensive)
+        jobCreation = Math.floor(areaHectares / 2); // Very large operations: 1 job per 2 hectares (intensive)
       }
     }
     
@@ -1026,10 +1075,10 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                     description={calculationMode === 'perTree' 
                       ? simulationMode === 'planting' 
                         ? "Current year's carbon sequestration per tree based on growth stage. Trees start with low sequestration and increase as they mature over 20+ years."
-                        : `Carbon released in the first few years after cutting a ${averageTreeAge}-year-old tree. This represents approximately 30% of the total carbon stored in the tree biomass.`
+                        : `Carbon released immediately when cutting a ${averageTreeAge}-year-old tree. This represents the tree's current annual carbon sequestration rate.`
                       : simulationMode === 'planting'
                         ? `Current year's carbon sequestration for all ${totalTrees.toLocaleString()} trees in the selected area, based on tree growth stage. This is the yearly rate, not cumulative.`
-                        : `Carbon released in the first few years after cutting all ${totalTrees.toLocaleString()} trees at age ${averageTreeAge} years. This represents approximately 30% of the total stored biomass.`
+                        : `Carbon released immediately when cutting all ${totalTrees.toLocaleString()} trees at age ${averageTreeAge} years. This represents the current annual sequestration rate.`
                     }
                     isExpanded={expandedSections['annual-carbon'] || false}
                     onToggle={() => toggleSection('annual-carbon')}
@@ -1049,10 +1098,10 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                            climate?.precipitation !== null && climate?.precipitation !== undefined 
                            ? "Total carbon sequestered per tree over the entire simulation period, accounting for tree growth and climate predictions"
                            : "Total carbon sequestered per tree over the entire simulation period, accounting for tree growth (climate predictions excluded due to unavailable data)")
-                        : `Total carbon emissions per tree: stored biomass (${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).immediate.toFixed(1)} kg) + lost future sequestration (${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).lostFuture.toFixed(1)} kg) over ${years} years`
+                        : `Total carbon emissions per tree: immediate release (${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).immediate.toFixed(1)} kg) + lost future sequestration (${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).lostFuture.toFixed(1)} kg) over ${years} years`
                       : simulationMode === 'planting'
                         ? `Total carbon sequestered by all ${totalTrees.toLocaleString()} trees over the entire simulation period, accounting for tree growth and climate predictions`
-                        : `Total carbon emissions for all ${totalTrees.toLocaleString()} trees: stored biomass + lost future sequestration over ${years} years when cut at age ${averageTreeAge}`
+                        : `Total carbon emissions for all ${totalTrees.toLocaleString()} trees: immediate release + lost future sequestration over ${years} years when cut at age ${averageTreeAge}`
                     }
                     isExpanded={expandedSections['total-carbon'] || false}
                     onToggle={() => toggleSection('total-carbon')}

@@ -523,6 +523,9 @@ export default function Home() {
                     <strong>Growth Model:</strong> Trees don&apos;t reach full capacity immediately. Our realistic model shows: Year 1-3 (5-15% of mature rate), Year 4-10 (15-80% of mature rate), Year 11-20 (80-95% of mature rate), and Year 20+ (95-100% of mature rate). This reflects real-world tree growth patterns and provides more accurate long-term projections.
                   </p>
                   <p className="text-gray-900 mb-3">
+                    <strong>Clear-cutting Carbon Calculations:</strong> In clear-cutting mode, the simulator calculates immediate carbon release as the tree&apos;s current annual sequestration rate (representing carbon released when the tree is cut down) plus lost future sequestration (carbon that would have been absorbed over the simulation period). This provides realistic emission estimates based on the actual age of trees being removed.
+                  </p>
+                  <p className="text-gray-900 mb-3">
                     The simulator also factors in local soil conditions and climate data for more accurate predictions.
                   </p>
                 </div>
@@ -576,7 +579,7 @@ export default function Home() {
                     <strong>Environmental Data Sources:</strong> The simulator uses real-time data from multiple sources: Soil carbon content from <a href="https://soilgrids.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">ISRIC SoilGrids</a> (adds 0.1 kg CO₂/year per g/kg of soil carbon), climate data from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">Open-Meteo</a> (precipitation affects forest resilience), and biodiversity data from <a href="https://www.gbif.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">GBIF</a> (Global Biodiversity Information Facility). When climate data is unavailable, the simulator uses geographic fallbacks to ensure calculations remain accurate.
                   </p>
                   <p className="text-gray-900 mb-3">
-                    <strong>Environmental Benefits Calculated:</strong> Beyond carbon sequestration, the simulator calculates biodiversity impact (how well the forest supports wildlife), forest resilience (ability to withstand climate stresses), water retention (improved soil moisture and reduced runoff), and air quality improvement (pollution filtration). These metrics provide a comprehensive view of the forest&apos;s environmental contribution.
+                    <strong>Environmental Benefits Calculated:</strong> Beyond carbon sequestration, the simulator calculates biodiversity impact (how well the forest supports wildlife), forest resilience (ability to withstand climate stresses), water retention (improved soil moisture and reduced runoff), and air quality improvement (pollution filtration). In planting mode, these metrics improve over time and scale with forest size. In clear-cutting mode, these metrics degrade over time and scale with the extent of forest removal. These metrics provide a comprehensive view of the forest&apos;s environmental contribution or impact.
                   </p>
                 </div>
               )}

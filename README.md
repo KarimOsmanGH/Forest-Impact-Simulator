@@ -146,7 +146,7 @@ Soil Modifier = Soil Carbon (g/kg) × 0.1
 
 **Immediate Carbon Release:**
 ```
-Immediate Release = Σ(Base Rate × Growth Factor(age)) for age 1 to tree_age
+Immediate Release = Base Rate × Growth Factor(tree_age)
 ```
 
 **Lost Future Sequestration:**
@@ -172,7 +172,25 @@ Age 21-50: 90% of mature rate (older mature trees)
 Age 50+: 85% of mature rate (very old trees)
 ```
 
-**Note**: Clear-cutting mode calculates both immediate carbon release (carbon currently stored in tree biomass) and lost future sequestration (carbon that would have been absorbed over the simulation period). The calculation provides accurate emission estimates based on the actual age of trees being removed.
+**Note**: Clear-cutting mode calculates immediate carbon release as the tree's current annual sequestration rate (representing carbon released when the tree is cut down) plus lost future sequestration (carbon that would have been absorbed over the simulation period). This provides realistic emission estimates based on the actual age of trees being removed.
+
+### **Environmental Impact Calculations**
+
+**Water Retention & Air Quality:**
+- **Planting Mode**: Improve over time (+0.3% and +0.7% per year respectively) and scale with forest size
+- **Clear-cutting Mode**: Degrade over time (-0.5% and -1.0% per year respectively) and scale with forest size
+
+**Biodiversity & Forest Resilience:**
+- **Planting Mode**: Improve over time (+0.05 and +0.03 per year respectively) and scale with forest size
+- **Clear-cutting Mode**: Degrade over time (-0.05 and -0.03 per year respectively) and scale with forest size
+
+**Social Impact:**
+- **Planting Mode**: Positive social benefits (3.5/5 base score, improves over time)
+- **Clear-cutting Mode**: Negative social impacts (2.0/5 base score, degrades over time)
+
+**Land Use Impact:**
+- **Planting Mode**: Positive improvements (erosion reduction, soil improvement, habitat creation)
+- **Clear-cutting Mode**: Negative impacts (erosion increase, soil degradation, habitat loss)
 
 **Real-world Comparisons:**
 ```
@@ -304,6 +322,14 @@ Air Quality = min(Base + (Years × 0.7), 95%)
 - **[ISRIC SoilGrids](https://soilgrids.org/)**: Global soil information
 - **[Open-Meteo](https://open-meteo.com/)**: Climate and weather data
 - **[GBIF](https://www.gbif.org/)**: Biodiversity occurrence records
+- **[OpenStreetMap](https://www.openstreetmap.org/)**: Map tiles and geographic data
+
+### **Acknowledgments**
+We thank the following organizations for providing the data and services that make this simulator possible:
+- **[ISRIC SoilGrids](https://soilgrids.org/)** for global soil data
+- **[Open-Meteo](https://open-meteo.com/)** for climate information
+- **[GBIF](https://www.gbif.org/)** for biodiversity data
+- **[OpenStreetMap](https://www.openstreetmap.org/)** for map tiles
 
 ## 🤝 Contributing
 
@@ -330,12 +356,6 @@ We welcome contributions! This project is open source because environmental know
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
-
-- **[ISRIC SoilGrids](https://soilgrids.org/)** for global soil data
-- **[Open-Meteo](https://open-meteo.com/)** for climate information
-- **[GBIF](https://www.gbif.org/)** for biodiversity data
-- **[OpenStreetMap](https://www.openstreetmap.org/)** for map tiles
 - **[Leaflet](https://leafletjs.com/)** for interactive mapping
 
 ## 📞 Contact
