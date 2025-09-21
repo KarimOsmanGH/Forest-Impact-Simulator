@@ -15,16 +15,16 @@ import { ExportData } from '@/utils/exportUtils';
 
 // Types for soil and climate data
 interface SoilData {
-  carbon: number;
-  ph: number;
+  carbon: number | null;
+  ph: number | null;
 }
 
 interface ClimateData {
-  temperature: number;
-  precipitation: number;
+  temperature: number | null;
+  precipitation: number | null;
   historicalData?: {
-    years: number[];
     temperatures: number[];
+    precipitations: number[];
   };
 }
 
@@ -420,7 +420,7 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
                   {climate?.historicalData && climate.historicalData.temperatures.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-primary/30">
                       <div className="text-xs text-primary">
-                        <span className="font-semibold">Climate Trend:</span> {calculateLinearTrend(climate.historicalData.years, climate.historicalData.temperatures).toFixed(3)}°C/year
+                        <span className="font-semibold">Climate Trend:</span> {calculateLinearTrend(Array.from({length: climate.historicalData.temperatures.length}, (_, i) => i), climate.historicalData.temperatures).toFixed(3)}°C/year
                       </div>
                     </div>
                   )}

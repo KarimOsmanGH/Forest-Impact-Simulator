@@ -32,8 +32,8 @@ export default function Home() {
   } | null>(null);
   
   // Soil and climate data state
-  const [soilData, setSoilData] = useState<{ carbon: number; ph: number } | null>(null);
-  const [climateData, setClimateData] = useState<{ temperature: number; precipitation: number; historicalData?: { years: number[]; temperatures: number[] } } | null>(null);
+  const [soilData, setSoilData] = useState<{ carbon: number | null; ph: number | null } | null>(null);
+  const [climateData, setClimateData] = useState<{ temperature: number | null; precipitation: number | null; historicalData?: { temperatures: number[]; precipitations: number[] } } | null>(null);
 
   const [faqOpen, setFaqOpen] = useState<{ [key: number]: boolean }>({
     1: false,
