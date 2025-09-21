@@ -406,8 +406,9 @@ const calculateClearCuttingCarbon = (matureRate: number, treeAge: number, simula
     totalStoredCarbon += annualSequestration;
   }
   
-  // Immediate carbon release is the total carbon stored in the tree biomass
-  const immediateRelease = totalStoredCarbon;
+  // Immediate carbon release represents carbon released in the first few years after cutting
+  // This is a fraction of the total stored carbon (not all carbon is released immediately)
+  const immediateRelease = totalStoredCarbon * 0.3; // 30% released in first few years
   
   // Calculate lost future sequestration over simulation period
   let lostFutureSequestration = 0;
@@ -559,7 +560,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       // Notify parent component that no data is available
       if (onSoilClimateDataReady) {
         onSoilClimateDataReady(null, null);
-      }
+    }
     }
   }, [latitude, longitude, onSoilClimateDataReady]);
 
@@ -615,8 +616,16 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     // Apply calculation mode multiplier
     const multiplier = calculationMode === 'perArea' ? totalTrees : 1;
     const carbonSequestration = carbonBase * multiplier;
-    const biodiversityImpact = Math.min(5, biodiversityBase);
-    const forestResilience = Math.min(5, resilienceBase);
+    
+    // Biodiversity and resilience improve over time and scale with forest size
+    const biodiversityTimeBonus = Math.min(1, years * 0.05); // +0.05 per year, max +1
+    const resilienceTimeBonus = Math.min(1, years * 0.03); // +0.03 per year, max +1
+    
+    // Scale with forest size (more trees = more diverse ecosystem)
+    const forestSizeBonus = calculationMode === 'perArea' ? Math.min(1, Math.log10(totalTrees) * 0.2) : 0;
+    
+    const biodiversityImpact = Math.min(5, biodiversityBase + biodiversityTimeBonus + forestSizeBonus);
+    const forestResilience = Math.min(5, resilienceBase + resilienceTimeBonus + forestSizeBonus);
 
     // Water retention calculation
     let waterBase = 70; // Default base
@@ -632,8 +641,10 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       waterBase = Math.max(60, Math.min(90, 70 + precipBonus));
     }
     
-    // Water retention improves over time as soil structure develops
-    const waterRetention = Math.min(95, waterBase + (years * 0.3)); // Improves by ~0.3% per year, max 95%
+    // Water retention improves over time and scales with forest size
+    const waterTimeBonus = years * 0.3; // Improves by ~0.3% per year
+    const waterSizeBonus = calculationMode === 'perArea' ? Math.min(10, Math.log10(totalTrees) * 2) : 0; // More trees = better water retention
+    const waterRetention = Math.min(95, waterBase + waterTimeBonus + waterSizeBonus);
 
     // Air quality improves over time as trees mature and grow larger
     // Base air quality improvement varies by climate zone (more impact in polluted areas)
@@ -658,7 +669,10 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       airQualityBase = Math.max(40, Math.min(80, 60 + tempBonus + precipBonus));
     }
     
-    const airQualityImprovement = Math.min(95, airQualityBase + (years * 0.7)); // Improves by ~0.7% per year, max 95%
+    // Air quality improves over time and scales with forest size
+    const airTimeBonus = years * 0.7; // Improves by ~0.7% per year
+    const airSizeBonus = calculationMode === 'perArea' ? Math.min(15, Math.log10(totalTrees) * 3) : 0; // More trees = better air quality
+    const airQualityImprovement = Math.min(95, airQualityBase + airTimeBonus + airSizeBonus);
 
     return {
       carbonSequestration: Math.max(0, carbonSequestration),
@@ -1012,10 +1026,10 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                     description={calculationMode === 'perTree' 
                       ? simulationMode === 'planting' 
                         ? "Current year's carbon sequestration per tree based on growth stage. Trees start with low sequestration and increase as they mature over 20+ years."
-                        : `Total carbon stored in tree biomass at age ${averageTreeAge} years. This represents the cumulative carbon sequestered over the tree's lifetime that would be released when the tree is cut down.`
+                        : `Carbon released in the first few years after cutting a ${averageTreeAge}-year-old tree. This represents approximately 30% of the total carbon stored in the tree biomass.`
                       : simulationMode === 'planting'
                         ? `Current year's carbon sequestration for all ${totalTrees.toLocaleString()} trees in the selected area, based on tree growth stage. This is the yearly rate, not cumulative.`
-                        : `Total carbon stored in biomass for all ${totalTrees.toLocaleString()} trees at age ${averageTreeAge} years. This represents the cumulative carbon sequestered over each tree's lifetime.`
+                        : `Carbon released in the first few years after cutting all ${totalTrees.toLocaleString()} trees at age ${averageTreeAge} years. This represents approximately 30% of the total stored biomass.`
                     }
                     isExpanded={expandedSections['annual-carbon'] || false}
                     onToggle={() => toggleSection('annual-carbon')}
