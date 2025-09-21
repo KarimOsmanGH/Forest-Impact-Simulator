@@ -146,7 +146,7 @@ Soil Modifier = Soil Carbon (g/kg) × 0.1
 
 **Immediate Carbon Release:**
 ```
-Immediate Release = Base Rate × Growth Factor(tree_age)
+Immediate Release = Σ(Base Rate × Growth Factor(year)) for year 1 to tree_age
 ```
 
 **Lost Future Sequestration:**
@@ -172,7 +172,7 @@ Age 21-50: 90% of mature rate (older mature trees)
 Age 50+: 85% of mature rate (very old trees)
 ```
 
-**Note**: Clear-cutting mode calculates immediate carbon release as the tree's current annual sequestration rate (representing carbon released when the tree is cut down) plus lost future sequestration (carbon that would have been absorbed over the simulation period). This provides realistic emission estimates based on the actual age of trees being removed.
+**Note**: Clear-cutting mode calculates immediate carbon release as the total carbon stored in the tree over its lifetime (representing all carbon released when the tree is cut down) plus lost future sequestration (carbon that would have been absorbed over the simulation period). This provides realistic emission estimates based on the actual age and carbon storage of trees being removed.
 
 ### **Environmental Impact Calculations**
 
@@ -382,11 +382,14 @@ A: When trees are cut down, air quality immediately degrades because you're remo
 A: The CSV export is now in standard tabular format. Use `read.csv()` in R or `pd.read_csv()` in Python. See `examples/csv_usage_examples.md` for detailed examples.
 
 ### **Q: Why is immediate carbon release sometimes larger than total emissions?**
-A: This was a display formatting bug that has been fixed. Total emissions should always be larger than immediate release (immediate + lost future sequestration).
+A: This was a display formatting bug that has been fixed. Total emissions should always be larger than immediate release (immediate + lost future sequestration). Note: Immediate release now represents the total carbon stored in the tree over its lifetime, which can be substantial for mature trees.
 
 ### **Q: Can I analyze multiple tree species at once?**
 A: Yes! Select multiple tree types and specify percentage distributions. The simulator will calculate weighted averages for all impact metrics.
 
 ### **Q: How accurate are the carbon sequestration rates?**
 A: Based on IPCC data with species-specific adjustments. Rates vary by tree age, climate, and local conditions. Always consult local forestry experts for project-specific planning.
+
+### **Q: How is immediate carbon release calculated in clear-cutting mode?**
+A: Immediate carbon release represents the total carbon stored in the tree over its entire lifetime (sum of all annual sequestration from year 1 to current age). This is the carbon that gets released when the tree is cut down, which can be substantial for mature trees (hundreds of kg CO₂).
 

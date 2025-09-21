@@ -398,10 +398,15 @@ const getGrowthFactor = (age: number): number => {
 
 // New function for clear-cutting carbon calculations
 const calculateClearCuttingCarbon = (matureRate: number, treeAge: number, simulationYears: number): { immediate: number, lostFuture: number, total: number } => {
-  // Immediate carbon release represents carbon released immediately when tree is cut down
-  // This is based on the current annual sequestration rate (carbon currently being sequestered)
-  const currentAnnualSequestration = matureRate * getGrowthFactor(treeAge);
-  const immediateRelease = currentAnnualSequestration; // Just the current year's rate
+  // Calculate total carbon stored in the tree over its lifetime
+  let totalStoredCarbon = 0;
+  for (let year = 1; year <= treeAge; year++) {
+    const annualSequestration = matureRate * getGrowthFactor(year);
+    totalStoredCarbon += annualSequestration;
+  }
+  
+  // Immediate carbon release = all carbon stored in the tree when cut down
+  const immediateRelease = totalStoredCarbon;
   
   // Calculate lost future sequestration over simulation period
   let lostFutureSequestration = 0;
