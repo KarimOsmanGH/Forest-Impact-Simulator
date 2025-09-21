@@ -398,13 +398,16 @@ const getGrowthFactor = (age: number): number => {
 
 // New function for clear-cutting carbon calculations
 const calculateClearCuttingCarbon = (matureRate: number, treeAge: number, simulationYears: number): { immediate: number, lostFuture: number, total: number } => {
-  // Calculate current carbon content based on tree age
-  // This represents the carbon stored in the tree biomass at the current age
-  const currentCarbonContent = matureRate * getGrowthFactor(treeAge);
+  // Calculate total carbon stored in tree biomass at current age
+  // This represents the cumulative carbon sequestered over the tree's lifetime
+  let totalStoredCarbon = 0;
+  for (let age = 1; age <= treeAge; age++) {
+    const annualSequestration = matureRate * getGrowthFactor(age);
+    totalStoredCarbon += annualSequestration;
+  }
   
-  // Immediate carbon release (carbon that would be released in the first year after cutting)
-  // This is more realistic than showing total lifetime carbon
-  const immediateRelease = currentCarbonContent * 5; // 5 years worth of current carbon content
+  // Immediate carbon release is the total carbon stored in the tree biomass
+  const immediateRelease = totalStoredCarbon;
   
   // Calculate lost future sequestration over simulation period
   let lostFutureSequestration = 0;
@@ -1009,10 +1012,10 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                     description={calculationMode === 'perTree' 
                       ? simulationMode === 'planting' 
                         ? "Current year's carbon sequestration per tree based on growth stage. Trees start with low sequestration and increase as they mature over 20+ years."
-                        : `Immediate carbon release per tree when cut down at age ${averageTreeAge} years. Represents carbon that would be released in the first few years after cutting.`
+                        : `Total carbon stored in tree biomass at age ${averageTreeAge} years. This represents the cumulative carbon sequestered over the tree's lifetime that would be released when the tree is cut down.`
                       : simulationMode === 'planting'
                         ? `Current year's carbon sequestration for all ${totalTrees.toLocaleString()} trees in the selected area, based on tree growth stage. This is the yearly rate, not cumulative.`
-                        : `Immediate carbon release for all ${totalTrees.toLocaleString()} trees when cut down at age ${averageTreeAge} years. This represents the carbon currently stored in tree biomass.`
+                        : `Total carbon stored in biomass for all ${totalTrees.toLocaleString()} trees at age ${averageTreeAge} years. This represents the cumulative carbon sequestered over each tree's lifetime.`
                     }
                     isExpanded={expandedSections['annual-carbon'] || false}
                     onToggle={() => toggleSection('annual-carbon')}
@@ -1032,10 +1035,10 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                            climate?.precipitation !== null && climate?.precipitation !== undefined 
                            ? "Total carbon sequestered per tree over the entire simulation period, accounting for tree growth and climate predictions"
                            : "Total carbon sequestered per tree over the entire simulation period, accounting for tree growth (climate predictions excluded due to unavailable data)")
-                        : `Total carbon emissions per tree: immediate release (${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).immediate.toFixed(1)} kg) + lost future sequestration (${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).lostFuture.toFixed(1)} kg) over ${years} years`
+                        : `Total carbon emissions per tree: stored biomass (${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).immediate.toFixed(1)} kg) + lost future sequestration (${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).lostFuture.toFixed(1)} kg) over ${years} years`
                       : simulationMode === 'planting'
                         ? `Total carbon sequestered by all ${totalTrees.toLocaleString()} trees over the entire simulation period, accounting for tree growth and climate predictions`
-                        : `Total carbon emissions for all ${totalTrees.toLocaleString()} trees: immediate release + lost future sequestration over ${years} years when cut at age ${averageTreeAge}`
+                        : `Total carbon emissions for all ${totalTrees.toLocaleString()} trees: stored biomass + lost future sequestration over ${years} years when cut at age ${averageTreeAge}`
                     }
                     isExpanded={expandedSections['total-carbon'] || false}
                     onToggle={() => toggleSection('total-carbon')}
