@@ -12,7 +12,7 @@ A comprehensive tool to simulate and analyze the environmental, economic, social
 - **Dynamic Time Analysis**: Simulate forest development over 1-100 years
 - **Comprehensive Impact Analysis**: Four detailed tabs covering Environment, Economic, Social, and Land Use impacts
 - **Professional Planning Tools**: Realistic planting/removal configurations and project scale analysis
-- **Export Functionality**: Download results in GeoJSON, JSON, and CSV formats
+- **Export Functionality**: Download results in GeoJSON, JSON, and R/Python-compatible CSV formats
 
 ## 🚀 Quick Start
 
@@ -72,7 +72,7 @@ This simulator is for educational and planning purposes only. Use at your own ri
    - **Economic**: Job creation/affected and economic considerations (varies by simulation mode)
    - **Social**: Community benefits and social impact assessment (varies by simulation mode)
    - **Land Use**: Erosion reduction/risk, soil improvement/degradation, and habitat creation/loss (varies by simulation mode)
-8. **Export Results**: Download your analysis in GeoJSON (GIS), JSON (data), or CSV (spreadsheets) format
+8. **Export Results**: Download your analysis in GeoJSON (GIS), JSON (data), or CSV (R/Python analysis) format
 
 ## 🛠️ Technology Stack
 
@@ -373,6 +373,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+## ❓ FAQ
 
+### **Q: Why does air quality show negative values in clear-cutting mode?**
+A: When trees are cut down, air quality immediately degrades because you're removing the air-cleaning benefits of trees. The negative values (-10% to -80%) represent air quality deterioration.
 
+### **Q: How do I import CSV data into R or Python?**
+A: The CSV export is now in standard tabular format. Use `read.csv()` in R or `pd.read_csv()` in Python. See `examples/csv_usage_examples.md` for detailed examples.
+
+### **Q: Why is immediate carbon release sometimes larger than total emissions?**
+A: This was a display formatting bug that has been fixed. Total emissions should always be larger than immediate release (immediate + lost future sequestration).
+
+### **Q: Can I analyze multiple tree species at once?**
+A: Yes! Select multiple tree types and specify percentage distributions. The simulator will calculate weighted averages for all impact metrics.
+
+### **Q: How accurate are the carbon sequestration rates?**
+A: Based on IPCC data with species-specific adjustments. Rates vary by tree age, climate, and local conditions. Always consult local forestry experts for project-specific planning.
 
