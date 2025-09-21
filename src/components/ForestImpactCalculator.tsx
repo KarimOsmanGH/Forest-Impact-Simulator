@@ -398,15 +398,22 @@ const getGrowthFactor = (age: number): number => {
 
 // New function for clear-cutting carbon calculations
 const calculateClearCuttingCarbon = (matureRate: number, treeAge: number, simulationYears: number): { immediate: number, lostFuture: number, total: number } => {
-  // Calculate total carbon stored in the tree over its lifetime
-  let totalStoredCarbon = 0;
-  for (let year = 1; year <= treeAge; year++) {
-    const annualSequestration = matureRate * getGrowthFactor(year);
-    totalStoredCarbon += annualSequestration;
+  // Calculate realistic carbon stored in tree trunk based on age
+  // Research shows mature oak stores ~20-50 kg carbon (73-183 kg CO2)
+  // Use a realistic growth curve for trunk carbon storage
+  let trunkCarbonKg = 0;
+  if (treeAge <= 5) {
+    trunkCarbonKg = treeAge * 2; // Young trees: ~2 kg carbon per year
+  } else if (treeAge <= 20) {
+    trunkCarbonKg = 10 + (treeAge - 5) * 1.5; // Growing trees: slower accumulation
+  } else if (treeAge <= 50) {
+    trunkCarbonKg = 32.5 + (treeAge - 20) * 0.5; // Mature trees: minimal growth
+  } else {
+    trunkCarbonKg = 47.5; // Very old trees: capped at ~48 kg carbon
   }
   
-  // Immediate carbon release = all carbon stored in the tree when cut down
-  const immediateRelease = totalStoredCarbon;
+  // Convert carbon to CO2 (carbon * 3.67)
+  const immediateRelease = trunkCarbonKg * 3.67;
   
   // Calculate lost future sequestration over simulation period
   let lostFutureSequestration = 0;
