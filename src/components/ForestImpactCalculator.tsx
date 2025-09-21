@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { TreeType } from '@/types/treeTypes';
 import { validateLatitude, validateLongitude, apiRateLimiter } from '@/utils/security';
 import { ExportData } from '@/utils/exportUtils';
-import { calculateRegionArea, formatArea } from '@/utils/treePlanting';
+import { calculateRegionArea } from '@/utils/treePlanting';
 
 // Simple cache for environmental data
 const environmentalDataCache = new Map<string, {
@@ -423,7 +423,7 @@ const calculateClearCuttingCarbon = (matureRate: number, treeAge: number, simula
   };
 };
 
-const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitude, longitude, years, selectedTreeType, selectedTrees, treePercentages, selectedRegion, plantingData, onYearsChange, onDataReady, simulationMode = 'planting', calculationMode = 'perArea', averageTreeAge = 20, onSoilClimateDataReady }) => {
+const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitude, longitude, years, selectedTreeType, selectedTrees, treePercentages, selectedRegion, plantingData, onDataReady, simulationMode = 'planting', calculationMode = 'perArea', averageTreeAge = 20, onSoilClimateDataReady }) => {
 
   const [soil, setSoil] = useState<SoilData | null>(null);
   const [climate, setClimate] = useState<ClimateData | null>(null);
@@ -435,7 +435,6 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
 
   // Use planting data if available, otherwise calculate fallback
   const totalTrees = plantingData?.totalTrees || (selectedRegion ? calculateRegionArea(selectedRegion) * 1111 : 1);
-  const treeSpacing = plantingData?.spacing || 3.0;
 
   // Calculate social, economic, and land use impacts with useMemo
   const socialImpact = useMemo(() => {
@@ -559,7 +558,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         onSoilClimateDataReady(null, null);
       }
     }
-  }, [latitude, longitude]);
+  }, [latitude, longitude, onSoilClimateDataReady]);
 
   const calculateImpact = useCallback((
     lat: number,

@@ -117,7 +117,7 @@ export default function Home() {
     }
   };
 
-  const handleSoilClimateDataReady = (soil: { carbon: number; ph: number } | null, climate: { temperature: number; precipitation: number; historicalData?: { years: number[]; temperatures: number[] } } | null) => {
+  const handleSoilClimateDataReady = (soil: { carbon: number | null; ph: number | null } | null, climate: { temperature: number | null; precipitation: number | null; historicalData?: { temperatures: number[]; precipitations: number[] } } | null) => {
     setSoilData(soil);
     setClimateData(climate);
   };
@@ -414,7 +414,7 @@ export default function Home() {
                     <li><strong>Environmental Planning:</strong> Evaluating the long-term environmental benefits of forest restoration</li>
                   </ul>
                   <p className="text-gray-900 mb-3">
-                    In planting mode, the simulator shows carbon sequestration (positive values) representing the carbon that would be absorbed from the atmosphere as trees grow and mature. The interface shows "recommended species for this region" and displays planting configurations with timelines for project completion.
+                    In planting mode, the simulator shows carbon sequestration (positive values) representing the carbon that would be absorbed from the atmosphere as trees grow and mature. The interface shows &quot;recommended species for this region&quot; and displays planting configurations with timelines for project completion.
                   </p>
                   <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mt-3">
                     <p className="text-sm text-primary">
@@ -453,7 +453,7 @@ export default function Home() {
                     <li><strong>Educational Purposes:</strong> Demonstrating the value of existing forests</li>
                   </ul>
                   <p className="text-gray-900 mb-3">
-                    In clear-cutting mode, the simulator shows carbon emissions (positive values) representing the carbon that would be released into the atmosphere, including both immediate emissions from tree removal and the lost future sequestration capacity. You can specify the average age of trees in the forest area to get more accurate calculations. The interface adapts to show "forest types present in this region" instead of "recommended species" and displays removal configurations with tree age settings.
+                    In clear-cutting mode, the simulator shows carbon emissions (positive values) representing the carbon that would be released into the atmosphere, including both immediate emissions from tree removal and the lost future sequestration capacity. You can specify the average age of trees in the forest area to get more accurate calculations. The interface adapts to show &quot;forest types present in this region&quot; instead of &quot;recommended species&quot; and displays removal configurations with tree age settings.
                   </p>
                   <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mt-3">
                     <p className="text-sm text-primary">
@@ -891,7 +891,7 @@ export default function Home() {
                     <li><strong>Educational Purposes:</strong> Demonstrating the value of existing forests</li>
                   </ul>
                   <p className="text-gray-900 mb-3">
-                    In clear-cutting mode, the simulator shows carbon emissions (positive values) representing the carbon that would be released into the atmosphere, including both immediate emissions from tree removal and the lost future sequestration capacity. The interface adapts to show "forest types present in this region" instead of "recommended species" and displays removal configurations instead of planting timelines.
+                    In clear-cutting mode, the simulator shows carbon emissions (positive values) representing the carbon that would be released into the atmosphere, including both immediate emissions from tree removal and the lost future sequestration capacity. The interface adapts to show &quot;forest types present in this region&quot; instead of &quot;recommended species&quot; and displays removal configurations instead of planting timelines.
                   </p>
                   <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mt-3">
                     <p className="text-sm text-primary">
