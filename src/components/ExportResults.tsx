@@ -97,7 +97,7 @@ const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = fa
         >
           <div className="text-2xl mb-2">📊</div>
           <span className="text-sm font-medium">CSV</span>
-          <span className="text-xs text-gray-500">For spreadsheets</span>
+          <span className="text-xs text-gray-500">For R/Python</span>
         </button>
       </div>
       
