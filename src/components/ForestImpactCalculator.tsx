@@ -1102,7 +1102,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                       ? `+${formatTotalCarbon(totalCarbon)} ${getTotalCarbonUnit().replace('metric tons', 't').replace('kg CO₂', 'kg CO₂')}`
                       : calculationMode === 'perTree'
                         ? `${formatTotalCarbon(calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).total)} kg CO₂`
-                        : `${formatTotalCarbon(calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).total * totalTrees)} metric tons CO₂`
+                        : `${formatTotalCarbon(calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).total)} metric tons CO₂`
                     }
                     description={calculationMode === 'perTree' 
                       ? simulationMode === 'planting'
