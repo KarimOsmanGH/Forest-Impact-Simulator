@@ -709,19 +709,19 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     }
     
     // Air quality changes based on simulation mode
-    let airTimeBonus, airSizeBonus;
+    let airQualityImprovement;
     
     if (simulationMode === 'planting') {
       // Planting mode: improve over time and scale with forest size
-      airTimeBonus = years * 0.7; // Improves by ~0.7% per year
-      airSizeBonus = calculationMode === 'perArea' ? Math.min(15, Math.log10(totalTrees) * 3) : 0; // More trees = better air quality
+      const airTimeBonus = years * 0.7; // Improves by ~0.7% per year
+      const airSizeBonus = calculationMode === 'perArea' ? Math.min(15, Math.log10(totalTrees) * 3) : 0; // More trees = better air quality
+      airQualityImprovement = Math.min(95, Math.max(0, airQualityBase + airTimeBonus + airSizeBonus));
     } else {
-      // Clear-cutting mode: degrade over time and scale with forest size (more trees = more damage)
-      airTimeBonus = -years * 1.0; // Degrades by ~1.0% per year
-      airSizeBonus = calculationMode === 'perArea' ? Math.min(20, Math.log10(totalTrees) * 4) : 0; // More trees = more damage
+      // Clear-cutting mode: immediately negative impact, gets worse over time
+      const immediateImpact = calculationMode === 'perArea' ? Math.min(30, Math.log10(totalTrees) * 5) : 10; // Immediate negative impact based on forest size
+      const timeDegradation = years * 1.0; // Gets worse by ~1.0% per year
+      airQualityImprovement = Math.max(-80, -(immediateImpact + timeDegradation)); // Start negative, can go down to -80%
     }
-    
-    const airQualityImprovement = Math.min(95, Math.max(0, airQualityBase + airTimeBonus + airSizeBonus));
 
     return {
       carbonSequestration: Math.max(0, carbonSequestration),
@@ -1070,7 +1070,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                         : `${calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).immediate.toFixed(1)} kg CO₂`
                       : simulationMode === 'planting'
                         ? `+${(calculateAnnualCarbonWithGrowth(impact.carbonSequestration, years) / 1000).toFixed(1)} metric ton CO₂/yr`
-                        : `${(calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).immediate * totalTrees / 1000).toFixed(1)} metric tons CO₂`
+                        : `${formatTotalCarbon(calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).immediate * totalTrees)} metric tons CO₂`
                     }
                     description={calculationMode === 'perTree' 
                       ? simulationMode === 'planting' 
@@ -1090,7 +1090,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                       ? `+${formatTotalCarbon(totalCarbon)} ${getTotalCarbonUnit().replace('metric tons', 't').replace('kg CO₂', 'kg CO₂')}`
                       : calculationMode === 'perTree'
                         ? `${formatTotalCarbon(calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).total)} kg CO₂`
-                        : `${formatTotalCarbon(calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).total * totalTrees / 1000)} metric tons CO₂`
+                        : `${formatTotalCarbon(calculateClearCuttingCarbon(impact.carbonSequestration, averageTreeAge, years).total * totalTrees)} metric tons CO₂`
                     }
                     description={calculationMode === 'perTree' 
                       ? simulationMode === 'planting'
@@ -1132,9 +1132,12 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                   />
                   
                   <CollapsibleSection
-                    title="Air Quality Improvement"
+                    title={simulationMode === 'planting' ? "Air Quality Improvement" : "Air Quality Impact"}
                     value={`${impact.airQualityImprovement.toFixed(0)}%`}
-                    description="Reduction in air pollution through particle filtration and oxygen production. Improves as trees mature and canopy develops."
+                    description={simulationMode === 'planting' 
+                      ? "Reduction in air pollution through particle filtration and oxygen production. Improves as trees mature and canopy develops."
+                      : "Degradation in air quality due to loss of trees. Negative values indicate air quality deterioration from removing forest cover."
+                    }
                     isExpanded={expandedSections['air-quality'] || false}
                     onToggle={() => toggleSection('air-quality')}
                   />

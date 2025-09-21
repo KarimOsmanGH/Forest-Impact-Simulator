@@ -178,7 +178,7 @@ Age 50+: 85% of mature rate (very old trees)
 
 **Water Retention & Air Quality:**
 - **Planting Mode**: Improve over time (+0.3% and +0.7% per year respectively) and scale with forest size
-- **Clear-cutting Mode**: Degrade over time (-0.5% and -1.0% per year respectively) and scale with forest size
+- **Clear-cutting Mode**: Immediately negative air quality impact (-10% to -30% based on forest size), then degrades further over time (-1.0% per year). Can reach -80% indicating severe air quality deterioration.
 
 **Biodiversity & Forest Resilience:**
 - **Planting Mode**: Improve over time (+0.05 and +0.03 per year respectively) and scale with forest size
@@ -293,13 +293,20 @@ Precipitation Bonus = Annual Precipitation (mm) × 0.01
 Water Retention = min(Base + (Years × 0.3) + Bonus, 95%)
 ```
 
-### **Air Quality Improvement**
+### **Air Quality Impact**
 
-**Progressive Enhancement:**
+**Planting Mode - Progressive Enhancement:**
 ```
 Base Quality = 60%
 Annual Improvement = 0.7% per year
 Air Quality = min(Base + (Years × 0.7), 95%)
+```
+
+**Clear-cutting Mode - Immediate Negative Impact:**
+```
+Immediate Impact = -10% to -30% (based on forest size)
+Annual Degradation = -1.0% per year
+Air Quality = max(-80, -(Immediate Impact + (Years × 1.0)))
 ```
 
 ### **Mathematical Notation**
