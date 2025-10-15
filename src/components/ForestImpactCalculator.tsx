@@ -776,7 +776,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
       waterRetention: Math.max(0, waterRetention),
       airQualityImprovement: Math.max(0, airQualityImprovement)
     };
-  }, [treePercentages, calculationMode, totalTrees, years]);
+  }, [treePercentages, calculationMode, totalTrees, years, simulationMode]);
 
   // Calculate impact and all derived values BEFORE early returns to ensure consistent hook order
   const impact = useMemo(() => calculateImpact(
