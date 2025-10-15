@@ -57,6 +57,8 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
       <button
         onClick={onToggle}
         className="w-full flex items-center justify-between text-left hover:bg-gray-50 rounded transition-colors"
+        aria-expanded={isExpanded}
+        aria-label={`${title}: ${value}`}
       >
         <div className="flex-1">
           <div className="text-xs text-gray-900 font-bold mb-1">{title}</div>
@@ -67,12 +69,13 @@ const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       {isExpanded && (
-        <div className="mt-3 pt-3 border-t border-gray-100">
+        <div className="mt-3 pt-3 border-t border-gray-100" role="region" aria-label={`Details for ${title}`}>
           <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
         </div>
       )}
@@ -136,37 +139,41 @@ interface ClimatePrediction {
   growthModifier: number;
 }
 
-const fetchSoilData = async (lat: number, lon: number): Promise<SoilData> => {
+const fetchSoilData = async (lat: number, lon: number, retries = 2): Promise<SoilData> => {
   try {
     // Validate coordinates
     if (!validateLatitude(lat) || !validateLongitude(lon)) {
+      console.warn('Invalid coordinates for soil data:', { lat, lon });
       throw new Error('Invalid coordinates');
     }
     
     // Rate limiting
     if (!apiRateLimiter.isAllowed('soil')) {
+      console.warn('Soil API rate limit exceeded, will retry after cooldown');
       throw new Error('Rate limit exceeded');
     }
     
     console.log('Fetching soil data for:', lat, lon);
     
-    // Use the ISRIC SoilGrids API endpoint with timeout
+    // Use the ISRIC SoilGrids API endpoint with increased timeout
     const res = await fetchWithTimeout(
       `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lon}&lat=${lat}&property=soc&property=phh2o&depth=0-5cm&value=mean`,
       {
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'ForestFuture/1.0'
-        }
-      }
+        },
+        mode: 'cors'
+      },
+      20000 // Increased timeout to 20 seconds
     );
     
     if (!res.ok) {
+      console.warn(`Soil API returned status ${res.status}: ${res.statusText}`);
       throw new Error(`Soil API error: ${res.status} ${res.statusText}`);
     }
     
     const data = await res.json();
-    console.log('Soil API response received');
+    console.log('Soil API response received successfully');
     
     // Extract organic carbon and pH from the response
     let carbon = null;
@@ -191,6 +198,15 @@ const fetchSoilData = async (lat: number, lon: number): Promise<SoilData> => {
     return { carbon, ph };
   } catch (error) {
     console.error('Error fetching soil data:', error);
+    
+    // Retry logic with exponential backoff
+    if (retries > 0) {
+      console.log(`Retrying soil data fetch (${retries} retries remaining)...`);
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+      return fetchSoilData(lat, lon, retries - 1);
+    }
+    
+    console.warn('All soil data fetch attempts failed, using null values');
     return { carbon: null, ph: null };
   }
 };
@@ -226,31 +242,36 @@ const processDailyToYearly = (temperatures: (number | null)[], precipitations: (
   return { temperatures: yearlyTemps, precipitations: yearlyPrecip, years };
 };
 
-const fetchClimateData = async (lat: number, lon: number): Promise<ClimateData> => {
+const fetchClimateData = async (lat: number, lon: number, retries = 2): Promise<ClimateData> => {
   try {
     // Validate coordinates
     if (!validateLatitude(lat) || !validateLongitude(lon)) {
+      console.warn('Invalid coordinates for climate data:', { lat, lon });
       throw new Error('Invalid coordinates');
     }
     
     // Rate limiting
     if (!apiRateLimiter.isAllowed('climate')) {
+      console.warn('Climate API rate limit exceeded, will retry after cooldown');
       throw new Error('Rate limit exceeded');
     }
     
     console.log('Fetching climate data for:', lat, lon);
     
-    // Fetch current weather data with timeout
+    // Fetch current weather data with increased timeout
     const weatherRes = await fetchWithTimeout(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&timezone=auto`
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&timezone=auto`,
+      {},
+      20000 // 20 second timeout
     );
     
     if (!weatherRes.ok) {
+      console.warn(`Weather API returned status ${weatherRes.status}: ${weatherRes.statusText}`);
       throw new Error(`Weather API error: ${weatherRes.status} ${weatherRes.statusText}`);
     }
     
     const weatherData = await weatherRes.json();
-    console.log('Current weather data received');
+    console.log('Current weather data received successfully');
     
     // Fetch historical data for climate trend analysis (reduced to 5 years for performance)
     const endDate = new Date();
@@ -258,13 +279,15 @@ const fetchClimateData = async (lat: number, lon: number): Promise<ClimateData> 
     startDate.setFullYear(startDate.getFullYear() - 5); // Reduced from 11 to 5 years
     
     const historicalRes = await fetchWithTimeout(
-      `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`
+      `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`,
+      {},
+      20000 // 20 second timeout
     );
     
     let historicalData = undefined;
     if (historicalRes.ok) {
       const historicalWeatherData = await historicalRes.json();
-      console.log('Historical weather data received');
+      console.log('Historical weather data received successfully');
       
       if (historicalWeatherData.daily) {
         const temperatures = historicalWeatherData.daily.temperature_2m_mean || [];
@@ -281,6 +304,8 @@ const fetchClimateData = async (lat: number, lon: number): Promise<ClimateData> 
           };
         }
       }
+    } else {
+      console.warn('Historical weather data unavailable, predictions will use fallback values');
     }
     
     const currentTemp = weatherData.current?.temperature_2m || null;
@@ -301,10 +326,19 @@ const fetchClimateData = async (lat: number, lon: number): Promise<ClimateData> 
         console.error('Rate limit exceeded - try again in a minute');
       } else if (error.message.includes('Weather API error')) {
         console.error('Weather API is temporarily unavailable');
-      } else if (error.message.includes('Request timeout')) {
+      } else if (error.message.includes('aborted')) {
         console.error('API request timed out');
       }
     }
+    
+    // Retry logic with exponential backoff
+    if (retries > 0) {
+      console.log(`Retrying climate data fetch (${retries} retries remaining)...`);
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+      return fetchClimateData(lat, lon, retries - 1);
+    }
+    
+    console.warn('All climate data fetch attempts failed, using null values');
     return { temperature: null, precipitation: null };
   }
 };
@@ -813,31 +847,40 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
     
     if (simulationMode === 'planting') {
       // Planting operations: fewer workers, more long-term
-    if (areaHectares < 1) {
-      jobCreation = 1; // Small projects: 1 person
-    } else if (areaHectares < 5) {
-      jobCreation = 2; // Small projects: 2 people (planting, maintenance)
-    } else if (areaHectares < 20) {
-      jobCreation = 3; // Medium projects: 3 people (planting, maintenance, monitoring)
-    } else if (areaHectares < 50) {
-      jobCreation = 5; // Larger projects: 5 people (team)
-    } else if (areaHectares < 100) {
-      jobCreation = 8; // Large projects: 8 people (full team)
-    } else {
-      jobCreation = Math.floor(areaHectares / 10); // Very large projects: 1 job per 10 hectares
+      // More granular thresholds for small projects
+      if (areaHectares < 0.1) {
+        jobCreation = 2; // Very small (backyard/community): 2 people minimum (planting team)
+      } else if (areaHectares < 0.5) {
+        jobCreation = 2; // Small (large backyard): 2-3 people (planting, support)
+      } else if (areaHectares < 1) {
+        jobCreation = 3; // Small project: 3 people (planting, supervision)
+      } else if (areaHectares < 5) {
+        jobCreation = 4; // Medium-small: 4 people (planting, maintenance)
+      } else if (areaHectares < 20) {
+        jobCreation = 6; // Medium projects: 6 people (planting, maintenance, monitoring)
+      } else if (areaHectares < 50) {
+        jobCreation = 10; // Larger projects: 10 people (full team)
+      } else if (areaHectares < 100) {
+        jobCreation = 15; // Large projects: 15 people (multiple crews)
+      } else {
+        jobCreation = Math.floor(areaHectares / 10); // Very large projects: 1 job per 10 hectares
       }
     } else {
       // Clear-cutting operations: more workers, intensive short-term operations
-      if (areaHectares < 1) {
-        jobCreation = 3; // Small operations: 3 people (logger, equipment operator, supervisor)
+      if (areaHectares < 0.1) {
+        jobCreation = 3; // Very small operations: 3 people (logger, helper, supervisor)
+      } else if (areaHectares < 0.5) {
+        jobCreation = 4; // Small operations: 4 people (crew, equipment)
+      } else if (areaHectares < 1) {
+        jobCreation = 5; // Small operations: 5 people (logging crew, equipment)
       } else if (areaHectares < 5) {
-        jobCreation = 6; // Small operations: 6 people (logging crew, equipment, transport)
+        jobCreation = 8; // Medium-small: 8 people (crew, equipment, transport)
       } else if (areaHectares < 20) {
-        jobCreation = 12; // Medium operations: 12 people (logging crew, heavy machinery, transport, processing)
+        jobCreation = 15; // Medium operations: 15 people (logging crew, heavy machinery, transport, processing)
       } else if (areaHectares < 50) {
-        jobCreation = 25; // Larger operations: 25 people (full logging team, multiple crews, processing)
+        jobCreation = 30; // Larger operations: 30 people (full logging team, multiple crews, processing)
       } else if (areaHectares < 100) {
-        jobCreation = 40; // Large operations: 40 people (multiple crews, processing, transport, management)
+        jobCreation = 50; // Large operations: 50 people (multiple crews, processing, transport, management)
       } else {
         jobCreation = Math.floor(areaHectares / 2); // Very large operations: 1 job per 2 hectares (intensive)
       }
@@ -1023,7 +1066,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         <h4 className="font-semibold mb-2">Impact Analysis</h4>
         
         {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200 mb-3 overflow-x-auto">
+        <div className="flex border-b border-gray-200 mb-3 overflow-x-auto" role="tablist" aria-label="Impact analysis categories">
           <button
             onClick={() => setActiveEnvTab('environment')}
             className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
@@ -1031,6 +1074,9 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                 ? 'border-primary text-primary'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
+            role="tab"
+            aria-selected={activeEnvTab === 'environment'}
+            aria-controls="environment-panel"
           >
             Environment
           </button>
@@ -1041,6 +1087,9 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                 ? 'border-primary text-primary'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
+            role="tab"
+            aria-selected={activeEnvTab === 'economic'}
+            aria-controls="economic-panel"
           >
             Economic
           </button>
@@ -1051,6 +1100,9 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                 ? 'border-primary text-primary'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
+            role="tab"
+            aria-selected={activeEnvTab === 'social'}
+            aria-controls="social-panel"
           >
             Social
           </button>
@@ -1061,6 +1113,9 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
                 ? 'border-primary text-primary'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
+            role="tab"
+            aria-selected={activeEnvTab === 'landuse'}
+            aria-controls="landuse-panel"
           >
             Land Use
           </button>
@@ -1069,7 +1124,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         {/* Tab Content */}
         <div className="min-h-[100px]">
           {activeEnvTab === 'environment' && (
-            <div className="space-y-3">
+            <div className="space-y-3" role="tabpanel" id="environment-panel" aria-labelledby="environment-tab">
 
               {/* Environmental Impact Analysis */}
               <div className="mt-4">
@@ -1161,7 +1216,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
 
 
           {activeEnvTab === 'social' && (
-            <div className="space-y-3">
+            <div className="space-y-3" role="tabpanel" id="social-panel" aria-labelledby="social-tab">
               <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                 <h5 className="font-semibold text-green-800 mb-2 flex items-center">
                   {simulationMode === 'planting' ? 'Community Benefits' : 'Social Impact Assessment'}
@@ -1233,7 +1288,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
           )}
 
           {activeEnvTab === 'economic' && (
-            <div className="space-y-3">
+            <div className="space-y-3" role="tabpanel" id="economic-panel" aria-labelledby="economic-tab">
               <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                 <h5 className="font-semibold text-green-800 mb-2 flex items-center">
                   {simulationMode === 'planting' ? 'Employment Impact' : 'Economic Impact'}
@@ -1288,7 +1343,7 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
           )}
 
           {activeEnvTab === 'landuse' && (
-            <div className="space-y-3">
+            <div className="space-y-3" role="tabpanel" id="landuse-panel" aria-labelledby="landuse-tab">
               <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                 <h5 className="font-semibold text-green-800 mb-2 flex items-center">
                   {simulationMode === 'planting' ? 'Land Use Improvements' : 'Land Use Impact Assessment'}
