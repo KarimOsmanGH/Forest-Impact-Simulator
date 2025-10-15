@@ -91,13 +91,20 @@ interface MapBounds {
   getEast: () => number;
 }
 
+interface LeafletMouseEvent {
+  latlng: {
+    lat: number;
+    lng: number;
+  };
+  originalEvent: MouseEvent | TouchEvent;
+}
+
 const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsChange: (bounds: MapBounds) => void; onSelectingChange?: (selecting: boolean) => void }) => {
   const map = useMap();
   const [isSelecting, setIsSelecting] = useState(false);
   const [startPoint, setStartPoint] = useState<[number, number] | null>(null);
   const [currentBounds, setCurrentBounds] = useState<MapBounds | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const tempRectangleRef = useRef<any>(null);
+  const tempRectangleRef = useRef<L.Rectangle | null>(null);
   
   // Add visual feedback for dragging state and notify parent
   useEffect(() => {
@@ -105,22 +112,16 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       document.body.style.cursor = 'crosshair';
       // Prevent text selection on mobile during dragging
       document.body.style.userSelect = 'none';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (document.body.style as any).webkitUserSelect = 'none';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (document.body.style as any).mozUserSelect = 'none';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (document.body.style as any).msUserSelect = 'none';
+      (document.body.style as CSSStyleDeclaration & { webkitUserSelect: string }).webkitUserSelect = 'none';
+      (document.body.style as CSSStyleDeclaration & { mozUserSelect: string }).mozUserSelect = 'none';
+      (document.body.style as CSSStyleDeclaration & { msUserSelect: string }).msUserSelect = 'none';
     } else {
       document.body.style.cursor = 'default';
       // Restore text selection
       document.body.style.userSelect = 'auto';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (document.body.style as any).webkitUserSelect = 'auto';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (document.body.style as any).mozUserSelect = 'auto';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (document.body.style as any).msUserSelect = 'auto';
+      (document.body.style as CSSStyleDeclaration & { webkitUserSelect: string }).webkitUserSelect = 'auto';
+      (document.body.style as CSSStyleDeclaration & { mozUserSelect: string }).mozUserSelect = 'auto';
+      (document.body.style as CSSStyleDeclaration & { msUserSelect: string }).msUserSelect = 'auto';
     }
     
     // Notify parent component of selecting state
@@ -129,20 +130,16 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
     return () => {
       document.body.style.cursor = 'default';
       document.body.style.userSelect = 'auto';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (document.body.style as any).webkitUserSelect = 'auto';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (document.body.style as any).mozUserSelect = 'auto';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (document.body.style as any).msUserSelect = 'auto';
+      (document.body.style as CSSStyleDeclaration & { webkitUserSelect: string }).webkitUserSelect = 'auto';
+      (document.body.style as CSSStyleDeclaration & { mozUserSelect: string }).mozUserSelect = 'auto';
+      (document.body.style as CSSStyleDeclaration & { msUserSelect: string }).msUserSelect = 'auto';
     };
   }, [isSelecting, onSelectingChange]);
 
   useEffect(() => {
     if (!map) return;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleMouseStart = (e: any) => {
+    const handleMouseStart = (e: LeafletMouseEvent) => {
       // Only activate selection if CTRL key is pressed
       if (!e.originalEvent.ctrlKey) {
         return; // Allow normal map panning
@@ -157,8 +154,7 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       e.originalEvent.stopImmediatePropagation();
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleTouchStart = (e: any) => {
+    const handleTouchStart = (e: LeafletMouseEvent) => {
       // For mobile devices, use click-to-create-square approach
       console.log('Touch start:', e.latlng);
       
@@ -196,8 +192,7 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       tempRectangleRef.current = newTempRectangle;
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleMouseMove = (e: any) => {
+    const handleMouseMove = (e: LeafletMouseEvent) => {
       if (!isSelecting || !startPoint) return;
       e.originalEvent.preventDefault();
       e.originalEvent.stopPropagation();
@@ -229,8 +224,7 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       tempRectangleRef.current = newTempRectangle;
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleTouchMove = (e: any) => {
+    const handleTouchMove = (e: LeafletMouseEvent) => {
       if (!isSelecting || !startPoint) return;
       
       // Prevent default touch behavior during selection
@@ -264,8 +258,7 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       tempRectangleRef.current = newTempRectangle;
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleMouseEnd = (e: any) => {
+    const handleMouseEnd = (e: LeafletMouseEvent) => {
       console.log('Mouse end:', e.latlng, 'isSelecting:', isSelecting, 'currentBounds:', currentBounds);
       if (isSelecting && currentBounds) {
         const dragDistance = Math.sqrt(
@@ -293,8 +286,7 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       setCurrentBounds(null);
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleTouchEnd = (e: any) => {
+    const handleTouchEnd = (e: LeafletMouseEvent) => {
       console.log('Touch end:', e.latlng, 'isSelecting:', isSelecting, 'currentBounds:', currentBounds);
       
       if (isSelecting && currentBounds) {
@@ -325,10 +317,9 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
     map.on('touchend', handleTouchEnd);
     
     // Also add click event for mobile as fallback
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    map.on('click', (e: any) => {
+    map.on('click', (e: LeafletMouseEvent) => {
       // Only handle clicks on mobile devices (no CTRL key)
-      if (!e.originalEvent.ctrlKey && 'ontouchstart' in window) {
+      if (!('ctrlKey' in e.originalEvent && (e.originalEvent as MouseEvent).ctrlKey) && 'ontouchstart' in window) {
         console.log('Mobile click detected:', e.latlng);
         handleTouchStart(e);
       }

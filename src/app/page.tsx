@@ -35,18 +35,7 @@ export default function Home() {
   const [soilData, setSoilData] = useState<{ carbon: number | null; ph: number | null } | null>(null);
   const [climateData, setClimateData] = useState<{ temperature: number | null; precipitation: number | null; historicalData?: { temperatures: number[]; precipitations: number[] } } | null>(null);
 
-  const [faqOpen, setFaqOpen] = useState<{ [key: number]: boolean }>({
-    1: false,
-    2: false,
-    3: false,
-    4: false,
-    5: false,
-    6: false,
-    7: false,
-    8: false,
-    9: false,
-    10: false
-  });
+  const [faqOpen, setFaqOpen] = useState<{ [key: string]: boolean }>({});
   const [exportData, setExportData] = useState<ExportData | null>(null);
 
   const handleLocationSelect = (lat: number, lng: number) => {
@@ -467,12 +456,12 @@ export default function Home() {
             {/* FAQ Item 4 - What do the different impact analysis tabs show? */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 3: !prev[3] }))}
+                onClick={() => setFaqOpen(prev => ({ ...prev, 4: !prev[4] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-800">What do the different impact analysis tabs show?</h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[3] ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[4] ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -480,7 +469,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {faqOpen[3] && (
+              {faqOpen[4] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
                     The impact analysis is organized into four comprehensive tabs, each focusing on different aspects of forest impact:
@@ -498,15 +487,15 @@ export default function Home() {
               )}
             </div>
 
-            {/* FAQ Item 4 - Combined Carbon Sequestration & Growth Model */}
+            {/* FAQ Item 5 - Combined Carbon Sequestration & Growth Model */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 4: !prev[4] }))}
+                onClick={() => setFaqOpen(prev => ({ ...prev, 5: !prev[5] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-800">How accurate are the carbon sequestration estimates?</h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[1] ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[5] ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -514,7 +503,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {faqOpen[1] && (
+              {faqOpen[5] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
                     Our estimates are based on <a href="https://www.ipcc.ch/report/ar4/wg1/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">IPCC Fourth Assessment Report</a> data, with species-specific rates ranging from 15-30 kg CO₂/year for mature trees. We apply realistic growth curves that account for the fact that young trees sequester much less carbon than mature ones.
@@ -532,15 +521,15 @@ export default function Home() {
               )}
             </div>
 
-            {/* FAQ Item 2 - Tree Selection */}
+            {/* FAQ Item 6 - Tree Selection */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 2: !prev[2] }))}
+                onClick={() => setFaqOpen(prev => ({ ...prev, 6: !prev[6] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-800">What&apos;s the difference between single and multiple tree selection?</h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[2] ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[6] ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -548,7 +537,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {faqOpen[2] && (
+              {faqOpen[6] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
                     Single tree selection uses the specific carbon sequestration rate of that species. Multiple tree selection allows you to create a mixed forest with custom percentage distributions. You can either use the &quot;Equal Split&quot; option for balanced distribution or manually set percentages for each species to reflect your forest management strategy.
@@ -557,15 +546,15 @@ export default function Home() {
               )}
             </div>
 
-            {/* FAQ Item 3 - Combined Environmental Factors & Benefits */}
+            {/* FAQ Item 7 - Combined Environmental Factors & Benefits */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 3: !prev[3] }))}
+                onClick={() => setFaqOpen(prev => ({ ...prev, 7: !prev[7] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-800">How are environmental factors calculated and what benefits do they provide?</h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[3] ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[7] ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -573,7 +562,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {faqOpen[3] && (
+              {faqOpen[7] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
                     <strong>Environmental Data Sources:</strong> The simulator uses real-time data from multiple sources: Soil carbon content from <a href="https://soilgrids.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">ISRIC SoilGrids</a> (adds 0.1 kg CO₂/year per g/kg of soil carbon), climate data from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">Open-Meteo</a> (precipitation affects forest resilience), and biodiversity data from <a href="https://www.gbif.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">GBIF</a> (Global Biodiversity Information Facility). When climate data is unavailable, the simulator uses geographic fallbacks to ensure calculations remain accurate.
@@ -585,15 +574,15 @@ export default function Home() {
               )}
             </div>
 
-            {/* FAQ Item 4 - Time Periods */}
+            {/* FAQ Item 8 - Time Periods */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 4: !prev[4] }))}
+                onClick={() => setFaqOpen(prev => ({ ...prev, 8: !prev[8] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-800">Why should I simulate different time periods?</h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[4] ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[8] ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -601,7 +590,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {faqOpen[4] && (
+              {faqOpen[8] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
                     Different time periods show how forest impact compounds over time. Short-term simulations (1-5 years) show immediate benefits like soil stabilization and initial carbon capture. Long-term simulations (10-100 years) reveal the full potential for carbon sequestration, biodiversity enhancement, and ecosystem restoration. This helps in planning both immediate and long-term environmental strategies.
@@ -610,15 +599,15 @@ export default function Home() {
               )}
             </div>
 
-            {/* FAQ Item 5 - Real-world Applications */}
+            {/* FAQ Item 9 - Real-world Applications */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 5: !prev[5] }))}
+                onClick={() => setFaqOpen(prev => ({ ...prev, 9: !prev[9] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-800">How can I use this simulator for real-world projects?</h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[5] ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[9] ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -626,7 +615,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {faqOpen[5] && (
+              {faqOpen[9] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
                     The simulator is perfect for planning reforestation projects, urban tree planting initiatives, carbon offset programs, and environmental impact assessments. Use it to compare different tree species for your climate zone, estimate long-term environmental benefits, analyze the impacts of forest removal, and communicate the impact of your projects to stakeholders. The region-specific data ensures your calculations are relevant to your actual forest management area.
@@ -640,15 +629,15 @@ export default function Home() {
               )}
             </div>
 
-            {/* FAQ Item 6 - Formulas & Calculations */}
+            {/* FAQ Item 10 - Formulas & Calculations */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 6: !prev[6] }))}
+                onClick={() => setFaqOpen(prev => ({ ...prev, 10: !prev[10] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-800">What formulas and calculations does the simulator use?</h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[6] ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[10] ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -656,7 +645,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {faqOpen[6] && (
+              {faqOpen[10] && (
                 <div className="px-6 pb-6">
                   <div className="space-y-4">
                     <div>
@@ -762,15 +751,15 @@ export default function Home() {
               )}
             </div>
 
-            {/* FAQ Item 7 - Tree Database */}
+            {/* FAQ Item 11 - Tree Database */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 7: !prev[7] }))}
+                onClick={() => setFaqOpen(prev => ({ ...prev, 11: !prev[11] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-800">What tree species are included in the database?</h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[7] ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[11] ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -778,7 +767,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {faqOpen[7] && (
+              {faqOpen[11] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
                     Our comprehensive tree database includes 80 species from around the world, covering diverse ecosystems and 7 major climate zones:
@@ -799,15 +788,15 @@ export default function Home() {
               )}
             </div>
 
-            {/* FAQ Item 8 - Export Features */}
+            {/* FAQ Item 12 - Export Features */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 8: !prev[8] }))}
+                onClick={() => setFaqOpen(prev => ({ ...prev, 12: !prev[12] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-800">What export formats are available and how can I use them?</h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[8] ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[12] ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -815,7 +804,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {faqOpen[8] && (
+              {faqOpen[12] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
                     The simulator offers three export formats to suit different use cases:
@@ -832,15 +821,15 @@ export default function Home() {
               )}
             </div>
 
-            {/* FAQ Item 9 - Impact Analysis Tabs */}
+            {/* FAQ Item 13 - Impact Analysis Tabs (Duplicate - Consider removing) */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 9: !prev[9] }))}
+                onClick={() => setFaqOpen(prev => ({ ...prev, 13: !prev[13] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-800">What do the different impact analysis tabs show?</h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[9] ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[13] ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -848,7 +837,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {faqOpen[9] && (
+              {faqOpen[13] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
                     The simulator provides comprehensive impact analysis across four specialized tabs:
@@ -866,15 +855,15 @@ export default function Home() {
               )}
             </div>
 
-            {/* FAQ Item 10 - Who Made This & How to Contribute */}
+            {/* FAQ Item 14 - Clear-cutting Mode (Duplicate - Consider removing) */}
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 10: !prev[10] }))}
+                onClick={() => setFaqOpen(prev => ({ ...prev, 14: !prev[14] }))}
                 className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <h3 className="text-lg font-semibold text-gray-800">What is clear-cutting mode and how does it work?</h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[10] ? 'rotate-180' : ''}`}
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[14] ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -882,7 +871,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {faqOpen[10] && (
+              {faqOpen[14] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
                     Clear-cutting mode allows you to analyze the environmental impacts of forest removal operations. This mode is useful for:

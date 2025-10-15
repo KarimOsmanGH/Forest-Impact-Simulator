@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { TreeType, TREE_TYPES, getTreeTypesByClimate } from '@/types/treeTypes';
+import { getTreeCategoryColor } from '@/utils/treeColors';
 
 interface TreeTypeSelectorProps {
   selectedTrees: TreeType[];
@@ -165,25 +166,22 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+          aria-label="Search tree species"
+          role="searchbox"
         />
         
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1" role="group" aria-label="Filter trees by category">
           {categories.map(category => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
               className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
                 selectedCategory === category
-                  ? category === 'deciduous' ? 'bg-primary text-white' :
-                    category === 'coniferous' ? 'bg-primary text-white' :
-                    category === 'tropical' ? 'bg-primary text-white' :
-                    category === 'mediterranean' ? 'bg-primary text-white' :
-                    category === 'boreal' ? 'bg-primary text-white' :
-                    category === 'arid' ? 'bg-primary text-white' :
-                    category === 'subtropical' ? 'bg-primary text-white' :
-                    'bg-primary text-white'
+                  ? getTreeCategoryColor(category as 'deciduous' | 'coniferous' | 'tropical' | 'mediterranean' | 'boreal' | 'arid' | 'subtropical' | 'all', 'bg')
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
+              aria-pressed={selectedCategory === category}
+              aria-label={`Filter by ${category} trees`}
             >
               {category.charAt(0).toUpperCase() + category.slice(1)}
             </button>
@@ -301,21 +299,13 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
                       onTreePercentagesChange(newPercentages);
                     }}
                     className="w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                    aria-label={`Percentage for ${tree.name}`}
                   />
                   <span className="text-xs text-gray-700">%</span>
                 </div>
                 <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div 
-                    className={`h-full transition-all duration-200 ${
-                      tree.category === 'deciduous' ? 'bg-primary' :
-                      tree.category === 'coniferous' ? 'bg-primary' :
-                      tree.category === 'tropical' ? 'bg-primary' :
-                      tree.category === 'mediterranean' ? 'bg-primary' :
-                      tree.category === 'boreal' ? 'bg-primary' :
-                      tree.category === 'arid' ? 'bg-primary' :
-                      tree.category === 'subtropical' ? 'bg-primary' :
-                      'bg-primary'
-                    }`}
+                    className={`h-full transition-all duration-200 ${getTreeCategoryColor(tree.category, 'bg')}`}
                     style={{ width: `${treePercentages[tree.id] || 0}%` }}
                   />
                 </div>
@@ -353,16 +343,19 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
               onClick={() => handleTreeToggle(tree)}
               className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
                 isSelected
-                  ? tree.category === 'deciduous' ? 'border-primary bg-primary/10' :
-                    tree.category === 'coniferous' ? 'border-primary bg-primary/10' :
-                    tree.category === 'tropical' ? 'border-primary bg-primary/10' :
-                    tree.category === 'mediterranean' ? 'border-primary bg-primary/10' :
-                    tree.category === 'boreal' ? 'border-primary bg-primary/10' :
-                    tree.category === 'arid' ? 'border-primary bg-primary/10' :
-                    tree.category === 'subtropical' ? 'border-primary bg-primary/10' :
-                    'border-primary bg-primary/10'
+                  ? `${getTreeCategoryColor(tree.category, 'bg-light')}`
                   : 'border-gray-200 hover:border-primary/50'
               }`}
+              role="checkbox"
+              aria-checked={isSelected}
+              aria-label={`${tree.name} - ${tree.scientificName}. Carbon sequestration: ${tree.carbonSequestration} kg CO₂/year`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleTreeToggle(tree);
+                }
+              }}
             >
               {/* Tree Info */}
               <div className="flex-1 min-w-0">
@@ -376,29 +369,11 @@ const TreeTypeSelector: React.FC<TreeTypeSelectorProps> = ({
                   <div className="flex items-center gap-2">
                     {/* Selection Indicator */}
                     {isSelected && (
-                      <div className={`w-5 h-5 text-white rounded-full flex items-center justify-center text-xs font-bold ${
-                        tree.category === 'deciduous' ? 'bg-primary' :
-                        tree.category === 'coniferous' ? 'bg-primary' :
-                        tree.category === 'tropical' ? 'bg-primary' :
-                        tree.category === 'mediterranean' ? 'bg-primary' :
-                        tree.category === 'boreal' ? 'bg-primary' :
-                        tree.category === 'arid' ? 'bg-primary' :
-                        tree.category === 'subtropical' ? 'bg-primary' :
-                        'bg-primary'
-                      }`}>
+                      <div className={`w-5 h-5 text-white rounded-full flex items-center justify-center text-xs font-bold ${getTreeCategoryColor(tree.category, 'bg')}`}>
                         ✓
                       </div>
                     )}
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${
-                      tree.category === 'deciduous' ? 'bg-primary text-white' :
-                      tree.category === 'coniferous' ? 'bg-primary text-white' :
-                      tree.category === 'tropical' ? 'bg-primary text-white' :
-                      tree.category === 'mediterranean' ? 'bg-primary text-white' :
-                      tree.category === 'boreal' ? 'bg-primary text-white' :
-                      tree.category === 'arid' ? 'bg-primary text-white' :
-                      tree.category === 'subtropical' ? 'bg-primary text-white' :
-                      'bg-primary text-white'
-                    }`}>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 ${getTreeCategoryColor(tree.category, 'bg')}`}>
                       {tree.category.charAt(0).toUpperCase() + tree.category.slice(1)}
                     </span>
                   </div>
