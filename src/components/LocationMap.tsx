@@ -312,9 +312,9 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
     map.on('mouseup', handleMouseEnd);
     
     // Add touch events for mobile
-    map.on('touchstart', handleTouchStart);
-    map.on('touchmove', handleTouchMove);
-    map.on('touchend', handleTouchEnd);
+    map.on('touchstart', handleTouchStart as unknown as L.LeafletEventHandlerFn);
+    map.on('touchmove', handleTouchMove as unknown as L.LeafletEventHandlerFn);
+    map.on('touchend', handleTouchEnd as unknown as L.LeafletEventHandlerFn);
     
     // Also add click event for mobile as fallback
     map.on('click', (e: LeafletMouseEvent) => {
@@ -329,9 +329,9 @@ const CustomRegionSelector = ({ onBoundsChange, onSelectingChange }: { onBoundsC
       map.off('mousedown', handleMouseStart);
       map.off('mousemove', handleMouseMove);
       map.off('mouseup', handleMouseEnd);
-      map.off('touchstart', handleTouchStart);
-      map.off('touchmove', handleTouchMove);
-      map.off('touchend', handleTouchEnd);
+      map.off('touchstart', handleTouchStart as unknown as L.LeafletEventHandlerFn);
+      map.off('touchmove', handleTouchMove as unknown as L.LeafletEventHandlerFn);
+      map.off('touchend', handleTouchEnd as unknown as L.LeafletEventHandlerFn);
       map.off('click');
       if (tempRectangleRef.current) {
         map.removeLayer(tempRectangleRef.current);
