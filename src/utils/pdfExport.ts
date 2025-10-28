@@ -11,7 +11,6 @@ export async function generatePDFReport(data: ExportData): Promise<void> {
   
   // Colors
   const primaryColor: [number, number, number] = [27, 77, 62]; // #1B4D3E
-  const lightGreen: [number, number, number] = [232, 237, 235]; // bg-primary/10
   
   let yPos = 20;
   
