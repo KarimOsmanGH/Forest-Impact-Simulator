@@ -5,13 +5,7 @@ import { TreeType } from '@/types/treeTypes';
 import { validateLatitude, validateLongitude, apiRateLimiter } from '@/utils/security';
 import { ExportData } from '@/utils/exportUtils';
 import { calculateRegionArea } from '@/utils/treePlanting';
-
-// Simple cache for environmental data
-const environmentalDataCache = new Map<string, {
-  soil: SoilData;
-  climate: ClimateData;
-  timestamp: number;
-}>();
+import { getCachedData, setCachedData, generateLocationKey } from '@/utils/apiCache';
 
 // Cache timeout: 30 minutes
 const CACHE_TIMEOUT = 30 * 60 * 1000;
@@ -127,6 +121,7 @@ interface SoilData {
 interface ClimateData {
   temperature: number | null;
   precipitation: number | null;
+  isEstimated?: boolean;
   historicalData?: {
     temperatures: number[];
     precipitations: number[];
@@ -139,6 +134,39 @@ interface ClimatePrediction {
   precipitation: number;
   growthModifier: number;
 }
+
+// Helper function to estimate climate data based on latitude when API fails
+const estimateClimateData = (lat: number): ClimateData => {
+  const absLat = Math.abs(lat);
+  
+  let temperature: number;
+  let precipitation: number;
+  
+  if (absLat >= 0 && absLat < 23.5) {
+    // Tropical zone
+    temperature = 25;
+    precipitation = 2000; // mm/year
+  } else if (absLat >= 23.5 && absLat < 35) {
+    // Subtropical zone
+    temperature = 20;
+    precipitation = 1000;
+  } else if (absLat >= 35 && absLat < 55) {
+    // Temperate zone
+    temperature = 12;
+    precipitation = 800;
+  } else if (absLat >= 55 && absLat < 66.5) {
+    // Boreal zone
+    temperature = 3;
+    precipitation = 500;
+  } else {
+    // Arctic/Antarctic zone
+    temperature = -5;
+    precipitation = 300;
+  }
+  
+  console.log(`Using estimated climate data for latitude ${lat}:`, { temperature, precipitation });
+  return { temperature, precipitation, isEstimated: true };
+};
 
 // Helper function to estimate soil data based on climate zone when API returns null
 const estimateSoilData = (lat: number): SoilData => {
@@ -350,10 +378,18 @@ const fetchClimateData = async (lat: number, lon: number, retries = 2): Promise<
     const currentPrecip = weatherData.current?.precipitation || null;
     
     console.log('Climate data extracted:', { currentTemp, currentPrecip, historicalData });
+    
+    // If API returns null values, use estimates
+    if (currentTemp === null || currentPrecip === null) {
+      console.log('Climate API returned null values, using climate-based estimates');
+      return estimateClimateData(lat);
+    }
+    
     return {
       temperature: currentTemp,
       precipitation: currentPrecip,
-      historicalData
+      historicalData,
+      isEstimated: false
     };
   } catch (error) {
     console.error('Error fetching climate data:', error);
@@ -376,8 +412,8 @@ const fetchClimateData = async (lat: number, lon: number, retries = 2): Promise<
       return fetchClimateData(lat, lon, retries - 1);
     }
     
-    console.warn('All climate data fetch attempts failed, using null values');
-    return { temperature: null, precipitation: null };
+    console.warn('All climate data fetch attempts failed, using climate-based estimates');
+    return estimateClimateData(lat);
   }
 };
 
@@ -589,12 +625,12 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
         return;
       }
       
-      // Check cache first
-      const cacheKey = `${latitude.toFixed(2)},${longitude.toFixed(2)}`;
-      const cachedData = environmentalDataCache.get(cacheKey);
+      // Check persistent cache first (localStorage)
+      const cacheKey = `env-${generateLocationKey(latitude, longitude)}`;
+      const cachedData = getCachedData<{ soil: SoilData; climate: ClimateData }>(cacheKey);
       
-      if (cachedData && (Date.now() - cachedData.timestamp < CACHE_TIMEOUT)) {
-        console.log('Using cached environmental data');
+      if (cachedData) {
+        console.log('Using cached environmental data from localStorage');
         setSoil(cachedData.soil);
         setClimate(cachedData.climate);
         setLoading(false);
@@ -639,19 +675,15 @@ const ForestImpactCalculator: React.FC<ForestImpactCalculatorProps> = ({ latitud
             setError('Weather API temporarily unavailable - using regional climate estimates based on latitude');
           }
           
-          // Cache the results
-          environmentalDataCache.set(cacheKey, {
-            soil: soilData,
-            climate: climateData,
-            timestamp: Date.now()
-          });
+          // Cache the results in localStorage (1 hour TTL)
+          setCachedData(cacheKey, { soil: soilData, climate: climateData }, 60 * 60 * 1000);
           
           // Notify parent component about soil and climate data
           if (onSoilClimateDataReady) {
             onSoilClimateDataReady(soilData, climateData);
           }
           
-          console.log('Environmental data cached for:', cacheKey);
+          console.log('Environmental data cached in localStorage for:', cacheKey);
         })
         .catch((error) => {
           console.error('Unexpected error fetching environmental data:', error);
