@@ -407,7 +407,7 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
               <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
                 <h5 className="font-semibold text-primary mb-2 text-xs flex items-center gap-2">
                   Climate Data
-                  {climate.isEstimated && (
+                  {climate?.isEstimated && (
                     <span className="text-xs font-normal text-primary/80">(Estimated)</span>
                   )}
                 </h5>
@@ -436,7 +436,7 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
                       </div>
                     </div>
                   )}
-                  {climate.isEstimated && (
+                  {climate?.isEstimated && (
                     <div className="mt-2 pt-2 border-t border-primary/30 text-xs text-primary/80">
                       ℹ️ Climate data unavailable for this location. Using climate-zone estimates.
                     </div>

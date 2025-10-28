@@ -7,9 +7,6 @@ import { ExportData } from '@/utils/exportUtils';
 import { calculateRegionArea } from '@/utils/treePlanting';
 import { getCachedData, setCachedData, generateLocationKey } from '@/utils/apiCache';
 
-// Cache timeout: 30 minutes
-const CACHE_TIMEOUT = 30 * 60 * 1000;
-
 // Simple fetch with timeout
 const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout: number = 15000): Promise<Response> => {
   const controller = new AbortController();

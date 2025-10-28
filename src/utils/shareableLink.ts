@@ -2,8 +2,6 @@
  * Utilities for creating shareable links with encoded analysis parameters
  */
 
-import { TreeType } from '@/types/treeTypes';
-
 export interface ShareableState {
   mode: 'planting' | 'clear-cutting';
   latitude?: number;
@@ -125,7 +123,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
         const successful = document.execCommand('copy');
         document.body.removeChild(textArea);
         return successful;
-      } catch (err) {
+      } catch {
         document.body.removeChild(textArea);
         return false;
       }

@@ -9,6 +9,7 @@ import {
   downloadFile, 
   formatTimestamp 
 } from '@/utils/exportUtils';
+import { generatePDFReport } from '@/utils/pdfExport';
 
 interface ExportResultsProps {
   exportData: ExportData;
@@ -18,38 +19,42 @@ interface ExportResultsProps {
 const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = false }) => {
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = async (format: 'geojson' | 'json' | 'csv') => {
+  const handleExport = async (format: 'geojson' | 'json' | 'csv' | 'pdf') => {
     if (disabled || isExporting) return;
     
     setIsExporting(true);
     
     try {
-      const timestamp = formatTimestamp();
-      let content: string;
-      let filename: string;
-      let mimeType: string;
-      
-      switch (format) {
-        case 'geojson':
-          content = generateGeoJSON(exportData);
-          filename = `forest-impact-analysis-${timestamp}.geojson`;
-          mimeType = 'application/geo+json';
-          break;
-        case 'json':
-          content = generateJSON(exportData);
-          filename = `forest-impact-analysis-${timestamp}.json`;
-          mimeType = 'application/json';
-          break;
-        case 'csv':
-          content = generateCSV(exportData);
-          filename = `forest-impact-analysis-${timestamp}.csv`;
-          mimeType = 'text/csv';
-          break;
-        default:
-          throw new Error('Unsupported export format');
+      if (format === 'pdf') {
+        await generatePDFReport(exportData);
+      } else {
+        const timestamp = formatTimestamp();
+        let content: string;
+        let filename: string;
+        let mimeType: string;
+        
+        switch (format) {
+          case 'geojson':
+            content = generateGeoJSON(exportData);
+            filename = `forest-impact-analysis-${timestamp}.geojson`;
+            mimeType = 'application/geo+json';
+            break;
+          case 'json':
+            content = generateJSON(exportData);
+            filename = `forest-impact-analysis-${timestamp}.json`;
+            mimeType = 'application/json';
+            break;
+          case 'csv':
+            content = generateCSV(exportData);
+            filename = `forest-impact-analysis-${timestamp}.csv`;
+            mimeType = 'text/csv';
+            break;
+          default:
+            throw new Error('Unsupported export format');
+        }
+        
+        downloadFile(content, filename, mimeType);
       }
-      
-      downloadFile(content, filename, mimeType);
     } catch (error) {
       console.error('Export failed:', error);
       alert('Export failed. Please try again.');
@@ -69,7 +74,17 @@ const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = fa
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
       
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button
+          onClick={() => handleExport('pdf')}
+          disabled={isExporting}
+          className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <div className="text-2xl mb-2">📋</div>
+          <span className="text-sm font-medium">PDF Report</span>
+          <span className="text-xs text-gray-500">Formatted report</span>
+        </button>
+
         <button
           onClick={() => handleExport('geojson')}
           disabled={isExporting}

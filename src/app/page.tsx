@@ -443,7 +443,7 @@ export default function Home() {
             <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">📤</div>
             <div>
               <h2 className="text-xl font-semibold text-gray-800">Export Results</h2>
-              <p className="text-sm text-gray-600">Download your analysis in GeoJSON, JSON, or CSV format</p>
+              <p className="text-sm text-gray-600">Download your analysis as PDF report, GeoJSON, JSON, or CSV</p>
             </div>
           </div>
           <Suspense fallback={

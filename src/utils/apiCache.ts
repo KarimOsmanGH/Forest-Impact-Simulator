@@ -27,7 +27,7 @@ function isLocalStorageAvailable(): boolean {
     localStorage.setItem(test, test);
     localStorage.removeItem(test);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -119,12 +119,12 @@ export function clearExpiredCache(): void {
           try {
             const entry: CacheEntry<unknown> = JSON.parse(cached);
             if (now - entry.timestamp > entry.ttl) {
-              keysToRemove.push(key);
-            }
-          } catch (e) {
-            // Invalid entry, remove it
             keysToRemove.push(key);
           }
+        } catch {
+          // Invalid entry, remove it
+          keysToRemove.push(key);
+        }
         }
       }
     }

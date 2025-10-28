@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useMap } from 'react-leaflet';
 import LocationSearch from './LocationSearch';
 import { calculateRegionArea, formatArea } from '@/utils/treePlanting';
+import { getLocationHistory, addToLocationHistory, removeFromLocationHistory, formatLocationName, getRelativeTime, type LocationHistoryItem } from '@/utils/locationHistory';
 
 // Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(
@@ -354,8 +355,15 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
   const [selectedRegion, setSelectedRegion] = useState<[number, number, number, number] | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([54.0, 15.0]);
   const [mapZoom, setMapZoom] = useState<number>(4);
+  const [showHistory, setShowHistory] = useState(false);
+  const [locationHistory, setLocationHistory] = useState<LocationHistoryItem[]>([]);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  // Load location history on mount
+  useEffect(() => {
+    setLocationHistory(getLocationHistory());
+  }, []);
 
   // Fix Leaflet marker icons
   useEffect(() => {
@@ -380,6 +388,15 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
     if (onSearchLocation) {
       onSearchLocation(lat, lng, name);
     }
+    
+    // Add to history
+    addToLocationHistory({
+      name,
+      latitude: lat,
+      longitude: lng,
+      type: 'search'
+    });
+    setLocationHistory(getLocationHistory());
   };
 
   const handleBoundsChange = (bounds: MapBounds) => {
@@ -399,6 +416,54 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
       east: bounds.getEast(),
       west: bounds.getWest()
     });
+    
+    // Add to history
+    const centerLat = (bounds.getNorth() + bounds.getSouth()) / 2;
+    const centerLon = (bounds.getEast() + bounds.getWest()) / 2;
+    addToLocationHistory({
+      name: 'Selected Region',
+      latitude: centerLat,
+      longitude: centerLon,
+      type: 'region',
+      region: {
+        north: bounds.getNorth(),
+        south: bounds.getSouth(),
+        east: bounds.getEast(),
+        west: bounds.getWest()
+      }
+    });
+    setLocationHistory(getLocationHistory());
+  };
+
+  const handleHistoryItemClick = (item: LocationHistoryItem) => {
+    if (item.type === 'region' && item.region) {
+      // Load region
+      const region = [
+        item.region.north,
+        item.region.west,
+        item.region.south,
+        item.region.east
+      ] as [number, number, number, number];
+      setSelectedRegion(region);
+      setSelectedLocation(null);
+      setMapCenter([(item.region.north + item.region.south) / 2, (item.region.east + item.region.west) / 2]);
+      setMapZoom(10);
+      onRegionSelect(item.region);
+    } else {
+      // Load point
+      setMapCenter([item.latitude, item.longitude]);
+      setMapZoom(10);
+      setSelectedLocation([item.latitude, item.longitude]);
+      setSelectedRegion(null);
+      onLocationSelect(item.latitude, item.longitude);
+    }
+    setShowHistory(false);
+  };
+
+  const handleRemoveHistoryItem = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeFromLocationHistory(id);
+    setLocationHistory(getLocationHistory());
   };
 
 
@@ -414,7 +479,79 @@ const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSel
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"> 
       <div className="relative p-3">
-        <LocationSearch onLocationSelect={handleSearchLocation} />
+        <div className="flex gap-2 mb-2">
+          <div className="flex-1">
+            <LocationSearch onLocationSelect={handleSearchLocation} />
+          </div>
+          {locationHistory.length > 0 && (
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg border border-primary/30 transition-colors flex items-center gap-2"
+              title="Recent locations"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-xs font-medium hidden sm:inline">Recent</span>
+            </button>
+          )}
+        </div>
+
+        {/* History Dropdown */}
+        {showHistory && locationHistory.length > 0 && (
+          <div className="absolute top-full left-3 right-3 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-[1000] max-h-64 overflow-y-auto">
+            <div className="p-2">
+              <div className="flex items-center justify-between mb-2 px-2">
+                <h4 className="text-xs font-semibold text-gray-700">Recent Locations</h4>
+                <button
+                  onClick={() => setShowHistory(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              {locationHistory.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => handleHistoryItemClick(item)}
+                  className="w-full text-left px-2 py-2 hover:bg-gray-50 rounded-lg flex items-start justify-between gap-2 group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      {item.type === 'region' ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      )}
+                      <span className="text-xs font-medium text-gray-700 truncate">
+                        {formatLocationName(item)}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {getRelativeTime(item.timestamp)}
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => handleRemoveHistoryItem(item.id, e)}
+                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-opacity p-1"
+                    title="Remove from history"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div 
           ref={mapContainerRef}
           className="relative"
