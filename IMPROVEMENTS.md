@@ -20,7 +20,7 @@
   - Test both simulation modes (planting/clear-cutting)
 
 - [ ] **Add integration tests** - Test API integrations
-  - Mock external API calls (SoilGrids, Open-Meteo, GBIF)
+  - Mock external API calls (SoilGrids, Open-Meteo)
   - Test error handling and fallbacks
 
 ## 2. Performance Optimization

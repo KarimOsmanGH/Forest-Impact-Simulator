@@ -88,7 +88,6 @@ This simulator is for educational and planning purposes only. Use at your own ri
 ### **Environmental APIs**
 - **[ISRIC SoilGrids](https://soilgrids.org/)**: Global soil data
 - **[Open-Meteo](https://open-meteo.com/)**: Weather and climate data
-- **[GBIF](https://www.gbif.org/)**: Biodiversity occurrence data
 - **[OpenStreetMap](https://www.openstreetmap.org/)**: Map tiles and geocoding
 
 ### **Styling & UI**
@@ -328,14 +327,13 @@ Air Quality = max(-80, -(Immediate Impact + (Years × 1.0)))
 ### **Environmental Data**
 - **[ISRIC SoilGrids](https://soilgrids.org/)**: Global soil information
 - **[Open-Meteo](https://open-meteo.com/)**: Climate and weather data
-- **[GBIF](https://www.gbif.org/)**: Biodiversity occurrence records
 - **[OpenStreetMap](https://www.openstreetmap.org/)**: Map tiles and geographic data
+- **Scientific Literature**: Biodiversity values based on peer-reviewed research
 
 ### **Acknowledgments**
 We thank the following organizations for providing the data and services that make this simulator possible:
 - **[ISRIC SoilGrids](https://soilgrids.org/)** for global soil data
 - **[Open-Meteo](https://open-meteo.com/)** for climate information
-- **[GBIF](https://www.gbif.org/)** for biodiversity data
 - **[OpenStreetMap](https://www.openstreetmap.org/)** for map tiles
 
 ## 🤝 Contributing

@@ -1,13 +1,16 @@
 "use client";
 
-import React, { useState } from 'react';
-import LocationMap from '@/components/LocationMap';
-import ForestImpactCalculator from '@/components/ForestImpactCalculator';
-import TreeTypeSelector from '@/components/TreeTypeSelector';
-import TreePlantingCalculator from '@/components/TreePlantingCalculator';
-import ExportResults from '@/components/ExportResults';
-import { TreeType } from '@/types/treeTypes';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { TreeType, TREE_TYPES } from '@/types/treeTypes';
 import { ExportData } from '@/utils/exportUtils';
+import { generateShareableUrl, getShareParameterFromUrl, decodeUrlToState, copyToClipboard, ShareableState } from '@/utils/shareableLink';
+
+// Lazy load components for better performance
+const LocationMap = lazy(() => import('@/components/LocationMap'));
+const ForestImpactCalculator = lazy(() => import('@/components/ForestImpactCalculator'));
+const TreeTypeSelector = lazy(() => import('@/components/TreeTypeSelector'));
+const TreePlantingCalculator = lazy(() => import('@/components/TreePlantingCalculator'));
+const ExportResults = lazy(() => import('@/components/ExportResults'));
 
 export default function Home() {
   const [simulationMode, setSimulationMode] = useState<'planting' | 'clear-cutting'>('planting');
@@ -37,6 +40,35 @@ export default function Home() {
 
   const [faqOpen, setFaqOpen] = useState<{ [key: string]: boolean }>({});
   const [exportData, setExportData] = useState<ExportData | null>(null);
+  const [shareNotification, setShareNotification] = useState<string | null>(null);
+
+  // Load state from URL on mount
+  useEffect(() => {
+    const shareParam = getShareParameterFromUrl();
+    if (shareParam) {
+      const state = decodeUrlToState(shareParam);
+      if (state) {
+        console.log('Loading shared analysis:', state);
+        setSimulationMode(state.mode);
+        setYears(state.years);
+        setCalculationMode(state.calculationMode);
+        if (state.averageTreeAge) setAverageTreeAge(state.averageTreeAge);
+        if (state.latitude && state.longitude) {
+          setSelectedLatitude(state.latitude);
+          setSelectedLongitude(state.longitude);
+        }
+        if (state.region) {
+          setSelectedRegion(state.region);
+        }
+        // Load selected trees
+        if (state.treeIds.length > 0) {
+          const trees = TREE_TYPES.filter(t => state.treeIds.includes(t.id));
+          setSelectedTrees(trees);
+          setTreePercentages(state.treePercentages || {});
+        }
+      }
+    }
+  }, []);
 
   const handleLocationSelect = (lat: number, lng: number) => {
     setSelectedLatitude(lat);
@@ -111,6 +143,53 @@ export default function Home() {
     setClimateData(climate);
   };
 
+  const handleReset = () => {
+    if (window.confirm('Reset all selections and start over? This will clear your current analysis.')) {
+      setSelectedLatitude(null);
+      setSelectedLongitude(null);
+      setSelectedRegion(null);
+      setYears(50);
+      setCalculationMode('perArea');
+      setAverageTreeAge(20);
+      setSelectedTrees([]);
+      setTreePercentages({});
+      setPlantingData(null);
+      setSoilData(null);
+      setClimateData(null);
+      setExportData(null);
+      // Don't reset simulationMode to preserve user's choice
+      // Clear URL parameter
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }
+  };
+
+  const handleShare = async () => {
+    const state: ShareableState = {
+      mode: simulationMode,
+      latitude: selectedLatitude || undefined,
+      longitude: selectedLongitude || undefined,
+      region: selectedRegion || undefined,
+      years,
+      calculationMode,
+      averageTreeAge: simulationMode === 'clear-cutting' ? averageTreeAge : undefined,
+      treeIds: selectedTrees.map(t => t.id),
+      treePercentages
+    };
+
+    const url = generateShareableUrl(state);
+    const success = await copyToClipboard(url);
+    
+    if (success) {
+      setShareNotification('Link copied to clipboard!');
+      setTimeout(() => setShareNotification(null), 3000);
+    } else {
+      setShareNotification('Failed to copy link. Please try again.');
+      setTimeout(() => setShareNotification(null), 3000);
+    }
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">
       <div className="container mx-auto max-w-7xl">
@@ -137,9 +216,9 @@ export default function Home() {
           </div>
         </section>
         
-        {/* Simulation Mode Selector */}
+        {/* Simulation Mode Selector and Reset Button */}
         <div className="mb-8">
-          <div className="flex justify-center">
+          <div className="flex justify-center items-center gap-4 flex-wrap">
             <div className="bg-white border border-primary/20 rounded-xl p-4 shadow-sm">
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium text-gray-700">Simulation Mode:</span>
@@ -167,8 +246,44 @@ export default function Home() {
                 </div>
               </div>
             </div>
+            {/* Share Button */}
+            {(selectedLatitude || selectedLongitude || selectedRegion) && selectedTrees.length > 0 && (
+              <button
+                onClick={handleShare}
+                className="bg-primary border border-primary text-white hover:bg-primary/90 px-4 py-3 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center gap-2"
+                title="Share this analysis"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+                Share Analysis
+              </button>
+            )}
+            {/* Reset Button */}
+            {(selectedLatitude || selectedLongitude || selectedRegion || selectedTrees.length > 0) && (
+              <button
+                onClick={handleReset}
+                className="bg-white border border-red-300 text-red-700 hover:bg-red-50 px-4 py-3 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center gap-2"
+                title="Reset all selections"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Reset
+              </button>
+            )}
           </div>
         </div>
+        
+        {/* Share Notification Toast */}
+        {shareNotification && (
+          <div className="fixed top-4 right-4 z-50 bg-primary text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-fade-in">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            {shareNotification}
+          </div>
+        )}
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
@@ -182,11 +297,17 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <LocationMap 
-              onLocationSelect={handleLocationSelect}
-              onRegionSelect={handleRegionSelect}
-              onSearchLocation={handleSearchLocation}
-            />
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-96">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            }>
+              <LocationMap 
+                onLocationSelect={handleLocationSelect}
+                onRegionSelect={handleRegionSelect}
+                onSearchLocation={handleSearchLocation}
+              />
+            </Suspense>
           </div>
           
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
@@ -194,7 +315,7 @@ export default function Home() {
               <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">🌳</div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">
-                  {simulationMode === 'planting' ? 'Choose Tree Species' : 'Select Tree Species'}
+                  {simulationMode === 'planting' ? 'Select Tree Species' : 'Select Tree Species'}
                 </h2>
                 <p className="text-sm text-gray-600">
                   {simulationMode === 'planting' 
@@ -205,15 +326,21 @@ export default function Home() {
               </div>
             </div>
             <div className="flex-1">
-              <TreeTypeSelector
-                selectedTrees={selectedTrees}
-                onTreeSelectionChange={handleTreeSelectionChange}
-                treePercentages={treePercentages}
-                onTreePercentagesChange={handleTreePercentagesChange}
-                latitude={selectedLatitude || undefined}
-                selectedRegion={selectedRegion}
-                simulationMode={simulationMode}
-              />
+              <Suspense fallback={
+                <div className="flex items-center justify-center h-48">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                </div>
+              }>
+                <TreeTypeSelector
+                  selectedTrees={selectedTrees}
+                  onTreeSelectionChange={handleTreeSelectionChange}
+                  treePercentages={treePercentages}
+                  onTreePercentagesChange={handleTreePercentagesChange}
+                  latitude={selectedLatitude || undefined}
+                  selectedRegion={selectedRegion}
+                  simulationMode={simulationMode}
+                />
+              </Suspense>
             </div>
           </div>
         </div>
@@ -243,46 +370,58 @@ export default function Home() {
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">
                     {simulationMode === 'planting' ? 'Planting Calculations' : 'Removal Configuration'}
                   </h3>
-                  <TreePlantingCalculator
-                    selectedRegion={selectedRegion || (selectedLatitude && selectedLongitude ? {
-                      north: selectedLatitude + 0.01,
-                      south: selectedLatitude - 0.01,
-                      east: selectedLongitude + 0.01,
-                      west: selectedLongitude - 0.01
-                    } : null)}
-                    selectedTreeType={selectedTrees.length === 1 ? selectedTrees[0] : null}
-                    selectedTrees={selectedTrees}
-                    treePercentages={treePercentages}
-                    onDataReady={handlePlantingDataReady}
-                    simulationMode={simulationMode}
-                    years={years}
-                    onYearsChange={setYears}
-                    onCalculationModeChange={setCalculationMode}
-                    onTreeAgeChange={setAverageTreeAge}
-                    soil={soilData}
-                    climate={climateData}
-                  />
+                  <Suspense fallback={
+                    <div className="flex items-center justify-center h-64 bg-gray-50 border border-gray-200 rounded-lg">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    </div>
+                  }>
+                    <TreePlantingCalculator
+                      selectedRegion={selectedRegion || (selectedLatitude && selectedLongitude ? {
+                        north: selectedLatitude + 0.01,
+                        south: selectedLatitude - 0.01,
+                        east: selectedLongitude + 0.01,
+                        west: selectedLongitude - 0.01
+                      } : null)}
+                      selectedTreeType={selectedTrees.length === 1 ? selectedTrees[0] : null}
+                      selectedTrees={selectedTrees}
+                      treePercentages={treePercentages}
+                      onDataReady={handlePlantingDataReady}
+                      simulationMode={simulationMode}
+                      years={years}
+                      onYearsChange={setYears}
+                      onCalculationModeChange={setCalculationMode}
+                      onTreeAgeChange={setAverageTreeAge}
+                      soil={soilData}
+                      climate={climateData}
+                    />
+                  </Suspense>
                 </div>
                 
                 {/* Impact Results Section */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">Impact Analysis</h3>
-                  <ForestImpactCalculator 
-                    latitude={selectedLatitude || (selectedRegion ? (selectedRegion.north + selectedRegion.south) / 2 : null)}
-                    longitude={selectedLongitude || (selectedRegion ? (selectedRegion.east + selectedRegion.west) / 2 : null)}
-                    years={years}
-                    selectedTreeType={selectedTrees.length === 1 ? selectedTrees[0] : null}
-                    selectedTrees={selectedTrees.length > 1 ? selectedTrees : undefined}
-                    treePercentages={treePercentages}
-                    selectedRegion={selectedRegion}
-                    plantingData={plantingData}
-                    onYearsChange={setYears}
-                    onDataReady={handleImpactDataReady}
-                    simulationMode={simulationMode}
-                    calculationMode={calculationMode}
-                    averageTreeAge={averageTreeAge}
-                    onSoilClimateDataReady={handleSoilClimateDataReady}
-                  />
+                  <Suspense fallback={
+                    <div className="flex items-center justify-center h-64 bg-gray-50 border border-gray-200 rounded-lg">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    </div>
+                  }>
+                    <ForestImpactCalculator 
+                      latitude={selectedLatitude || (selectedRegion ? (selectedRegion.north + selectedRegion.south) / 2 : null)}
+                      longitude={selectedLongitude || (selectedRegion ? (selectedRegion.east + selectedRegion.west) / 2 : null)}
+                      years={years}
+                      selectedTreeType={selectedTrees.length === 1 ? selectedTrees[0] : null}
+                      selectedTrees={selectedTrees.length > 1 ? selectedTrees : undefined}
+                      treePercentages={treePercentages}
+                      selectedRegion={selectedRegion}
+                      plantingData={plantingData}
+                      onYearsChange={setYears}
+                      onDataReady={handleImpactDataReady}
+                      simulationMode={simulationMode}
+                      calculationMode={calculationMode}
+                      averageTreeAge={averageTreeAge}
+                      onSoilClimateDataReady={handleSoilClimateDataReady}
+                    />
+                  </Suspense>
                 </div>
               </div>
             ) : (
@@ -304,39 +443,45 @@ export default function Home() {
             <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">📤</div>
             <div>
               <h2 className="text-xl font-semibold text-gray-800">Export Results</h2>
-              <p className="text-sm text-gray-600">Download your analysis in GeoJSON, JSON, or CSV format</p>
+              <p className="text-sm text-gray-600">Download your analysis as PDF report, GeoJSON, JSON, or CSV</p>
             </div>
           </div>
-          <ExportResults 
-            exportData={exportData || {
-              metadata: {
-                timestamp: new Date().toISOString(),
-                simulatorVersion: "1.0.0",
-                location: {
-                  latitude: selectedLatitude,
-                  longitude: selectedLongitude,
-                  region: selectedRegion
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-32">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            </div>
+          }>
+            <ExportResults 
+              exportData={exportData || {
+                metadata: {
+                  timestamp: new Date().toISOString(),
+                  simulatorVersion: "1.0.0",
+                  location: {
+                    latitude: selectedLatitude,
+                    longitude: selectedLongitude,
+                    region: selectedRegion
+                  },
+                  simulation: {
+                    years,
+                    selectedTrees,
+                    treePercentages
+                  }
                 },
-                simulation: {
-                  years,
-                  selectedTrees,
-                  treePercentages
+                environmentalData: {},
+                impactResults: {
+                  carbonSequestration: 0,
+                  biodiversityImpact: 0,
+                  forestResilience: 0,
+                  waterRetention: 0,
+                  airQualityImprovement: 0,
+                  totalCarbon: 0,
+                  averageBiodiversity: 0,
+                  averageResilience: 0
                 }
-              },
-              environmentalData: {},
-              impactResults: {
-                carbonSequestration: 0,
-                biodiversityImpact: 0,
-                forestResilience: 0,
-                waterRetention: 0,
-                airQualityImprovement: 0,
-                totalCarbon: 0,
-                averageBiodiversity: 0,
-                averageResilience: 0
-              }
-            }}
-            disabled={!selectedTrees.length || (!selectedLatitude && !selectedLongitude && !selectedRegion)}
-          />
+              }}
+              disabled={!selectedTrees.length || (!selectedLatitude && !selectedLongitude && !selectedRegion)}
+            />
+          </Suspense>
         </div>
         
 
@@ -565,7 +710,7 @@ export default function Home() {
               {faqOpen[7] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
-                    <strong>Environmental Data Sources:</strong> The simulator uses real-time data from multiple sources: Soil carbon content from <a href="https://soilgrids.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">ISRIC SoilGrids</a> (adds 0.1 kg CO₂/year per g/kg of soil carbon), climate data from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">Open-Meteo</a> (precipitation affects forest resilience), and biodiversity data from <a href="https://www.gbif.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">GBIF</a> (Global Biodiversity Information Facility). When climate data is unavailable, the simulator uses geographic fallbacks to ensure calculations remain accurate.
+                    <strong>Environmental Data Sources:</strong> The simulator uses real-time data from multiple sources: Soil carbon content from <a href="https://soilgrids.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">ISRIC SoilGrids</a> (adds 0.1 kg CO₂/year per g/kg of soil carbon) and climate data from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">Open-Meteo</a> (precipitation affects forest resilience). Biodiversity values are based on scientific literature and species-specific ecological characteristics. When environmental data is unavailable, the simulator uses climate-zone based estimates to ensure calculations remain accurate.
                   </p>
                   <p className="text-gray-900 mb-3">
                     <strong>Environmental Benefits Calculated:</strong> Beyond carbon sequestration, the simulator calculates biodiversity impact (how well the forest supports wildlife), forest resilience (ability to withstand climate stresses), water retention (improved soil moisture and reduced runoff), and air quality improvement (pollution filtration). In planting mode, these metrics improve over time and scale with forest size. In clear-cutting mode, these metrics degrade over time and scale with the extent of forest removal. These metrics provide a comprehensive view of the forest&apos;s environmental contribution or impact.
