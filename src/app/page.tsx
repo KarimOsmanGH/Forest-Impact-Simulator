@@ -194,7 +194,7 @@ export default function Home() {
               <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">🌳</div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">
-                  {simulationMode === 'planting' ? 'Choose Tree Species' : 'Select Tree Species'}
+                  {simulationMode === 'planting' ? 'Select Tree Species' : 'Select Tree Species'}
                 </h2>
                 <p className="text-sm text-gray-600">
                   {simulationMode === 'planting' 
