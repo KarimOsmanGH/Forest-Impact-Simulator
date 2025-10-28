@@ -121,6 +121,7 @@ interface ImpactMetrics {
 interface SoilData {
   carbon: number | null;
   ph: number | null;
+  isEstimated?: boolean;
 }
 
 interface ClimateData {
@@ -138,6 +139,36 @@ interface ClimatePrediction {
   precipitation: number;
   growthModifier: number;
 }
+
+// Helper function to estimate soil data based on climate zone when API returns null
+const estimateSoilData = (lat: number): SoilData => {
+  const absLat = Math.abs(lat);
+  
+  // Estimate based on latitude/climate zone
+  let carbon: number;
+  let ph: number;
+  
+  if (absLat >= 0 && absLat < 23.5) {
+    // Tropical zone
+    carbon = 15; // Lower soil carbon due to rapid decomposition
+    ph = 6.0; // Slightly acidic
+  } else if (absLat >= 23.5 && absLat < 40) {
+    // Subtropical zone
+    carbon = 18; // Moderate soil carbon
+    ph = 6.5; // Slightly acidic to neutral
+  } else if (absLat >= 40 && absLat < 60) {
+    // Temperate zone
+    carbon = 25; // Higher soil carbon
+    ph = 6.5; // Neutral
+  } else {
+    // Boreal/Arctic zone
+    carbon = 30; // High soil carbon due to slow decomposition
+    ph = 5.5; // Acidic
+  }
+  
+  console.log(`Using estimated soil data for latitude ${lat}:`, { carbon, ph });
+  return { carbon, ph, isEstimated: true };
+};
 
 const fetchSoilData = async (lat: number, lon: number, retries = 2): Promise<SoilData> => {
   try {
@@ -195,7 +226,14 @@ const fetchSoilData = async (lat: number, lon: number, retries = 2): Promise<Soi
     }
     
     console.log('Soil data extracted:', { carbon, ph });
-    return { carbon, ph };
+    
+    // If API returns null values (no data available for this location), use estimates
+    if (carbon === null || ph === null) {
+      console.log('SoilGrids API returned null values, using climate-based estimates');
+      return estimateSoilData(lat);
+    }
+    
+    return { carbon, ph, isEstimated: false };
   } catch (error) {
     console.error('Error fetching soil data:', error);
     
@@ -206,8 +244,8 @@ const fetchSoilData = async (lat: number, lon: number, retries = 2): Promise<Soi
       return fetchSoilData(lat, lon, retries - 1);
     }
     
-    console.warn('All soil data fetch attempts failed, using null values');
-    return { carbon: null, ph: null };
+    console.warn('All soil data fetch attempts failed, using climate-based estimates');
+    return estimateSoilData(lat);
   }
 };
 

@@ -17,6 +17,7 @@ import { ExportData } from '@/utils/exportUtils';
 interface SoilData {
   carbon: number | null;
   ph: number | null;
+  isEstimated?: boolean;
 }
 
 interface ClimateData {
@@ -367,8 +368,11 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
             
             {soil && (
               <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
-                <h5 className="font-semibold text-primary mb-2 text-xs">
+                <h5 className="font-semibold text-primary mb-2 text-xs flex items-center gap-2">
                   Soil Data
+                  {soil.isEstimated && (
+                    <span className="text-xs font-normal text-primary/80">(Estimated)</span>
+                  )}
                 </h5>
                 <div className="space-y-1 text-xs text-primary">
                   <div className="flex justify-between">
@@ -388,6 +392,11 @@ const TreePlantingCalculator: React.FC<TreePlantingCalculatorProps> = ({
                       <div className="text-xs text-primary">
                         <span className="font-semibold">Carbon Bonus:</span> +{(soil.carbon * 0.1).toFixed(1)} kg CO₂/year per tree
                       </div>
+                    </div>
+                  )}
+                  {soil.isEstimated && (
+                    <div className="mt-2 pt-2 border-t border-primary/30 text-xs text-primary/80">
+                      ℹ️ Soil data unavailable for this location. Using climate-zone estimates.
                     </div>
                   )}
                 </div>
