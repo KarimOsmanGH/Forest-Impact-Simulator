@@ -348,13 +348,35 @@ interface LocationMapProps {
   onLocationSelect: (lat: number, lng: number) => void;
   onRegionSelect: (bounds: { north: number; south: number; east: number; west: number }) => void;
   onSearchLocation?: (lat: number, lng: number, name: string) => void;
+  initialRegion?: { north: number; south: number; east: number; west: number } | null;
+  initialLatitude?: number | null;
+  initialLongitude?: number | null;
 }
 
-const LocationMap: React.FC<LocationMapProps> = ({ onLocationSelect, onRegionSelect, onSearchLocation }) => {
-  const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(null);
-  const [selectedRegion, setSelectedRegion] = useState<[number, number, number, number] | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([54.0, 15.0]);
-  const [mapZoom, setMapZoom] = useState<number>(4);
+const LocationMap: React.FC<LocationMapProps> = ({ 
+  onLocationSelect, 
+  onRegionSelect, 
+  onSearchLocation,
+  initialRegion,
+  initialLatitude,
+  initialLongitude
+}) => {
+  const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(
+    initialLatitude && initialLongitude ? [initialLatitude, initialLongitude] : null
+  );
+  const [selectedRegion, setSelectedRegion] = useState<[number, number, number, number] | null>(
+    initialRegion ? [initialRegion.north, initialRegion.west, initialRegion.south, initialRegion.east] : null
+  );
+  const [mapCenter, setMapCenter] = useState<[number, number]>(
+    initialRegion 
+      ? [(initialRegion.north + initialRegion.south) / 2, (initialRegion.east + initialRegion.west) / 2]
+      : initialLatitude && initialLongitude
+      ? [initialLatitude, initialLongitude]
+      : [54.0, 15.0]
+  );
+  const [mapZoom, setMapZoom] = useState<number>(
+    initialRegion || (initialLatitude && initialLongitude) ? 10 : 4
+  );
   const [showHistory, setShowHistory] = useState(false);
   const [locationHistory, setLocationHistory] = useState<LocationHistoryItem[]>([]);
   const mapRef = useRef<L.Map | null>(null);
