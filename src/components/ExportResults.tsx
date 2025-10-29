@@ -100,56 +100,56 @@ const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = fa
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Export and Share Results</h3>
       
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
         <button
           onClick={() => handleExport('pdf')}
           disabled={isExporting}
-          className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex flex-col items-center p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <div className="text-2xl mb-2">📋</div>
-          <span className="text-sm font-medium">PDF Report</span>
-          <span className="text-xs text-gray-500">Formatted report</span>
+          <div className="text-xl mb-1">📋</div>
+          <span className="text-xs font-medium">PDF Report</span>
+          <span className="text-xs text-gray-500 hidden sm:block">Formatted</span>
         </button>
 
         <button
           onClick={() => handleExport('geojson')}
           disabled={isExporting}
-          className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex flex-col items-center p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <div className="text-2xl mb-2">🗺️</div>
-          <span className="text-sm font-medium">GeoJSON</span>
-          <span className="text-xs text-gray-500">For GIS tools</span>
+          <div className="text-xl mb-1">🗺️</div>
+          <span className="text-xs font-medium">GeoJSON</span>
+          <span className="text-xs text-gray-500 hidden sm:block">GIS tools</span>
         </button>
         
         <button
           onClick={() => handleExport('json')}
           disabled={isExporting}
-          className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex flex-col items-center p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <div className="text-2xl mb-2">📄</div>
-          <span className="text-sm font-medium">JSON</span>
-          <span className="text-xs text-gray-500">Complete data</span>
+          <div className="text-xl mb-1">📄</div>
+          <span className="text-xs font-medium">JSON</span>
+          <span className="text-xs text-gray-500 hidden sm:block">Complete</span>
         </button>
         
         <button
           onClick={() => handleExport('csv')}
           disabled={isExporting}
-          className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex flex-col items-center p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <div className="text-2xl mb-2">📊</div>
-          <span className="text-sm font-medium">CSV</span>
-          <span className="text-xs text-gray-500">For R/Python</span>
+          <div className="text-xl mb-1">📊</div>
+          <span className="text-xs font-medium">CSV</span>
+          <span className="text-xs text-gray-500 hidden sm:block">R/Python</span>
         </button>
 
         {shareableState && (
           <button
             onClick={handleShare}
             disabled={disabled || isSharing}
-            className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex flex-col items-center p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <div className="text-2xl mb-2">🔗</div>
-            <span className="text-sm font-medium">Share Link</span>
-            <span className="text-xs text-gray-500">Copy URL</span>
+            <div className="text-xl mb-1">🔗</div>
+            <span className="text-xs font-medium">Share Link</span>
+            <span className="text-xs text-gray-500 hidden sm:block">Copy URL</span>
           </button>
         )}
       </div>
