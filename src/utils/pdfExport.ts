@@ -18,6 +18,14 @@ export async function generatePDFReport(data: ExportData): Promise<void> {
   doc.setFillColor(...primaryColor);
   doc.rect(0, 0, 210, 40, 'F');
   
+  // Draw a simple tree logo (left side)
+  doc.setFillColor(255, 255, 255);
+  // Tree crown (circle)
+  doc.circle(20, 15, 5, 'F');
+  // Tree trunk (rectangle)
+  doc.setFillColor(200, 200, 200);
+  doc.rect(18.5, 18, 3, 6, 'F');
+  
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(24);
   doc.setFont('helvetica', 'bold');
@@ -48,10 +56,70 @@ export async function generatePDFReport(data: ExportData): Promise<void> {
     ['Simulation Years', data.metadata.simulation?.years?.toString() || 'N/A'],
   ];
   
-  if (data.metadata.location?.latitude && data.metadata.location?.longitude) {
+  // Add location information
+  if (data.metadata.location?.region) {
+    const region = data.metadata.location.region;
+    const centerLat = (region.north + region.south) / 2;
+    const centerLon = (region.east + region.west) / 2;
+    
+    // Determine hemisphere and general location
+    let locationDesc = '';
+    const latLabel = centerLat >= 0 ? 'N' : 'S';
+    const lonLabel = centerLon >= 0 ? 'E' : 'W';
+    
+    // Add general region description
+    if (Math.abs(centerLat) < 23.5) {
+      locationDesc = 'Tropical Region';
+    } else if (Math.abs(centerLat) < 35) {
+      locationDesc = 'Subtropical Region';
+    } else if (Math.abs(centerLat) < 55) {
+      locationDesc = 'Temperate Region';
+    } else if (Math.abs(centerLat) < 66.5) {
+      locationDesc = 'Boreal Region';
+    } else {
+      locationDesc = 'Polar Region';
+    }
+    
     metadataInfo.push([
       'Location',
-      `${data.metadata.location.latitude.toFixed(4)}°, ${data.metadata.location.longitude.toFixed(4)}°`
+      `${locationDesc} (${Math.abs(centerLat).toFixed(4)}°${latLabel}, ${Math.abs(centerLon).toFixed(4)}°${lonLabel})`
+    ]);
+    
+    metadataInfo.push([
+      'Region Bounds',
+      `${region.north.toFixed(4)}°N to ${region.south.toFixed(4)}°N, ${region.west.toFixed(4)}°W to ${region.east.toFixed(4)}°E`
+    ]);
+    
+    // Calculate and add region area
+    const areaKm2 = Math.abs((region.north - region.south) * (region.east - region.west)) * 111 * 111 * Math.cos((centerLat * Math.PI) / 180);
+    const areaHa = areaKm2 * 100;
+    metadataInfo.push([
+      'Region Area',
+      `${areaHa.toFixed(2)} hectares (${areaKm2.toFixed(2)} km²)`
+    ]);
+  } else if (data.metadata.location?.latitude && data.metadata.location?.longitude) {
+    const lat = data.metadata.location.latitude;
+    const lon = data.metadata.location.longitude;
+    const latLabel = lat >= 0 ? 'N' : 'S';
+    const lonLabel = lon >= 0 ? 'E' : 'W';
+    
+    // Add general region description
+    let locationDesc = '';
+    if (Math.abs(lat) < 23.5) {
+      locationDesc = 'Tropical Region';
+    } else if (Math.abs(lat) < 35) {
+      locationDesc = 'Subtropical Region';
+    } else if (Math.abs(lat) < 55) {
+      locationDesc = 'Temperate Region';
+    } else if (Math.abs(lat) < 66.5) {
+      locationDesc = 'Boreal Region';
+    } else {
+      locationDesc = 'Polar Region';
+    }
+    
+    metadataInfo.push([
+      'Location',
+      `${locationDesc} (${Math.abs(lat).toFixed(4)}°${latLabel}, ${Math.abs(lon).toFixed(4)}°${lonLabel})`
     ]);
   }
   
@@ -217,7 +285,7 @@ export async function generatePDFReport(data: ExportData): Promise<void> {
       ['Total Area', `${data.plantingData.area?.toFixed(2) || 'N/A'} hectares`],
       ['Total Trees', (data.plantingData.totalTrees || 0).toLocaleString()],
       ['Tree Spacing', `${data.plantingData.spacing?.toFixed(1) || 'N/A'} meters`],
-      ['Planting Density', `${data.plantingData.density || 'N/A'} trees/hectare`],
+      ['Planting Density', `${typeof data.plantingData.density === 'number' ? data.plantingData.density.toFixed(0) : 'N/A'} trees/hectare`],
     ];
     
     autoTable(doc, {

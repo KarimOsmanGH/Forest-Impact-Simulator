@@ -209,7 +209,7 @@ const fetchSoilData = async (lat: number, lon: number, retries = 2): Promise<Soi
       throw new Error('Rate limit exceeded');
     }
     
-    console.log('Fetching soil data for:', lat, lon);
+    console.log('[SOIL API] Fetching soil data for:', lat, lon, '(attempt', 3 - retries, 'of 3)');
     
     // Use the ISRIC SoilGrids API endpoint with increased timeout
     const res = await fetchWithTimeout(
@@ -220,7 +220,7 @@ const fetchSoilData = async (lat: number, lon: number, retries = 2): Promise<Soi
         },
         mode: 'cors'
       },
-      20000 // Increased timeout to 20 seconds
+      30000 // Increased timeout to 30 seconds
     );
     
     if (!res.ok) {
@@ -229,7 +229,7 @@ const fetchSoilData = async (lat: number, lon: number, retries = 2): Promise<Soi
     }
     
     const data = await res.json();
-    console.log('Soil API response received successfully');
+    console.log('[SOIL API] Response received successfully');
     
     // Extract organic carbon and pH from the response
     let carbon = null;
@@ -250,26 +250,28 @@ const fetchSoilData = async (lat: number, lon: number, retries = 2): Promise<Soi
       }
     }
     
-    console.log('Soil data extracted:', { carbon, ph });
+    console.log('[SOIL API] Data extracted:', { carbon, ph });
     
     // If API returns null values (no data available for this location), use estimates
     if (carbon === null || ph === null) {
-      console.log('SoilGrids API returned null values, using climate-based estimates');
+      console.log('[SOIL API] API returned null values - no data available for this location. Using climate-based estimates.');
       return estimateSoilData(lat);
     }
     
+    console.log('[SOIL API] Successfully retrieved real soil data from SoilGrids');
     return { carbon, ph, isEstimated: false };
   } catch (error) {
     console.error('Error fetching soil data:', error);
     
     // Retry logic with exponential backoff
     if (retries > 0) {
-      console.log(`Retrying soil data fetch (${retries} retries remaining)...`);
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+      const waitTime = (3 - retries) * 3000; // Progressive backoff: 3s, 6s
+      console.log(`[SOIL API] Retry ${3 - retries} failed. Waiting ${waitTime/1000}s before retry ${3 - retries + 1}...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
       return fetchSoilData(lat, lon, retries - 1);
     }
     
-    console.warn('All soil data fetch attempts failed, using climate-based estimates');
+    console.warn('[SOIL API] All 3 attempts failed. Using climate-based estimates.');
     return estimateSoilData(lat);
   }
 };
@@ -319,13 +321,13 @@ const fetchClimateData = async (lat: number, lon: number, retries = 2): Promise<
       throw new Error('Rate limit exceeded');
     }
     
-    console.log('Fetching climate data for:', lat, lon);
+    console.log('[CLIMATE API] Fetching climate data for:', lat, lon, '(attempt', 3 - retries, 'of 3)');
     
     // Fetch current weather data with increased timeout
     const weatherRes = await fetchWithTimeout(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,precipitation&timezone=auto`,
       {},
-      20000 // 20 second timeout
+      30000 // 30 second timeout
     );
     
     if (!weatherRes.ok) {
@@ -334,7 +336,7 @@ const fetchClimateData = async (lat: number, lon: number, retries = 2): Promise<
     }
     
     const weatherData = await weatherRes.json();
-    console.log('Current weather data received successfully');
+    console.log('[CLIMATE API] Current weather data received successfully');
     
     // Fetch historical data for climate trend analysis (reduced to 5 years for performance)
     const endDate = new Date();
@@ -344,13 +346,13 @@ const fetchClimateData = async (lat: number, lon: number, retries = 2): Promise<
     const historicalRes = await fetchWithTimeout(
       `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}&daily=temperature_2m_mean,precipitation_sum&timezone=auto`,
       {},
-      20000 // 20 second timeout
+      30000 // 30 second timeout
     );
     
     let historicalData = undefined;
     if (historicalRes.ok) {
       const historicalWeatherData = await historicalRes.json();
-      console.log('Historical weather data received successfully');
+      console.log('[CLIMATE API] Historical weather data received successfully');
       
       if (historicalWeatherData.daily) {
         const temperatures = historicalWeatherData.daily.temperature_2m_mean || [];
@@ -374,14 +376,15 @@ const fetchClimateData = async (lat: number, lon: number, retries = 2): Promise<
     const currentTemp = weatherData.current?.temperature_2m || null;
     const currentPrecip = weatherData.current?.precipitation || null;
     
-    console.log('Climate data extracted:', { currentTemp, currentPrecip, historicalData });
+    console.log('[CLIMATE API] Data extracted:', { currentTemp, currentPrecip, hasHistoricalData: !!historicalData });
     
     // If API returns null values, use estimates
     if (currentTemp === null || currentPrecip === null) {
-      console.log('Climate API returned null values, using climate-based estimates');
+      console.log('[CLIMATE API] API returned null values - no data available for this location. Using climate-based estimates.');
       return estimateClimateData(lat);
     }
     
+    console.log('[CLIMATE API] Successfully retrieved real climate data from Open-Meteo');
     return {
       temperature: currentTemp,
       precipitation: currentPrecip,
@@ -404,12 +407,13 @@ const fetchClimateData = async (lat: number, lon: number, retries = 2): Promise<
     
     // Retry logic with exponential backoff
     if (retries > 0) {
-      console.log(`Retrying climate data fetch (${retries} retries remaining)...`);
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+      const waitTime = (3 - retries) * 3000; // Progressive backoff: 3s, 6s
+      console.log(`[CLIMATE API] Retry ${3 - retries} failed. Waiting ${waitTime/1000}s before retry ${3 - retries + 1}...`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
       return fetchClimateData(lat, lon, retries - 1);
     }
     
-    console.warn('All climate data fetch attempts failed, using climate-based estimates');
+    console.warn('[CLIMATE API] All 3 attempts failed. Using climate-based estimates.');
     return estimateClimateData(lat);
   }
 };

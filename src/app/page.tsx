@@ -197,23 +197,9 @@ export default function Home() {
           <h1 id="main-heading" className="text-4xl font-bold text-center mb-2">
             Simulate the Impact of Forest Management
           </h1>
-          <p className="text-lg text-gray-600 mb-6 max-w-3xl mx-auto text-center">
-            Use real-time data to analyze the impacts of forest planting and clear-cutting on carbon storage, biodiversity, economic value, social outcomes, and land use.
+          <p className="text-lg text-gray-600 mb-8 max-w-3xl mx-auto text-center">
+            Use real-time environmental data to analyze the impacts of forest planting and clear-cutting on carbon storage, biodiversity, economic value, social outcomes, and land use.
           </p>
-          <div className="flex flex-wrap justify-center gap-6 mb-8">
-            <div className="flex items-center text-sm text-gray-700 bg-white px-4 py-2 rounded-lg shadow-sm border border-primary/20">
-              <span className="w-3 h-3 bg-primary rounded-full mr-3"></span>
-              <span className="font-medium">Real-time environmental data</span>
-            </div>
-            <div className="flex items-center text-sm text-gray-700 bg-white px-4 py-2 rounded-lg shadow-sm border border-primary/20">
-              <span className="w-3 h-3 bg-primary rounded-full mr-3"></span>
-              <span className="font-medium">Climate prediction modeling</span>
-            </div>
-            <div className="flex items-center text-sm text-gray-700 bg-white px-4 py-2 rounded-lg shadow-sm border border-primary/20">
-              <span className="w-3 h-3 bg-primary rounded-full mr-3"></span>
-              <span className="font-medium"><a href="https://github.com/KarimOsmanGH/forest-impact-simulator" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">TypeScript</a>, <a href="https://github.com/KarimOsmanGH/forest-impact-simulator-python" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">Python</a>, <a href="https://github.com/KarimOsmanGH/forest-impact-simulator-r" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">R</a></span>
-            </div>
-          </div>
         </section>
         
         {/* Simulation Mode Selector and Reset Button */}
