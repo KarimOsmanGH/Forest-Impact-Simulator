@@ -499,160 +499,147 @@ const LocationMap: React.FC<LocationMapProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"> 
-      <div className="relative p-3">
-        <div className="flex gap-2 mb-2">
-          <div className="flex-1">
-            <LocationSearch onLocationSelect={handleSearchLocation} />
+    <div>
+      <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"> 
+        <div className="relative p-3">
+          <div className="flex gap-2 mb-2">
+            <div className="flex-1">
+              <LocationSearch onLocationSelect={handleSearchLocation} />
+            </div>
           </div>
-          {locationHistory.length > 0 && (
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg border border-primary/30 transition-colors flex items-center gap-2"
-              title="Recent locations"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-xs font-medium hidden sm:inline">Recent</span>
-            </button>
-          )}
-        </div>
 
-        {/* History Dropdown */}
-        {showHistory && locationHistory.length > 0 && (
-          <div className="absolute top-full left-3 right-3 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-[1000] max-h-64 overflow-y-auto">
-            <div className="p-2">
-              <div className="flex items-center justify-between mb-2 px-2">
-                <h4 className="text-xs font-semibold text-gray-700">Recent Locations</h4>
+          {/* History Dropdown */}
+          {showHistory && locationHistory.length > 0 && (
+            <div className="absolute top-full left-3 right-3 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-[1000] max-h-64 overflow-y-auto">
+              <div className="p-2">
+                <div className="flex items-center justify-between mb-2 px-2">
+                  <h4 className="text-xs font-semibold text-gray-700">Recent Locations</h4>
+                  <button
+                    onClick={() => setShowHistory(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                {locationHistory.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleHistoryItemClick(item)}
+                    className="w-full text-left px-2 py-2 hover:bg-gray-50 rounded-lg flex items-start justify-between gap-2 group"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        {item.type === 'region' ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        )}
+                        <span className="text-xs font-medium text-gray-700 truncate">
+                          {formatLocationName(item)}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {getRelativeTime(item.timestamp)}
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => handleRemoveHistoryItem(item.id, e)}
+                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-opacity p-1"
+                      title="Remove from history"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          <div 
+            ref={mapContainerRef}
+            className="relative"
+          >
+            <ClientOnlyMap>
+              <MapContainer
+                center={mapCenter}
+                zoom={mapZoom}
+                style={{ 
+                  height: '384px', 
+                  width: '100%',
+                  position: 'relative',
+                }}
+                ref={mapRef}
+                zoomControl={false}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <MapController center={mapCenter} zoom={mapZoom} />
+                {selectedLocation && (
+                  <Marker position={selectedLocation} />
+                )}
+                {selectedRegion && (
+                  <Rectangle 
+                    bounds={[
+                      [selectedRegion[0], selectedRegion[1]],
+                      [selectedRegion[2], selectedRegion[3]]
+                    ]}
+                    color="green"
+                    fillColor="green"
+                    fillOpacity={0.2}
+                  />
+                )}
+                
+                {/* Custom Region Selector - Always enabled for drag selection */}
+                <CustomRegionSelector 
+                  onBoundsChange={handleBoundsChange} 
+                />
+                <MapClickHandler />
+              </MapContainer>
+            </ClientOnlyMap>
+            
+            {/* Map control buttons */}
+            <div className="absolute top-2 right-2 z-[1000] flex gap-2">
+              {/* Clear selection button */}
+              {selectedRegion && (
                 <button
-                  onClick={() => setShowHistory(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  onClick={clearSelection}
+                  className="bg-white hover:bg-gray-100 text-gray-700 rounded-md p-2 shadow-md border border-gray-200 transition-colors"
+                  title="Clear selection"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-              </div>
-              {locationHistory.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleHistoryItemClick(item)}
-                  className="w-full text-left px-2 py-2 hover:bg-gray-50 rounded-lg flex items-start justify-between gap-2 group"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      {item.type === 'region' ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                        </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-primary flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                      )}
-                      <span className="text-xs font-medium text-gray-700 truncate">
-                        {formatLocationName(item)}
-                      </span>
-                    </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      {getRelativeTime(item.timestamp)}
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => handleRemoveHistoryItem(item.id, e)}
-                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-600 transition-opacity p-1"
-                    title="Remove from history"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </button>
-              ))}
+              )}
             </div>
-          </div>
-        )}
-        <div 
-          ref={mapContainerRef}
-          className="relative"
-        >
-          <ClientOnlyMap>
-            <MapContainer
-              center={mapCenter}
-              zoom={mapZoom}
-              style={{ 
-                height: '384px', 
-                width: '100%',
-                position: 'relative',
-              }}
-              ref={mapRef}
-              zoomControl={false}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              />
-              <MapController center={mapCenter} zoom={mapZoom} />
-              {selectedLocation && (
-                <Marker position={selectedLocation} />
-              )}
-              {selectedRegion && (
-                <Rectangle 
-                  bounds={[
-                    [selectedRegion[0], selectedRegion[1]],
-                    [selectedRegion[2], selectedRegion[3]]
-                  ]}
-                  color="green"
-                  fillColor="green"
-                  fillOpacity={0.2}
-                />
-              )}
-              
-              {/* Custom Region Selector - Always enabled for drag selection */}
-              <CustomRegionSelector 
-                onBoundsChange={handleBoundsChange} 
-              />
-              <MapClickHandler />
-            </MapContainer>
-          </ClientOnlyMap>
-          
-          {/* Map control buttons */}
-          <div className="absolute top-2 right-2 z-[1000] flex gap-2">
-            {/* Clear selection button */}
-            {selectedRegion && (
-              <button
-                onClick={clearSelection}
-                className="bg-white hover:bg-gray-100 text-gray-700 rounded-md p-2 shadow-md border border-gray-200 transition-colors"
-                title="Clear selection"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
           </div>
         </div>
       </div>
       
-      <div className="p-3 bg-gray-50 border-t border-gray-200">
-        <div className="text-sm text-gray-600">
-          {selectedRegion ? (
-            <div className="space-y-1">
-              <p><strong>Selected region:</strong> {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
-              <p><strong>Area size:</strong> {formatArea(calculateRegionArea({
-                north: selectedRegion[0],
-                south: selectedRegion[2], 
-                east: selectedRegion[3],
-                west: selectedRegion[1]
-              }))}</p>
-            </div>
-          ) : (
-            <p>Select a region for forest impact analysis</p>
-          )}
+      {/* Region information box - moved outside map container */}
+      {selectedRegion && (
+        <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="text-sm text-gray-600 space-y-1">
+            <p><strong>Selected region:</strong> {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
+            <p><strong>Area size:</strong> {formatArea(calculateRegionArea({
+              north: selectedRegion[0],
+              south: selectedRegion[2], 
+              east: selectedRegion[3],
+              west: selectedRegion[1]
+            }))}</p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -19,97 +19,114 @@ export interface ShareableState {
   treePercentages: { [key: string]: number };
 }
 
-// Compact state representation for URL encoding
-interface CompactState {
-  m: 0 | 1; // mode: 0=planting, 1=clear-cutting
-  lat?: number;
-  lon?: number;
-  r?: number[]; // region as [n,s,e,w]
-  y: number; // years
-  c: 0 | 1; // calculationMode: 0=perTree, 1=perArea
-  a?: number; // averageTreeAge
-  t: string[]; // treeIds
-  p: { [key: string]: number }; // treePercentages (only non-zero)
-}
-
 /**
- * Convert ShareableState to compact representation
+ * Ultra-compact URL encoding using delimiter-separated values
+ * Format: m|y|c|lat,lon|n,s,e,w|a|treeId1:pct1,treeId2:pct2
  */
-function toCompactState(state: ShareableState): CompactState {
-  const compact: CompactState = {
-    m: state.mode === 'planting' ? 0 : 1,
-    y: state.years,
-    c: state.calculationMode === 'perTree' ? 0 : 1,
-    t: state.treeIds,
-    p: {}
-  };
+function toUltraCompactString(state: ShareableState): string {
+  const parts: string[] = [];
   
-  // Round coordinates to 4 decimals to save space
-  if (state.latitude !== undefined) compact.lat = Math.round(state.latitude * 10000) / 10000;
-  if (state.longitude !== undefined) compact.lon = Math.round(state.longitude * 10000) / 10000;
+  // Mode: p=planting, c=clear-cutting
+  parts.push(state.mode === 'planting' ? 'p' : 'c');
   
-  // Compact region representation
+  // Years
+  parts.push(state.years.toString());
+  
+  // Calculation mode: t=perTree, a=perArea
+  parts.push(state.calculationMode === 'perTree' ? 't' : 'a');
+  
+  // Location (lat,lon) - round to 3 decimals (~100m precision)
+  if (state.latitude !== undefined && state.longitude !== undefined) {
+    const lat = Math.round(state.latitude * 1000) / 1000;
+    const lon = Math.round(state.longitude * 1000) / 1000;
+    parts.push(`${lat},${lon}`);
+  } else {
+    parts.push('');
+  }
+  
+  // Region (n,s,e,w) - round to 3 decimals
   if (state.region) {
-    compact.r = [
-      Math.round(state.region.north * 10000) / 10000,
-      Math.round(state.region.south * 10000) / 10000,
-      Math.round(state.region.east * 10000) / 10000,
-      Math.round(state.region.west * 10000) / 10000
-    ];
+    const n = Math.round(state.region.north * 1000) / 1000;
+    const s = Math.round(state.region.south * 1000) / 1000;
+    const e = Math.round(state.region.east * 1000) / 1000;
+    const w = Math.round(state.region.west * 1000) / 1000;
+    parts.push(`${n},${s},${e},${w}`);
+  } else {
+    parts.push('');
   }
   
-  if (state.averageTreeAge !== undefined) compact.a = state.averageTreeAge;
+  // Average tree age (only if defined)
+  parts.push(state.averageTreeAge !== undefined ? state.averageTreeAge.toString() : '');
   
-  // Only include non-zero percentages
-  Object.entries(state.treePercentages).forEach(([key, value]) => {
-    if (value > 0) compact.p[key] = value;
+  // Trees with percentages (id:pct,id:pct)
+  const treesWithPcts: string[] = [];
+  state.treeIds.forEach(id => {
+    const pct = state.treePercentages[id];
+    if (pct > 0) {
+      treesWithPcts.push(`${id}:${pct}`);
+    }
   });
+  parts.push(treesWithPcts.join(','));
   
-  return compact;
+  return parts.join('|');
 }
 
 /**
- * Convert compact representation back to ShareableState
+ * Decode ultra-compact string back to state
  */
-function fromCompactState(compact: CompactState): ShareableState {
+function fromUltraCompactString(compact: string): ShareableState {
+  const parts = compact.split('|');
+  
   const state: ShareableState = {
-    mode: compact.m === 0 ? 'planting' : 'clear-cutting',
-    years: compact.y,
-    calculationMode: compact.c === 0 ? 'perTree' : 'perArea',
-    treeIds: compact.t,
-    treePercentages: compact.p
+    mode: parts[0] === 'p' ? 'planting' : 'clear-cutting',
+    years: parseInt(parts[1]),
+    calculationMode: parts[2] === 't' ? 'perTree' : 'perArea',
+    treeIds: [],
+    treePercentages: {}
   };
   
-  if (compact.lat !== undefined) state.latitude = compact.lat;
-  if (compact.lon !== undefined) state.longitude = compact.lon;
-  
-  if (compact.r) {
-    state.region = {
-      north: compact.r[0],
-      south: compact.r[1],
-      east: compact.r[2],
-      west: compact.r[3]
-    };
+  // Location
+  if (parts[3]) {
+    const [lat, lon] = parts[3].split(',').map(parseFloat);
+    state.latitude = lat;
+    state.longitude = lon;
   }
   
-  if (compact.a !== undefined) state.averageTreeAge = compact.a;
+  // Region
+  if (parts[4]) {
+    const [n, s, e, w] = parts[4].split(',').map(parseFloat);
+    state.region = { north: n, south: s, east: e, west: w };
+  }
+  
+  // Average tree age
+  if (parts[5]) {
+    state.averageTreeAge = parseInt(parts[5]);
+  }
+  
+  // Trees with percentages
+  if (parts[6]) {
+    parts[6].split(',').forEach(treePct => {
+      const [id, pct] = treePct.split(':');
+      state.treeIds.push(id);
+      state.treePercentages[id] = parseFloat(pct);
+    });
+  }
   
   return state;
 }
 
 /**
- * Encode state to URL-safe base64 string with compression
+ * Encode state to URL-safe compact string
  */
 export function encodeStateToUrl(state: ShareableState): string {
   try {
-    // Convert to compact representation
-    const compact = toCompactState(state);
-    const json = JSON.stringify(compact);
+    // Convert to ultra-compact string format
+    const compactStr = toUltraCompactString(state);
     
-    // Use btoa for base64 encoding (browser-safe)
+    // Use base64 encoding for URL safety (still much shorter than JSON)
     const base64 = typeof window !== 'undefined' 
-      ? btoa(json)
-      : Buffer.from(json).toString('base64');
+      ? btoa(compactStr)
+      : Buffer.from(compactStr).toString('base64');
     
     // Make URL-safe by replacing characters
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
@@ -131,14 +148,12 @@ export function decodeUrlToState(encoded: string): ShareableState | null {
     }
     
     // Decode base64
-    const json = typeof window !== 'undefined'
+    const compactStr = typeof window !== 'undefined'
       ? atob(base64)
       : Buffer.from(base64, 'base64').toString('utf-8');
     
-    const compact = JSON.parse(json) as CompactState;
-    
-    // Convert from compact format
-    const state = fromCompactState(compact);
+    // Convert from ultra-compact string format
+    const state = fromUltraCompactString(compactStr);
     
     // Validate required fields
     if (!state.mode || !state.years || !state.calculationMode) {
