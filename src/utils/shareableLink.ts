@@ -19,12 +19,93 @@ export interface ShareableState {
   treePercentages: { [key: string]: number };
 }
 
+// Compact state representation for URL encoding
+interface CompactState {
+  m: 0 | 1; // mode: 0=planting, 1=clear-cutting
+  lat?: number;
+  lon?: number;
+  r?: number[]; // region as [n,s,e,w]
+  y: number; // years
+  c: 0 | 1; // calculationMode: 0=perTree, 1=perArea
+  a?: number; // averageTreeAge
+  t: string[]; // treeIds
+  p: { [key: string]: number }; // treePercentages (only non-zero)
+}
+
 /**
- * Encode state to URL-safe base64 string
+ * Convert ShareableState to compact representation
+ */
+function toCompactState(state: ShareableState): CompactState {
+  const compact: CompactState = {
+    m: state.mode === 'planting' ? 0 : 1,
+    y: state.years,
+    c: state.calculationMode === 'perTree' ? 0 : 1,
+    t: state.treeIds,
+    p: {}
+  };
+  
+  // Round coordinates to 4 decimals to save space
+  if (state.latitude !== undefined) compact.lat = Math.round(state.latitude * 10000) / 10000;
+  if (state.longitude !== undefined) compact.lon = Math.round(state.longitude * 10000) / 10000;
+  
+  // Compact region representation
+  if (state.region) {
+    compact.r = [
+      Math.round(state.region.north * 10000) / 10000,
+      Math.round(state.region.south * 10000) / 10000,
+      Math.round(state.region.east * 10000) / 10000,
+      Math.round(state.region.west * 10000) / 10000
+    ];
+  }
+  
+  if (state.averageTreeAge !== undefined) compact.a = state.averageTreeAge;
+  
+  // Only include non-zero percentages
+  Object.entries(state.treePercentages).forEach(([key, value]) => {
+    if (value > 0) compact.p[key] = value;
+  });
+  
+  return compact;
+}
+
+/**
+ * Convert compact representation back to ShareableState
+ */
+function fromCompactState(compact: CompactState): ShareableState {
+  const state: ShareableState = {
+    mode: compact.m === 0 ? 'planting' : 'clear-cutting',
+    years: compact.y,
+    calculationMode: compact.c === 0 ? 'perTree' : 'perArea',
+    treeIds: compact.t,
+    treePercentages: compact.p
+  };
+  
+  if (compact.lat !== undefined) state.latitude = compact.lat;
+  if (compact.lon !== undefined) state.longitude = compact.lon;
+  
+  if (compact.r) {
+    state.region = {
+      north: compact.r[0],
+      south: compact.r[1],
+      east: compact.r[2],
+      west: compact.r[3]
+    };
+  }
+  
+  if (compact.a !== undefined) state.averageTreeAge = compact.a;
+  
+  return state;
+}
+
+/**
+ * Encode state to URL-safe base64 string with compression
  */
 export function encodeStateToUrl(state: ShareableState): string {
   try {
-    const json = JSON.stringify(state);
+    // Convert to compact representation
+    const compact = toCompactState(state);
+    const json = JSON.stringify(compact);
+    
     // Use btoa for base64 encoding (browser-safe)
     const base64 = typeof window !== 'undefined' 
       ? btoa(json)
@@ -54,7 +135,10 @@ export function decodeUrlToState(encoded: string): ShareableState | null {
       ? atob(base64)
       : Buffer.from(base64, 'base64').toString('utf-8');
     
-    const state = JSON.parse(json) as ShareableState;
+    const compact = JSON.parse(json) as CompactState;
+    
+    // Convert from compact format
+    const state = fromCompactState(compact);
     
     // Validate required fields
     if (!state.mode || !state.years || !state.calculationMode) {

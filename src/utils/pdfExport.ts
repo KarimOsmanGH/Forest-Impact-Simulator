@@ -45,7 +45,6 @@ export async function generatePDFReport(data: ExportData): Promise<void> {
   
   const metadataInfo = [
     ['Generated', new Date(data.metadata.timestamp).toLocaleString()],
-    ['Version', data.metadata.simulatorVersion],
     ['Simulation Years', data.metadata.simulation?.years?.toString() || 'N/A'],
   ];
   

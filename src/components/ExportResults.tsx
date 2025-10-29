@@ -10,14 +10,18 @@ import {
   formatTimestamp 
 } from '@/utils/exportUtils';
 import { generatePDFReport } from '@/utils/pdfExport';
+import { generateShareableUrl, copyToClipboard, ShareableState } from '@/utils/shareableLink';
 
 interface ExportResultsProps {
   exportData: ExportData;
   disabled?: boolean;
+  shareableState?: ShareableState;
+  onShareSuccess?: (message: string) => void;
 }
 
-const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = false }) => {
+const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = false, shareableState, onShareSuccess }) => {
   const [isExporting, setIsExporting] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   const handleExport = async (format: 'geojson' | 'json' | 'csv' | 'pdf') => {
     if (disabled || isExporting) return;
@@ -71,8 +75,30 @@ const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = fa
     );
   }
 
+  const handleShare = async () => {
+    if (!shareableState || disabled) return;
+    
+    setIsSharing(true);
+    try {
+      const url = generateShareableUrl(shareableState);
+      const success = await copyToClipboard(url);
+      
+      if (success && onShareSuccess) {
+        onShareSuccess('Link copied to clipboard!');
+      } else if (!success) {
+        onShareSuccess?.('Failed to copy link. Please try again.');
+      }
+    } catch (error) {
+      console.error('Share failed:', error);
+      onShareSuccess?.('Failed to generate share link.');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">Export and Share Results</h3>
       
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button
@@ -114,13 +140,25 @@ const ExportResults: React.FC<ExportResultsProps> = ({ exportData, disabled = fa
           <span className="text-sm font-medium">CSV</span>
           <span className="text-xs text-gray-500">For R/Python</span>
         </button>
+
+        {shareableState && (
+          <button
+            onClick={handleShare}
+            disabled={disabled || isSharing}
+            className="flex flex-col items-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <div className="text-2xl mb-2">🔗</div>
+            <span className="text-sm font-medium">Share Link</span>
+            <span className="text-xs text-gray-500">Copy URL</span>
+          </button>
+        )}
       </div>
       
-      {isExporting && (
+      {(isExporting || isSharing) && (
         <div className="mt-3 text-center">
           <div className="inline-flex items-center text-sm text-gray-600">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-            Preparing export...
+            {isSharing ? 'Generating share link...' : 'Preparing export...'}
           </div>
         </div>
       )}

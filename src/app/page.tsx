@@ -246,19 +246,6 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            {/* Share Button */}
-            {(selectedLatitude || selectedLongitude || selectedRegion) && selectedTrees.length > 0 && (
-              <button
-                onClick={handleShare}
-                className="bg-primary border border-primary text-white hover:bg-primary/90 px-4 py-3 rounded-xl text-sm font-medium transition-colors shadow-sm flex items-center gap-2"
-                title="Share this analysis"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                Share Analysis
-              </button>
-            )}
             {/* Reset Button */}
             {(selectedLatitude || selectedLongitude || selectedRegion || selectedTrees.length > 0) && (
               <button
@@ -306,6 +293,9 @@ export default function Home() {
                 onLocationSelect={handleLocationSelect}
                 onRegionSelect={handleRegionSelect}
                 onSearchLocation={handleSearchLocation}
+                initialRegion={selectedRegion}
+                initialLatitude={selectedLatitude}
+                initialLongitude={selectedLongitude}
               />
             </Suspense>
           </div>
@@ -437,15 +427,8 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Export Results Section */}
+        {/* Export and Share Results Section */}
         <div className="mt-12 bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">📤</div>
-            <div>
-              <h2 className="text-xl font-semibold text-gray-800">Export Results</h2>
-              <p className="text-sm text-gray-600">Download your analysis as PDF report, GeoJSON, JSON, or CSV</p>
-            </div>
-          </div>
           <Suspense fallback={
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
@@ -480,6 +463,21 @@ export default function Home() {
                 }
               }}
               disabled={!selectedTrees.length || (!selectedLatitude && !selectedLongitude && !selectedRegion)}
+              shareableState={(selectedLatitude || selectedLongitude || selectedRegion) && selectedTrees.length > 0 ? {
+                mode: simulationMode,
+                latitude: selectedLatitude || undefined,
+                longitude: selectedLongitude || undefined,
+                region: selectedRegion || undefined,
+                years,
+                calculationMode,
+                averageTreeAge: simulationMode === 'clear-cutting' ? averageTreeAge : undefined,
+                treeIds: selectedTrees.map(t => t.id),
+                treePercentages
+              } : undefined}
+              onShareSuccess={(message) => {
+                setShareNotification(message);
+                setTimeout(() => setShareNotification(null), 3000);
+              }}
             />
           </Suspense>
         </div>
