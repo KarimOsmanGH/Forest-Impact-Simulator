@@ -217,7 +217,7 @@ export default function Home() {
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    ?? Planting
+                    &#127793; Planting
                   </button>
                   <button
                     onClick={() => setSimulationMode('clear-cutting')}
@@ -227,7 +227,7 @@ export default function Home() {
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    ?? Clear-cutting
+                    &#129683; Clear-cutting
                   </button>
                 </div>
               </div>
@@ -261,7 +261,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">??</div>
+              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">1&#65039;&#8419;</div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">Select Location</h2>
                 <div className="text-sm text-gray-600">
@@ -290,7 +290,7 @@ export default function Home() {
           
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">??</div>
+              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">2&#65039;&#8419;</div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">
                   {simulationMode === 'planting' ? 'Select Tree Species' : 'Select Tree Species'}
@@ -328,7 +328,7 @@ export default function Home() {
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
               <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">
-                {simulationMode === 'planting' ? '??' : '??'}
+                3&#65039;&#8419;
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">Impact Results</h2>
@@ -477,7 +477,7 @@ export default function Home() {
                   {/* FAQ Section */}
           <div className="mt-24">
           <h2 className="text-2xl font-bold text-center mb-8 flex items-center justify-center gap-3">
-          <span className="flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full text-lg font-semibold">?</span>
+          <span className="flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full text-lg font-semibold">&#10067;</span>
           Frequently Asked Questions
         </h2>
           <div className="max-w-4xl mx-auto space-y-4">
@@ -753,7 +753,7 @@ export default function Home() {
                   </p>
                   <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mt-3">
                     <p className="text-sm text-primary font-medium">
-                      ?? <strong>Disclaimer:</strong> This simulator is for educational and planning purposes only. Use at your own risk. Always consult with forestry professionals, environmental experts, and local authorities before implementing any real-world projects.
+                      &#9888;&#65039; <strong>Disclaimer:</strong> This simulator is for educational and planning purposes only. Use at your own risk. Always consult with forestry professionals, environmental experts, and local authorities before implementing any real-world projects.
                     </p>
                   </div>
                 </div>
