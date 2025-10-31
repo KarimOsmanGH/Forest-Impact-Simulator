@@ -217,7 +217,7 @@ export default function Home() {
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    🌱 Planting
+                    ?? Planting
                   </button>
                   <button
                     onClick={() => setSimulationMode('clear-cutting')}
@@ -227,7 +227,7 @@ export default function Home() {
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    🪓 Clear-cutting
+                    ?? Clear-cutting
                   </button>
                 </div>
               </div>
@@ -261,7 +261,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">📍</div>
+              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">??</div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">Select Location</h2>
                 <div className="text-sm text-gray-600">
@@ -290,7 +290,7 @@ export default function Home() {
           
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">🌳</div>
+              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">??</div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">
                   {simulationMode === 'planting' ? 'Select Tree Species' : 'Select Tree Species'}
@@ -328,7 +328,7 @@ export default function Home() {
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
               <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">
-                {simulationMode === 'planting' ? '📊' : '📉'}
+                {simulationMode === 'planting' ? '??' : '??'}
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">Impact Results</h2>
@@ -477,7 +477,7 @@ export default function Home() {
                   {/* FAQ Section */}
           <div className="mt-24">
           <h2 className="text-2xl font-bold text-center mb-8 flex items-center justify-center gap-3">
-          <span className="flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full text-lg font-semibold">❓</span>
+          <span className="flex items-center justify-center w-8 h-8 bg-primary text-white rounded-full text-lg font-semibold">?</span>
           Frequently Asked Questions
         </h2>
           <div className="max-w-4xl mx-auto space-y-4">
@@ -527,7 +527,7 @@ export default function Home() {
                   <p className="text-gray-900 mb-3">
                     Planting mode allows you to analyze the environmental benefits of forest restoration and tree planting operations. This mode is useful for:
                   </p>
-                  <ul className="text-gray-900 mb-3 space-y-2">
+                  <ul className="list-disc pl-6 text-gray-900 mb-3 space-y-2">
                     <li><strong>Reforestation Projects:</strong> Planning and quantifying the benefits of tree planting initiatives</li>
                     <li><strong>Carbon Offset Planning:</strong> Calculating potential carbon sequestration from new forests</li>
                     <li><strong>Biodiversity Restoration:</strong> Understanding how tree planting can enhance local ecosystems</li>
@@ -566,7 +566,7 @@ export default function Home() {
                   <p className="text-gray-900 mb-3">
                     Clear-cutting mode allows you to analyze the environmental impacts of forest removal operations. This mode is useful for:
                   </p>
-                  <ul className="text-gray-900 mb-3 space-y-2">
+                  <ul className="list-disc pl-6 text-gray-900 mb-3 space-y-2">
                     <li><strong>Environmental Impact Assessment:</strong> Understanding the carbon emissions and biodiversity loss from forest removal</li>
                     <li><strong>Land Use Planning:</strong> Evaluating the trade-offs of converting forested areas to other uses</li>
                     <li><strong>Policy Analysis:</strong> Quantifying the environmental costs of deforestation</li>
@@ -605,7 +605,7 @@ export default function Home() {
                   <p className="text-gray-900 mb-3">
                     The impact analysis is organized into four comprehensive tabs, each focusing on different aspects of forest impact:
                   </p>
-                  <ul className="text-gray-900 mb-3 space-y-2">
+                  <ul className="list-disc pl-6 text-gray-900 mb-3 space-y-2">
                     <li><strong>Environment Tab:</strong> Core environmental metrics including soil data, climate information, carbon sequestration/emissions, biodiversity impact, forest resilience, water retention, and air quality improvement. This is the most detailed tab with real-time environmental data integration.</li>
                     <li><strong>Economic Tab:</strong> Economic benefits such as job creation estimates, conservation value, and economic impact calculations based on forest size and type.</li>
                     <li><strong>Social Tab:</strong> Community benefits, social impact scores, and societal value of forest restoration or the social costs of forest removal.</li>
@@ -753,7 +753,7 @@ export default function Home() {
                   </p>
                   <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mt-3">
                     <p className="text-sm text-primary font-medium">
-                      ⚠️ <strong>Disclaimer:</strong> This simulator is for educational and planning purposes only. Use at your own risk. Always consult with forestry professionals, environmental experts, and local authorities before implementing any real-world projects.
+                      ?? <strong>Disclaimer:</strong> This simulator is for educational and planning purposes only. Use at your own risk. Always consult with forestry professionals, environmental experts, and local authorities before implementing any real-world projects.
                     </p>
                   </div>
                 </div>
@@ -903,7 +903,7 @@ export default function Home() {
                   <p className="text-gray-900 mb-3">
                     Our comprehensive tree database includes 80 species from around the world, covering diverse ecosystems and 7 major climate zones:
                   </p>
-                  <ul className="text-gray-900 mb-3 space-y-1">
+                  <ul className="list-disc pl-6 text-gray-900 mb-3 space-y-1">
                     <li><strong>Temperate Trees:</strong> Oak, Beech, Ash, Maple, Birch, and European/North American species</li>
                     <li><strong>Coniferous Trees:</strong> Pine, Spruce, Cedar, Redwood, and other evergreens</li>
                     <li><strong>Tropical Trees:</strong> Mahogany, Teak, Mango, Mangrove, and tropical hardwoods</li>
@@ -940,7 +940,7 @@ export default function Home() {
                   <p className="text-gray-900 mb-3">
                     The simulator offers three export formats to suit different use cases:
                   </p>
-                  <ul className="text-gray-900 mb-3 space-y-2">
+                  <ul className="list-disc pl-6 text-gray-900 mb-3 space-y-2">
                     <li><strong>GeoJSON:</strong> Perfect for GIS professionals and mapping tools. Includes point features (analysis location) and polygon features (forest region) with all environmental metrics as properties.</li>
                     <li><strong>JSON:</strong> Complete data export for developers and data analysis. Contains all simulation parameters, environmental data, impact results, and forest management specifications in structured format.</li>
                     <li><strong>CSV:</strong> Spreadsheet-friendly format organized by sections (metadata, trees, environmental data, results, forest data) for reporting and analysis.</li>
@@ -948,6 +948,62 @@ export default function Home() {
                   <p className="text-gray-900 mb-3">
                     All exports include timestamps and are automatically generated once you complete your analysis. Files are downloaded directly to your browser with descriptive filenames.
                   </p>
+                </div>
+              )}
+            </div>
+
+            {/* FAQ Item 13 - Why Environmental Data Shows as Estimated */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <button
+                onClick={() => setFaqOpen(prev => ({ ...prev, 13: !prev[13] }))}
+                className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <h3 className="text-lg font-semibold text-gray-800">Why does environmental data sometimes show as &quot;Estimated&quot;?</h3>
+                <svg
+                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[13] ? 'rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {faqOpen[13] && (
+                <div className="px-6 pb-6">
+                  <p className="text-gray-900 mb-3">
+                    The Forest Impact Simulator fetches real-time environmental data from two scientific sources:
+                  </p>
+                  <ul className="list-disc pl-6 text-gray-900 mb-3 space-y-1">
+                    <li><strong>Soil data:</strong> <a href="https://soilgrids.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">ISRIC SoilGrids</a> (global soil property database)</li>
+                    <li><strong>Climate data:</strong> <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">Open-Meteo</a> (weather and climate API)</li>
+                  </ul>
+                  <p className="text-gray-900 mb-3">
+                    Sometimes this data cannot be fetched because:
+                  </p>
+                  <ul className="list-disc pl-6 text-gray-900 mb-3 space-y-1">
+                    <li>The APIs may be temporarily unavailable or experiencing high latency</li>
+                    <li>Your selected location may not have data coverage in these databases</li>
+                    <li>Network connectivity issues or firewall/ad-blocker restrictions</li>
+                    <li>API rate limits may be reached during high traffic periods</li>
+                  </ul>
+                  <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-3">
+                    <p className="text-sm text-primary">
+                      <strong>Don&apos;t worry!</strong> When real-time data is unavailable, the simulator automatically uses <strong>scientifically-based estimates</strong> derived from:
+                    </p>
+                    <ul className="list-disc pl-6 text-sm text-primary mt-2 space-y-1">
+                      <li>Climate zone analysis (based on latitude)</li>
+                      <li>Regional climate patterns</li>
+                      <li>Established environmental science models</li>
+                    </ul>
+                  </div>
+                  <p className="text-gray-900 mb-3">
+                    These estimates are reliable and the calculations remain accurate. You&apos;ll see an &quot;(Estimated)&quot; indicator when fallback data is used. Additionally:
+                  </p>
+                  <ul className="list-disc pl-6 text-gray-900 mb-3 space-y-1">
+                    <li>Data is <strong>cached locally</strong> for 1 hour to reduce API calls</li>
+                    <li>The simulator tries 3 times with different timeouts before using estimates</li>
+                    <li>Estimated values are based on peer-reviewed climate zone classifications</li>
+                  </ul>
                 </div>
               )}
             </div>
