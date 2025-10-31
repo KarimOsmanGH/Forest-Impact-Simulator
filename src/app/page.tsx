@@ -213,7 +213,7 @@ export default function Home() {
                     onClick={() => setSimulationMode('planting')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                       simulationMode === 'planting'
-                        ? 'bg-primary text-white shadow-sm'
+                        ? 'bg-green-800 text-white shadow-sm'
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
@@ -223,7 +223,7 @@ export default function Home() {
                     onClick={() => setSimulationMode('clear-cutting')}
                     className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                       simulationMode === 'clear-cutting'
-                        ? 'bg-primary text-white shadow-sm'
+                        ? 'bg-green-800 text-white shadow-sm'
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
@@ -325,14 +325,14 @@ export default function Home() {
         
         {/* Combined Calculator and Impact Results - Full Width */}
         <div className="mt-24">
-          <div className="bg-emerald-900 border border-emerald-700 rounded-xl p-6 shadow-lg text-emerald-50">
+          <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
               <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">
                 {simulationMode === 'planting' ? '📊' : '📉'}
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-white">Impact Results</h2>
-                <p className="text-sm text-emerald-100">
+                <h2 className="text-xl font-semibold text-gray-800">Impact Results</h2>
+                <p className="text-sm text-gray-600">
                   {simulationMode === 'planting' 
                     ? 'Calculate planting details and see environmental benefits'
                     : 'Calculate removal details and see environmental impacts'
@@ -345,12 +345,12 @@ export default function Home() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Calculator Section */}
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
                     {simulationMode === 'planting' ? 'Planting Calculations' : 'Removal Configuration'}
                   </h3>
                   <Suspense fallback={
-                    <div className="flex items-center justify-center h-64 bg-emerald-800/40 border border-emerald-600 rounded-lg">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-200"></div>
+                    <div className="flex items-center justify-center h-64 bg-gray-50 border border-gray-200 rounded-lg">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                     </div>
                   }>
                     <TreePlantingCalculator
@@ -377,10 +377,10 @@ export default function Home() {
                 
                 {/* Impact Results Section */}
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">Impact Analysis</h3>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Impact Analysis</h3>
                   <Suspense fallback={
-                    <div className="flex items-center justify-center h-64 bg-emerald-800/40 border border-emerald-600 rounded-lg">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-200"></div>
+                    <div className="flex items-center justify-center h-64 bg-gray-50 border border-gray-200 rounded-lg">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                     </div>
                   }>
                     <ForestImpactCalculator 
@@ -403,8 +403,8 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              <div className="p-6 bg-emerald-800/60 border border-emerald-600 rounded-lg">
-                <p className="text-sm text-emerald-100">
+              <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
+                <p className="text-sm text-gray-600">
                   {simulationMode === 'planting' 
                     ? 'Select a region and tree types to see planting calculations and environmental impact analysis.'
                     : 'Select a region and forest type to see removal calculations and environmental impact analysis.'
@@ -948,79 +948,6 @@ export default function Home() {
                   <p className="text-gray-900 mb-3">
                     All exports include timestamps and are automatically generated once you complete your analysis. Files are downloaded directly to your browser with descriptive filenames.
                   </p>
-                </div>
-              )}
-            </div>
-
-            {/* FAQ Item 13 - Impact Analysis Tabs (Duplicate - Consider removing) */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 13: !prev[13] }))}
-                className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
-              >
-                <h3 className="text-lg font-semibold text-gray-800">What do the different impact analysis tabs show?</h3>
-                <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[13] ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {faqOpen[13] && (
-                <div className="px-6 pb-6">
-                  <p className="text-gray-900 mb-3">
-                    The simulator provides comprehensive impact analysis across four specialized tabs:
-                  </p>
-                  <ul className="text-gray-900 mb-3 space-y-2">
-                    <li><strong>Environment:</strong> Soil data, climate information, carbon sequestration rates, biodiversity impact, forest resilience, water retention, and air quality improvement. Shows both current environmental conditions and projected benefits.</li>
-                    <li><strong>Economic:</strong> Job creation estimates based on project scale and conservation benefits. Focuses on employment opportunities and ecosystem services rather than monetary values.</li>
-                    <li><strong>Social:</strong> Community benefits, social impact scores, and factors like tree diversity bonuses, time investment, and area scale. Highlights recreational, educational, and community engagement opportunities.</li>
-                    <li><strong>Land Use:</strong> Erosion reduction, soil quality improvement, habitat creation, and water quality enhancement. Shows how the forest improves land management and ecosystem health.</li>
-                  </ul>
-                  <p className="text-gray-900 mb-3">
-                    Each tab provides detailed metrics and qualitative benefits, helping you understand the full scope of your forest planting project&apos;s impact.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* FAQ Item 14 - Clear-cutting Mode (Duplicate - Consider removing) */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              <button
-                onClick={() => setFaqOpen(prev => ({ ...prev, 14: !prev[14] }))}
-                className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
-              >
-                <h3 className="text-lg font-semibold text-gray-800">What is clear-cutting mode and how does it work?</h3>
-                <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${faqOpen[14] ? 'rotate-180' : ''}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {faqOpen[14] && (
-                <div className="px-6 pb-6">
-                  <p className="text-gray-900 mb-3">
-                    Clear-cutting mode allows you to analyze the environmental impacts of forest removal operations. This mode is useful for:
-                  </p>
-                  <ul className="text-gray-900 mb-3 space-y-2">
-                    <li><strong>Environmental Impact Assessment:</strong> Understanding the carbon emissions and biodiversity loss from forest removal</li>
-                    <li><strong>Land Use Planning:</strong> Evaluating the trade-offs of converting forested areas to other uses</li>
-                    <li><strong>Policy Analysis:</strong> Quantifying the environmental costs of deforestation</li>
-                    <li><strong>Educational Purposes:</strong> Demonstrating the value of existing forests</li>
-                  </ul>
-                  <p className="text-gray-900 mb-3">
-                    In clear-cutting mode, the simulator shows carbon emissions (positive values) representing the carbon that would be released into the atmosphere, including both immediate emissions from tree removal and the lost future sequestration capacity. The interface adapts to show &quot;forest types present in this region&quot; instead of &quot;recommended species&quot; and displays removal configurations instead of planting timelines.
-                  </p>
-                  <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mt-3">
-                    <p className="text-sm text-primary">
-                      <strong>Note:</strong> This tool is for educational and planning purposes. Always consult with forestry professionals and environmental experts before making real-world decisions about forest management.
-                    </p>
-                  </div>
                 </div>
               )}
             </div>
