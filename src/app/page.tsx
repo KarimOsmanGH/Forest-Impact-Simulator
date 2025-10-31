@@ -217,7 +217,7 @@ export default function Home() {
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    🌱 Planting
+                    ?? Planting
                   </button>
                   <button
                     onClick={() => setSimulationMode('clear-cutting')}
@@ -227,7 +227,7 @@ export default function Home() {
                         : 'text-gray-600 hover:text-gray-800'
                     }`}
                   >
-                    🪓 Clear-cutting
+                    ?? Clear-cutting
                   </button>
                 </div>
               </div>
@@ -261,13 +261,15 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">📍</div>
+              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">??</div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">Select Location</h2>
-                <p className="text-sm text-gray-600">
-                  <strong>Desktop:</strong> Press CTRL + mouse click and drag.<br />
-                  <strong>Mobile:</strong> Tap to create a selection square, then drag to resize.
-                </p>
+                <div className="text-sm text-gray-600">
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li><strong>Desktop:</strong> Press CTRL + mouse click and drag.</li>
+                    <li><strong>Mobile:</strong> Tap to create a selection square, then drag to resize.</li>
+                  </ul>
+                </div>
               </div>
             </div>
             <Suspense fallback={
@@ -288,7 +290,7 @@ export default function Home() {
           
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">🌳</div>
+              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">??</div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">
                   {simulationMode === 'planting' ? 'Select Tree Species' : 'Select Tree Species'}
@@ -323,14 +325,14 @@ export default function Home() {
         
         {/* Combined Calculator and Impact Results - Full Width */}
         <div className="mt-24">
-          <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
+          <div className="bg-emerald-900 border border-emerald-700 rounded-xl p-6 shadow-lg text-emerald-50">
             <div className="flex items-center gap-3 mb-6">
               <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">
-                {simulationMode === 'planting' ? '🌱' : '🪓'}
+                {simulationMode === 'planting' ? '??' : '??'}
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-800">Impact Results</h2>
-                <p className="text-sm text-gray-600">
+                <h2 className="text-xl font-semibold text-white">Impact Results</h2>
+                <p className="text-sm text-emerald-100">
                   {simulationMode === 'planting' 
                     ? 'Calculate planting details and see environmental benefits'
                     : 'Calculate removal details and see environmental impacts'
@@ -343,12 +345,12 @@ export default function Home() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Calculator Section */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  <h3 className="text-lg font-semibold text-white mb-4">
                     {simulationMode === 'planting' ? 'Planting Calculations' : 'Removal Configuration'}
                   </h3>
                   <Suspense fallback={
-                    <div className="flex items-center justify-center h-64 bg-gray-50 border border-gray-200 rounded-lg">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <div className="flex items-center justify-center h-64 bg-emerald-800/40 border border-emerald-600 rounded-lg">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-200"></div>
                     </div>
                   }>
                     <TreePlantingCalculator
@@ -375,10 +377,10 @@ export default function Home() {
                 
                 {/* Impact Results Section */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Impact Analysis</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">Impact Analysis</h3>
                   <Suspense fallback={
-                    <div className="flex items-center justify-center h-64 bg-gray-50 border border-gray-200 rounded-lg">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <div className="flex items-center justify-center h-64 bg-emerald-800/40 border border-emerald-600 rounded-lg">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-200"></div>
                     </div>
                   }>
                     <ForestImpactCalculator 
@@ -401,8 +403,8 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg">
-                <p className="text-sm text-gray-600">
+              <div className="p-6 bg-emerald-800/60 border border-emerald-600 rounded-lg">
+                <p className="text-sm text-emerald-100">
                   {simulationMode === 'planting' 
                     ? 'Select a region and tree types to see planting calculations and environmental impact analysis.'
                     : 'Select a region and forest type to see removal calculations and environmental impact analysis.'
@@ -635,7 +637,7 @@ export default function Home() {
               {faqOpen[5] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
-                    Our estimates are based on <a href="https://www.ipcc.ch/report/ar4/wg1/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">IPCC Fourth Assessment Report</a> data, with species-specific rates ranging from 15-30 kg CO₂/year for mature trees. We apply realistic growth curves that account for the fact that young trees sequester much less carbon than mature ones.
+                    Our estimates are based on <a href="https://www.ipcc.ch/report/ar4/wg1/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">IPCC Fourth Assessment Report</a> data, with species-specific rates ranging from 15-30 kg CO?/year for mature trees. We apply realistic growth curves that account for the fact that young trees sequester much less carbon than mature ones.
                   </p>
                   <p className="text-gray-900 mb-3">
                     <strong>Growth Model:</strong> Trees don&apos;t reach full capacity immediately. Our realistic model shows: Year 1-3 (5-15% of mature rate), Year 4-10 (15-80% of mature rate), Year 11-20 (80-95% of mature rate), and Year 20+ (95-100% of mature rate). This reflects real-world tree growth patterns and provides more accurate long-term projections.
@@ -694,7 +696,7 @@ export default function Home() {
               {faqOpen[7] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
-                    <strong>Environmental Data Sources:</strong> The simulator uses real-time data from multiple sources: Soil carbon content from <a href="https://soilgrids.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">ISRIC SoilGrids</a> (adds 0.1 kg CO₂/year per g/kg of soil carbon) and climate data from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">Open-Meteo</a> (precipitation affects forest resilience). Biodiversity values are based on scientific literature and species-specific ecological characteristics. When environmental data is unavailable, the simulator uses climate-zone based estimates to ensure calculations remain accurate.
+                    <strong>Environmental Data Sources:</strong> The simulator uses real-time data from multiple sources: Soil carbon content from <a href="https://soilgrids.org/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">ISRIC SoilGrids</a> (adds 0.1 kg CO?/year per g/kg of soil carbon) and climate data from <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80">Open-Meteo</a> (precipitation affects forest resilience). Biodiversity values are based on scientific literature and species-specific ecological characteristics. When environmental data is unavailable, the simulator uses climate-zone based estimates to ensure calculations remain accurate.
                   </p>
                   <p className="text-gray-900 mb-3">
                     <strong>Environmental Benefits Calculated:</strong> Beyond carbon sequestration, the simulator calculates biodiversity impact (how well the forest supports wildlife), forest resilience (ability to withstand climate stresses), water retention (improved soil moisture and reduced runoff), and air quality improvement (pollution filtration). In planting mode, these metrics improve over time and scale with forest size. In clear-cutting mode, these metrics degrade over time and scale with the extent of forest removal. These metrics provide a comprehensive view of the forest&apos;s environmental contribution or impact.
@@ -751,7 +753,7 @@ export default function Home() {
                   </p>
                   <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mt-3">
                     <p className="text-sm text-primary font-medium">
-                      ⚠️ <strong>Disclaimer:</strong> This simulator is for educational and planning purposes only. Use at your own risk. Always consult with forestry professionals, environmental experts, and local authorities before implementing any real-world projects.
+                      ?? <strong>Disclaimer:</strong> This simulator is for educational and planning purposes only. Use at your own risk. Always consult with forestry professionals, environmental experts, and local authorities before implementing any real-world projects.
                     </p>
                   </div>
                 </div>
@@ -781,9 +783,9 @@ export default function Home() {
                       <h4 className="font-semibold text-black mb-2">Carbon Sequestration</h4>
                       <div className="bg-gray-50 p-3 rounded text-sm text-black">
                         <p className="mb-2"><strong>Weighted Average Formula:</strong></p>
-                        <code className="block bg-white p-2 rounded mb-2">Carbon = Σ(Tree_i × Percentage_i) / 100</code>
+                        <code className="block bg-white p-2 rounded mb-2">Carbon = ?(Tree_i ? Percentage_i) / 100</code>
                         <p className="mb-2"><strong>Environmental Modifiers:</strong></p>
-                        <code className="block bg-white p-2 rounded mb-2">Soil Bonus = Soil Carbon (g/kg) × 0.1 kg CO₂/year</code>
+                        <code className="block bg-white p-2 rounded mb-2">Soil Bonus = Soil Carbon (g/kg) ? 0.1 kg CO?/year</code>
                         <code className="block bg-white p-2 rounded mb-2">Final Carbon = Base Carbon + Soil Bonus</code>
                         <p className="mt-2 text-sm text-black"><strong>Display Values:</strong></p>
                         <code className="block bg-white p-2 rounded text-black">Annual Carbon = Yearly sequestration rate</code>
@@ -802,7 +804,7 @@ export default function Home() {
                           <div><strong>Years 20+:</strong> Mature phase (95-100% of mature rate)</div>
                         </div>
                         <p className="mt-2 text-sm text-black"><strong>Annual Carbon Calculation:</strong></p>
-                        <code className="block bg-white p-2 rounded text-black">Annual Carbon = Mature Rate × Growth Factor (based on year)</code>
+                        <code className="block bg-white p-2 rounded text-black">Annual Carbon = Mature Rate ? Growth Factor (based on year)</code>
                       </div>
                     </div>
 
@@ -811,13 +813,13 @@ export default function Home() {
                       <div className="bg-gray-50 p-3 rounded text-sm text-black">
                         <p className="mb-2"><strong>Temperature Trend Analysis:</strong></p>
                         <code className="block bg-white p-2 rounded mb-2 text-black">Historical Data = 11 years of temperature records</code>
-                        <code className="block bg-white p-2 rounded mb-2 text-black">Linear Regression = Calculate temperature trend (°C/year)</code>
-                        <code className="block bg-white p-2 rounded mb-2 text-black">Future Temperature = Current + (Trend × Years)</code>
+                        <code className="block bg-white p-2 rounded mb-2 text-black">Linear Regression = Calculate temperature trend (?C/year)</code>
+                        <code className="block bg-white p-2 rounded mb-2 text-black">Future Temperature = Current + (Trend ? Years)</code>
                         <p className="mt-2 mb-2 text-sm text-black"><strong>Growth Modifier:</strong></p>
                         <code className="block bg-white p-2 rounded mb-2 text-black">Temperature Change = Future Temp - Current Temp</code>
-                        <code className="block bg-white p-2 rounded text-black">Growth Modifier = 1 + (Temperature Change × 0.02)</code>
+                        <code className="block bg-white p-2 rounded text-black">Growth Modifier = 1 + (Temperature Change ? 0.02)</code>
                         <p className="mt-2 text-sm text-black"><strong>Regional Estimates (fallback):</strong></p>
-                        <code className="block bg-white p-2 rounded text-black">Tropical: 25°C, Temperate: 15°C, Boreal: 5°C, Arctic: -5°C</code>
+                        <code className="block bg-white p-2 rounded text-black">Tropical: 25?C, Temperate: 15?C, Boreal: 5?C, Arctic: -5?C</code>
                       </div>
                     </div>
 
@@ -826,8 +828,8 @@ export default function Home() {
                       <div className="bg-gray-50 p-3 rounded text-sm text-black">
                         <p className="mb-2"><strong>Species Diversity Score:</strong></p>
                         <code className="block bg-white p-2 rounded mb-2 text-black">Base Score = Average biodiversity value (1-5)</code>
-                        <code className="block bg-white p-2 rounded mb-2 text-black">Multiplier = 1 + (Number of species - 1) × 0.1</code>
-                        <code className="block bg-white p-2 rounded text-black">Final Score = min(Base Score × Multiplier, 5)</code>
+                        <code className="block bg-white p-2 rounded mb-2 text-black">Multiplier = 1 + (Number of species - 1) ? 0.1</code>
+                        <code className="block bg-white p-2 rounded text-black">Final Score = min(Base Score ? Multiplier, 5)</code>
                       </div>
                     </div>
 
@@ -836,7 +838,7 @@ export default function Home() {
                       <div className="bg-gray-50 p-3 rounded text-sm text-black">
                         <p className="mb-2"><strong>Resilience Calculation:</strong></p>
                         <code className="block bg-white p-2 rounded mb-2 text-black">Base Resilience = Average resilience score (1-5)</code>
-                        <code className="block bg-white p-2 rounded mb-2 text-black">Climate Bonus = Precipitation (mm) × 0.001</code>
+                        <code className="block bg-white p-2 rounded mb-2 text-black">Climate Bonus = Precipitation (mm) ? 0.001</code>
                         <code className="block bg-white p-2 rounded text-black">Final Resilience = min(Base + Climate Bonus, 5)</code>
                       </div>
                     </div>
@@ -847,8 +849,8 @@ export default function Home() {
                         <p className="mb-2"><strong>Progressive Enhancement:</strong></p>
                         <code className="block bg-white p-2 rounded mb-2 text-black">Base Retention = 70-85% (based on latitude)</code>
                         <code className="block bg-white p-2 rounded mb-2 text-black">Annual Improvement = 0.3% per year</code>
-                        <code className="block bg-white p-2 rounded mb-2 text-black">Precipitation Bonus = Annual Precipitation (mm) × 0.01</code>
-                        <code className="block bg-white p-2 rounded text-black">Water Retention = min(Base + (Years × 0.3) + Bonus, 95%)</code>
+                        <code className="block bg-white p-2 rounded mb-2 text-black">Precipitation Bonus = Annual Precipitation (mm) ? 0.01</code>
+                        <code className="block bg-white p-2 rounded text-black">Water Retention = min(Base + (Years ? 0.3) + Bonus, 95%)</code>
                       </div>
                     </div>
 
@@ -858,7 +860,7 @@ export default function Home() {
                         <p className="mb-2"><strong>Progressive Enhancement:</strong></p>
                         <code className="block bg-white p-2 rounded mb-2 text-black">Base Quality = 60%</code>
                         <code className="block bg-white p-2 rounded mb-2 text-black">Annual Improvement = 0.7% per year</code>
-                        <code className="block bg-white p-2 rounded text-black">Air Quality = min(Base + (Years × 0.7), 95%)</code>
+                        <code className="block bg-white p-2 rounded text-black">Air Quality = min(Base + (Years ? 0.7), 95%)</code>
                       </div>
                     </div>
 
@@ -866,7 +868,7 @@ export default function Home() {
                       <h4 className="font-semibold text-black mb-2">Mathematical Notation</h4>
                       <div className="bg-gray-50 p-3 rounded text-base text-black">
                         <ul className="space-y-2">
-                          <li><strong>Σ:</strong> Summation across all selected tree species</li>
+                          <li><strong>?:</strong> Summation across all selected tree species</li>
                           <li><strong>Tree_i:</strong> Carbon sequestration rate of tree species i</li>
                           <li><strong>Percentage_i:</strong> User-specified percentage for tree species i</li>
                           <li><strong>n:</strong> Number of selected tree species</li>
