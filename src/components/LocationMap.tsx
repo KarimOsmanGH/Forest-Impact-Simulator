@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { useMap } from 'react-leaflet';
+import type * as L from 'leaflet';
 import LocationSearch from './LocationSearch';
 import { calculateRegionArea, formatArea } from '@/utils/treePlanting';
 import { getLocationHistory, addToLocationHistory, removeFromLocationHistory, formatLocationName, getRelativeTime, type LocationHistoryItem } from '@/utils/locationHistory';
@@ -10,10 +11,6 @@ import { getLocationHistory, addToLocationHistory, removeFromLocationHistory, fo
 // Dynamically import Leaflet components to avoid SSR issues
 const MapContainer = dynamic(
   () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
   { ssr: false }
 );
 const Marker = dynamic(
@@ -43,6 +40,202 @@ const ClientOnlyMap = ({ children }: { children: React.ReactNode }) => {
   }
   
   return <>{children}</>;
+};
+
+// Scale control component
+const ScaleControl = () => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (!map) return;
+    
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const L = require('leaflet');
+    
+    // Add scale control
+    const scaleControl = L.control.scale({
+      position: 'bottomleft',
+      metric: true,
+      imperial: true,
+      maxWidth: 150
+    });
+    
+    scaleControl.addTo(map);
+    
+    return () => {
+      scaleControl.remove();
+    };
+  }, [map]);
+  
+  return null;
+};
+
+// Locate me control component
+const LocateControl = ({ onLocate }: { onLocate?: (lat: number, lng: number) => void }) => {
+  const map = useMap();
+  const [locating, setLocating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  const handleLocate = () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+    
+    setLocating(true);
+    setError(null);
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        map.setView([lat, lng], 13, { animate: true });
+        
+        if (onLocate) {
+          onLocate(lat, lng);
+        }
+        
+        setLocating(false);
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setError('Unable to get your location');
+        setTimeout(() => setError(null), 3000);
+        setLocating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+  
+  return (
+    <>
+      <div className="leaflet-top leaflet-right" style={{ top: '10px', right: '10px' }}>
+        <div className="leaflet-control leaflet-bar">
+          <button
+            onClick={handleLocate}
+            disabled={locating}
+            className="bg-white hover:bg-gray-50 w-[30px] h-[30px] flex items-center justify-center border-none cursor-pointer disabled:cursor-wait disabled:opacity-60"
+            title="Locate me"
+            style={{
+              fontSize: '18px',
+              lineHeight: '30px',
+              color: '#333',
+            }}
+          >
+            {locating ? '?' : '?'}
+          </button>
+        </div>
+      </div>
+      {error && (
+        <div className="leaflet-top leaflet-right" style={{ top: '50px', right: '10px' }}>
+          <div className="bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-xs max-w-[200px]">
+            {error}
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+// Layer switcher control component
+const LayerSwitcher = () => {
+  const map = useMap();
+  const [activeLayer, setActiveLayer] = useState<'street' | 'satellite' | 'terrain'>('street');
+  const [isOpen, setIsOpen] = useState(false);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+  
+  useEffect(() => {
+    if (!map) return;
+    
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const L = require('leaflet');
+    
+    // Remove existing tile layer if any
+    if (tileLayerRef.current) {
+      map.removeLayer(tileLayerRef.current);
+    }
+    
+    // Add new tile layer based on active layer
+    let tileUrl = '';
+    let attribution = '';
+    
+    switch (activeLayer) {
+      case 'street':
+        tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+        break;
+      case 'satellite':
+        tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+        attribution = '&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+        break;
+      case 'terrain':
+        tileUrl = 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png';
+        attribution = '&copy; <a href="https://opentopomap.org">OpenTopoMap</a> contributors';
+        break;
+    }
+    
+    const newTileLayer = L.tileLayer(tileUrl, {
+      attribution,
+      maxZoom: 19
+    });
+    
+    newTileLayer.addTo(map);
+    tileLayerRef.current = newTileLayer;
+    
+    return () => {
+      if (tileLayerRef.current) {
+        map.removeLayer(tileLayerRef.current);
+      }
+    };
+  }, [map, activeLayer]);
+  
+  const handleLayerChange = (layer: 'street' | 'satellite' | 'terrain') => {
+    setActiveLayer(layer);
+    setIsOpen(false);
+  };
+  
+  return (
+    <div className="leaflet-bottom leaflet-right" style={{ bottom: '30px', right: '10px' }}>
+      <div className="leaflet-control leaflet-bar bg-white rounded shadow-md">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 border-none cursor-pointer flex items-center gap-2"
+          title="Change map layer"
+        >
+          <span>???</span>
+          <span className="hidden sm:inline">{activeLayer === 'street' ? 'Street' : activeLayer === 'satellite' ? 'Satellite' : 'Terrain'}</span>
+        </button>
+        {isOpen && (
+          <div className="absolute bottom-full right-0 mb-2 bg-white rounded shadow-lg border border-gray-200 min-w-[120px]">
+            <button
+              onClick={() => handleLayerChange('street')}
+              className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-50 border-none cursor-pointer ${activeLayer === 'street' ? 'bg-primary/10 font-semibold' : ''}`}
+            >
+              ??? Street
+            </button>
+            <button
+              onClick={() => handleLayerChange('satellite')}
+              className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-50 border-none cursor-pointer ${activeLayer === 'satellite' ? 'bg-primary/10 font-semibold' : ''}`}
+            >
+              ??? Satellite
+            </button>
+            <button
+              onClick={() => handleLayerChange('terrain')}
+              className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-50 border-none cursor-pointer ${activeLayer === 'terrain' ? 'bg-primary/10 font-semibold' : ''}`}
+            >
+              ?? Terrain
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 // Map controller component for navigation
@@ -506,6 +699,18 @@ const LocationMap: React.FC<LocationMapProps> = ({
             <div className="flex-1">
               <LocationSearch onLocationSelect={handleSearchLocation} />
             </div>
+            {locationHistory.length > 0 && (
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-1 flex-shrink-0"
+                title="Show location history"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="hidden sm:inline">History</span>
+              </button>
+            )}
           </div>
 
           {/* History Dropdown */}
@@ -577,13 +782,17 @@ const LocationMap: React.FC<LocationMapProps> = ({
                   position: 'relative',
                 }}
                 ref={mapRef}
-                zoomControl={false}
+                zoomControl={true}
               >
-                <TileLayer
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                />
                 <MapController center={mapCenter} zoom={mapZoom} />
+                <ScaleControl />
+                <LayerSwitcher />
+                <LocateControl onLocate={(lat, lng) => {
+                  setMapCenter([lat, lng]);
+                  setSelectedLocation([lat, lng]);
+                  setSelectedRegion(null);
+                  onLocationSelect(lat, lng);
+                }} />
                 {selectedLocation && (
                   <Marker position={selectedLocation} />
                 )}
@@ -630,7 +839,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
       {selectedRegion && (
         <div className="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
           <div className="text-sm text-gray-600 space-y-1">
-            <p><strong>Selected region:</strong> {selectedRegion[0].toFixed(4)}°N to {selectedRegion[2].toFixed(4)}°N, {selectedRegion[1].toFixed(4)}°E to {selectedRegion[3].toFixed(4)}°E</p>
+            <p><strong>Selected region:</strong> {selectedRegion[0].toFixed(4)}?N to {selectedRegion[2].toFixed(4)}?N, {selectedRegion[1].toFixed(4)}?E to {selectedRegion[3].toFixed(4)}?E</p>
             <p><strong>Area size:</strong> {formatArea(calculateRegionArea({
               north: selectedRegion[0],
               south: selectedRegion[2], 
