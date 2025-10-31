@@ -208,28 +208,39 @@ const LayerSwitcher = () => {
           className="px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 border-none cursor-pointer flex items-center gap-2"
           title="Change map layer"
         >
-          <span>???</span>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
           <span className="hidden sm:inline">{activeLayer === 'street' ? 'Street' : activeLayer === 'satellite' ? 'Satellite' : 'Terrain'}</span>
         </button>
         {isOpen && (
           <div className="absolute bottom-full right-0 mb-2 bg-white rounded shadow-lg border border-gray-200 min-w-[120px]">
             <button
               onClick={() => handleLayerChange('street')}
-              className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-50 border-none cursor-pointer ${activeLayer === 'street' ? 'bg-primary/10 font-semibold' : ''}`}
+              className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-50 border-none cursor-pointer flex items-center gap-2 ${activeLayer === 'street' ? 'bg-primary/10 font-semibold' : ''}`}
             >
-              ??? Street
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              <span>Street</span>
             </button>
             <button
               onClick={() => handleLayerChange('satellite')}
-              className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-50 border-none cursor-pointer ${activeLayer === 'satellite' ? 'bg-primary/10 font-semibold' : ''}`}
+              className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-50 border-none cursor-pointer flex items-center gap-2 ${activeLayer === 'satellite' ? 'bg-primary/10 font-semibold' : ''}`}
             >
-              ??? Satellite
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Satellite</span>
             </button>
             <button
               onClick={() => handleLayerChange('terrain')}
-              className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-50 border-none cursor-pointer ${activeLayer === 'terrain' ? 'bg-primary/10 font-semibold' : ''}`}
+              className={`w-full px-3 py-2 text-xs text-left hover:bg-gray-50 border-none cursor-pointer flex items-center gap-2 ${activeLayer === 'terrain' ? 'bg-primary/10 font-semibold' : ''}`}
             >
-              ?? Terrain
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16l-4-4m0 0l4-4m-4 4h18M5 20v-2a2 2 0 012-2h10a2 2 0 012 2v2" />
+              </svg>
+              <span>Terrain</span>
             </button>
           </div>
         )}
@@ -695,22 +706,8 @@ const LocationMap: React.FC<LocationMapProps> = ({
     <div>
       <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"> 
         <div className="relative p-3">
-          <div className="flex gap-2 mb-2">
-            <div className="flex-1">
-              <LocationSearch onLocationSelect={handleSearchLocation} />
-            </div>
-            {locationHistory.length > 0 && (
-              <button
-                onClick={() => setShowHistory(!showHistory)}
-                className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-1 flex-shrink-0"
-                title="Show location history"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="hidden sm:inline">History</span>
-              </button>
-            )}
+          <div className="mb-2">
+            <LocationSearch onLocationSelect={handleSearchLocation} />
           </div>
 
           {/* History Dropdown */}
@@ -787,12 +784,6 @@ const LocationMap: React.FC<LocationMapProps> = ({
                 <MapController center={mapCenter} zoom={mapZoom} />
                 <ScaleControl />
                 <LayerSwitcher />
-                <LocateControl onLocate={(lat, lng) => {
-                  setMapCenter([lat, lng]);
-                  setSelectedLocation([lat, lng]);
-                  setSelectedRegion(null);
-                  onLocationSelect(lat, lng);
-                }} />
                 {selectedLocation && (
                   <Marker position={selectedLocation} />
                 )}
