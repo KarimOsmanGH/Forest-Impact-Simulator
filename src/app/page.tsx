@@ -261,7 +261,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">1&#65039;&#8419;</div>
+              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">1??</div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">Select Location</h2>
                 <div className="text-sm text-gray-600">
@@ -290,7 +290,7 @@ export default function Home() {
           
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">2&#65039;&#8419;</div>
+              <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">2??</div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">
                   {simulationMode === 'planting' ? 'Select Tree Species' : 'Select Tree Species'}
@@ -328,7 +328,7 @@ export default function Home() {
           <div className="bg-white border border-primary/20 rounded-xl p-6 shadow-sm">
             <div className="flex items-center gap-3 mb-6">
               <div className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-lg">
-                3&#65039;&#8419;
+                3??
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">Impact Results</h2>
@@ -938,12 +938,14 @@ export default function Home() {
               {faqOpen[12] && (
                 <div className="px-6 pb-6">
                   <p className="text-gray-900 mb-3">
-                    The simulator offers three export formats to suit different use cases:
+                    The simulator offers multiple export and sharing options to suit different use cases:
                   </p>
                   <ul className="list-disc pl-6 text-gray-900 mb-3 space-y-2">
-                    <li><strong>GeoJSON:</strong> Perfect for GIS professionals and mapping tools. Includes point features (analysis location) and polygon features (forest region) with all environmental metrics as properties.</li>
-                    <li><strong>JSON:</strong> Complete data export for developers and data analysis. Contains all simulation parameters, environmental data, impact results, and forest management specifications in structured format.</li>
-                    <li><strong>CSV:</strong> Spreadsheet-friendly format organized by sections (metadata, trees, environmental data, results, forest data) for reporting and analysis.</li>
+                    <li><strong>PDF Report:</strong> Professional formatted report with all analysis results, charts, and metrics. Perfect for presentations, reports, and documentation.</li>
+                    <li><strong>GeoJSON:</strong> Geographic data format for GIS professionals and mapping tools. Includes point features (analysis location) and polygon features (forest region) with all environmental metrics as properties.</li>
+                    <li><strong>JSON:</strong> Complete structured data export for developers and data analysis. Contains all simulation parameters, environmental data, impact results, and forest management specifications.</li>
+                    <li><strong>CSV:</strong> Spreadsheet-friendly format organized by sections (metadata, trees, environmental data, results, forest data) for use in Excel, R, Python, and other data analysis tools.</li>
+                    <li><strong>Share Link:</strong> Generate a shareable URL that preserves your entire analysis configuration. Others can view your exact analysis by opening the link, with all settings, species selections, and region data preserved.</li>
                   </ul>
                   <p className="text-gray-900 mb-3">
                     All exports include timestamps and are automatically generated once you complete your analysis. Files are downloaded directly to your browser with descriptive filenames.
