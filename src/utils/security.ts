@@ -10,8 +10,8 @@ export const VALIDATION_PATTERNS = {
   LONGITUDE: /^-?((1[0-7][0-9]|[1-9]?[0-9])(\.[0-9]+)?|180(\.0+)?)$/,
   // Years: 1 to 100
   YEARS: /^([1-9]|[1-9][0-9]|100)$/,
-  // Search query: alphanumeric, spaces, commas, dots, hyphens
-  SEARCH_QUERY: /^[a-zA-Z0-9\s,.-]+$/,
+  // Search query: allow letters, numbers, punctuation, symbols (incl. emoji), and spaces
+  SEARCH_QUERY: /^[\p{L}\p{N}\p{M}\p{P}\p{S}\p{Zs}]+$/u,
   // Tree type ID: lowercase letters, numbers, hyphens
   TREE_TYPE_ID: /^[a-z0-9-]+$/,
 };
@@ -31,8 +31,13 @@ export const validateYears = (years: number): boolean => {
 
 export const validateSearchQuery = (query: string): boolean => {
   if (typeof query !== 'string') return false;
-  if (query.length > 100) return false; // Limit query length
-  return VALIDATION_PATTERNS.SEARCH_QUERY.test(query.trim());
+
+  const trimmedQuery = query.trim();
+
+  if (trimmedQuery.length === 0) return false;
+  if (trimmedQuery.length > 100) return false; // Limit query length
+
+  return VALIDATION_PATTERNS.SEARCH_QUERY.test(trimmedQuery);
 };
 
 export const validateTreeTypeId = (id: string): boolean => {
