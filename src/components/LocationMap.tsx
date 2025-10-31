@@ -706,22 +706,8 @@ const LocationMap: React.FC<LocationMapProps> = ({
     <div>
       <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden"> 
         <div className="relative p-3">
-          <div className="flex gap-2 mb-2">
-            <div className="flex-1">
-              <LocationSearch onLocationSelect={handleSearchLocation} />
-            </div>
-            {locationHistory.length > 0 && (
-              <button
-                onClick={() => setShowHistory(!showHistory)}
-                className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-1 flex-shrink-0"
-                title="Show location history"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="hidden sm:inline">History</span>
-              </button>
-            )}
+          <div className="mb-2">
+            <LocationSearch onLocationSelect={handleSearchLocation} />
           </div>
 
           {/* History Dropdown */}
@@ -798,12 +784,6 @@ const LocationMap: React.FC<LocationMapProps> = ({
                 <MapController center={mapCenter} zoom={mapZoom} />
                 <ScaleControl />
                 <LayerSwitcher />
-                <LocateControl onLocate={(lat, lng) => {
-                  setMapCenter([lat, lng]);
-                  setSelectedLocation([lat, lng]);
-                  setSelectedRegion(null);
-                  onLocationSelect(lat, lng);
-                }} />
                 {selectedLocation && (
                   <Marker position={selectedLocation} />
                 )}
